@@ -1,144 +1,149 @@
-import Link from "next/link"
-import { ArrowRight, FlaskConical, Lightbulb, Beaker, TestTube } from "lucide-react"
-import { Button } from "@/components/ui/button"
+"use client"
+
+import { LayoutWrapper } from "@/components/layout-wrapper"
+import { useLanguage } from "@/lib/language-context"
 import { Card } from "@/components/ui/card"
+import { Lightbulb, Rocket, Sparkles, Zap } from "lucide-react"
+import { useState, useEffect } from "react"
 
 export default function ExperimentalDepartmentPage() {
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="bg-gradient-to-br from-green-500 to-emerald-500 text-white py-20">
-        <div className="container mx-auto px-4">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-white/80 hover:text-white mb-6 transition-colors"
-          >
-            <ArrowRight className="w-5 h-5" />
-            <span>العودة للرئيسية</span>
-          </Link>
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-              <FlaskConical className="w-8 h-8" />
-            </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-balance">القسم التجريبي</h1>
-          </div>
-          <p className="text-xl text-white/90 max-w-2xl leading-relaxed text-pretty">
-            مختبرات متقدمة للتجارب العملية والأبحاث العلمية
-          </p>
-        </div>
-      </div>
+  const { language } = useLanguage()
+  const [currentSlide, setCurrentSlide] = useState(0)
 
-      {/* Content */}
-      <div className="container mx-auto px-4 py-16">
-        {/* Labs Grid */}
-        <div className="grid md:grid-cols-3 gap-8 mb-16">
-          {[
-            {
-              icon: Beaker,
-              title: "مختبر الكيمياء",
-              description: "مختبر مجهز بأحدث الأدوات لإجراء تجارب كيميائية متقدمة بأمان",
-            },
-            {
-              icon: TestTube,
-              title: "مختبر الأحياء",
-              description: "مختبر متخصص لدراسة الكائنات الحية والتجارب البيولوجية",
-            },
-            {
-              icon: Lightbulb,
-              title: "مختبر الفيزياء",
-              description: "مختبر حديث لإجراء تجارب فيزيائية وفهم القوانين الطبيعية",
-            },
-          ].map((lab, index) => (
-            <Card key={index} className="p-8 hover:shadow-xl transition-shadow">
-              <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mb-4">
-                <lab.icon className="w-8 h-8 text-white" />
+  const slides = [
+    {
+      image: "/innovative-experimental-learning-classroom.jpg",
+      titleAr: "القسم التجريبي",
+      titleEn: "Experimental Department",
+      descAr: "الابتكار والإبداع في التعليم الحديث",
+      descEn: "Innovation and creativity in modern education",
+    },
+    {
+      image: "/students-working-on-creative-projects.jpg",
+      titleAr: "مشاريع إبداعية",
+      titleEn: "Creative Projects",
+      descAr: "تشجيع الطلاب على التفكير الإبداعي والابتكار",
+      descEn: "Encouraging students to think creatively and innovate",
+    },
+    {
+      image: "/modern-technology-in-education.jpg",
+      titleAr: "تقنيات متقدمة",
+      titleEn: "Advanced Technologies",
+      descAr: "استخدام أحدث التقنيات في العملية التعليمية",
+      descEn: "Using the latest technologies in the educational process",
+    },
+  ]
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length)
+    }, 3000)
+    return () => clearInterval(timer)
+  }, [slides.length])
+
+  return (
+    <LayoutWrapper>
+      <section className="relative h-[500px] overflow-hidden">
+        {slides.map((slide, index) => (
+          <div
+            key={index}
+            className={`absolute inset-0 transition-opacity duration-1000 ${
+              index === currentSlide ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent z-10" />
+            <img
+              src={slide.image || "/placeholder.svg"}
+              alt={language === "ar" ? slide.titleAr : slide.titleEn}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 z-20 flex items-center justify-center">
+              <div className="text-center px-4 max-w-4xl">
+                <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 drop-shadow-lg">
+                  {language === "ar" ? slide.titleAr : slide.titleEn}
+                </h1>
+                <p className="text-xl md:text-2xl text-white/90 drop-shadow-lg">
+                  {language === "ar" ? slide.descAr : slide.descEn}
+                </p>
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-3">{lab.title}</h3>
-              <p className="text-muted-foreground leading-relaxed">{lab.description}</p>
-            </Card>
+            </div>
+          </div>
+        ))}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex gap-2">
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentSlide(index)}
+              className={`w-3 h-3 rounded-full transition-all ${
+                index === currentSlide ? "bg-white w-8" : "bg-white/50"
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
           ))}
         </div>
+      </section>
 
-        {/* Main Content */}
-        <div className="grid lg:grid-cols-2 gap-12 items-center mb-16">
-          <div className="relative">
-            <div className="absolute -inset-4 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-3xl blur-2xl" />
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl">
-              <img src="/students-doing-science-experiments.jpg" alt="القسم التجريبي" className="w-full h-auto" />
+      <main className="min-h-screen pt-24 pb-16">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-12">
+              <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+                {language === "ar" ? "القسم التجريبي" : "Experimental Department"}
+              </h1>
+              <p className="text-xl text-muted-foreground">
+                {language === "ar" ? "الابتكار والإبداع في التعليم" : "Innovation and creativity in education"}
+              </p>
             </div>
-          </div>
-          <div className="space-y-6">
-            <h2 className="text-3xl font-bold text-foreground">عن القسم التجريبي</h2>
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              يوفر القسم التجريبي بيئة مثالية للطلاب لإجراء التجارب العلمية واكتشاف المفاهيم العلمية بشكل عملي.
-            </p>
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              نشجع الطلاب على التفكير النقدي والاستكشاف العلمي من خلال تجارب عملية موجهة وآمنة.
-            </p>
-            <div className="space-y-3 pt-4">
-              <h3 className="font-bold text-foreground">ما نقدمه:</h3>
-              <ul className="space-y-2">
-                {[
-                  "تجارب علمية متنوعة ومتقدمة",
-                  "إشراف متخصص على جميع التجارب",
-                  "معايير سلامة عالية",
-                  "مشاريع بحثية للطلاب",
-                  "مسابقات علمية وعروض تقديمية",
-                  "ربط النظرية بالتطبيق العملي",
-                ].map((item, index) => (
-                  <li key={index} className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full" />
-                    <span className="text-muted-foreground">{item}</span>
-                  </li>
-                ))}
-              </ul>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {[
+                {
+                  icon: Lightbulb,
+                  title: language === "ar" ? "أفكار مبتكرة" : "Innovative Ideas",
+                  description:
+                    language === "ar"
+                      ? "تشجيع الطلاب على التفكير الإبداعي"
+                      : "Encouraging students to think creatively",
+                },
+                {
+                  icon: Rocket,
+                  title: language === "ar" ? "مشاريع تجريبية" : "Experimental Projects",
+                  description:
+                    language === "ar" ? "مشاريع تجريبية لتطبيق المعرفة" : "Experimental projects to apply knowledge",
+                },
+                {
+                  icon: Sparkles,
+                  title: language === "ar" ? "تقنيات حديثة" : "Modern Technologies",
+                  description:
+                    language === "ar"
+                      ? "استخدام أحدث التقنيات في التعليم"
+                      : "Using the latest technologies in education",
+                },
+                {
+                  icon: Zap,
+                  title: language === "ar" ? "تعلم تفاعلي" : "Interactive Learning",
+                  description:
+                    language === "ar"
+                      ? "أساليب تعليمية تفاعلية ومبتكرة"
+                      : "Interactive and innovative teaching methods",
+                },
+              ].map((item, index) => (
+                <Card key={index} className="p-6 hover:shadow-lg transition-shadow">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center flex-shrink-0">
+                      <item.icon className="w-6 h-6 text-primary-foreground" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-foreground mb-2">{item.title}</h3>
+                      <p className="text-muted-foreground">{item.description}</p>
+                    </div>
+                  </div>
+                </Card>
+              ))}
             </div>
           </div>
         </div>
-
-        {/* Projects Section */}
-        <Card className="p-12 bg-gradient-to-br from-green-500/5 to-emerald-500/5 mb-16">
-          <h2 className="text-3xl font-bold text-foreground text-center mb-8">مشاريع الطلاب</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                title: "تنقية المياه",
-                description: "مشروع لتطوير نظام تنقية مياه بسيط وفعال",
-                image: "/water-filtration-project.jpg",
-              },
-              {
-                title: "الطاقة المتجددة",
-                description: "دراسة وتطبيق مصادر الطاقة البديلة",
-                image: "/renewable-energy-project.jpg",
-              },
-              {
-                title: "الزراعة المائية",
-                description: "تجربة الزراعة بدون تربة باستخدام المحاليل",
-                image: "/placeholder.svg?height=300&width=400",
-              },
-            ].map((project, index) => (
-              <div key={index} className="space-y-4">
-                <div className="aspect-video rounded-lg overflow-hidden">
-                  <img
-                    src={project.image || "/placeholder.svg"}
-                    alt={project.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <h3 className="font-bold text-foreground">{project.title}</h3>
-                <p className="text-sm text-muted-foreground">{project.description}</p>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        {/* CTA */}
-        <div className="text-center">
-          <Link href="/#contact">
-            <Button size="lg">تواصل معنا للاستفسار</Button>
-          </Link>
-        </div>
-      </div>
-    </div>
+      </main>
+    </LayoutWrapper>
   )
 }

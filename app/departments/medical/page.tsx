@@ -1,131 +1,144 @@
-import Link from "next/link"
-import { ArrowRight, Stethoscope, Heart, Shield, Users } from "lucide-react"
-import { Button } from "@/components/ui/button"
+"use client"
+
+import { LayoutWrapper } from "@/components/layout-wrapper"
+import { useLanguage } from "@/lib/language-context"
 import { Card } from "@/components/ui/card"
+import { Heart, Stethoscope, Activity, Shield } from "lucide-react"
+import { useState, useEffect } from "react"
 
 export default function MedicalDepartmentPage() {
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="bg-gradient-to-br from-red-500 to-pink-500 text-white py-20">
-        <div className="container mx-auto px-4">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-white/80 hover:text-white mb-6 transition-colors"
-          >
-            <ArrowRight className="w-5 h-5" />
-            <span>العودة للرئيسية</span>
-          </Link>
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-              <Stethoscope className="w-8 h-8" />
-            </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-balance">القسم الطبي</h1>
-          </div>
-          <p className="text-xl text-white/90 max-w-2xl leading-relaxed text-pretty">
-            رعاية صحية شاملة لطلابنا مع فريق طبي متخصص ومرافق حديثة
-          </p>
-        </div>
-      </div>
+  const { language } = useLanguage()
+  const [currentSlide, setCurrentSlide] = useState(0)
 
-      {/* Content */}
-      <div className="container mx-auto px-4 py-16">
-        {/* Services Grid */}
-        <div className="grid md:grid-cols-3 gap-8 mb-16">
-          {[
-            {
-              icon: Heart,
-              title: "الفحوصات الدورية",
-              description: "فحوصات طبية دورية شاملة لجميع الطلاب للتأكد من سلامتهم الصحية",
-            },
-            {
-              icon: Shield,
-              title: "الإسعافات الأولية",
-              description: "خدمات إسعافات أولية فورية لأي حالة طارئة خلال اليوم الدراسي",
-            },
-            {
-              icon: Users,
-              title: "التوعية الصحية",
-              description: "برامج توعية صحية للطلاب وأولياء الأمور حول الصحة والوقاية",
-            },
-          ].map((service, index) => (
-            <Card key={index} className="p-8 text-center hover:shadow-xl transition-shadow">
-              <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <service.icon className="w-8 h-8 text-white" />
+  const slides = [
+    {
+      image: "/school-medical-clinic-with-modern-equipment-for-sp.jpg",
+      titleAr: "القسم الطبي",
+      titleEn: "Medical Department",
+      descAr: "رعاية صحية شاملة ومتخصصة لجميع الطلاب",
+      descEn: "Comprehensive and specialized healthcare for all students",
+    },
+    {
+      image: "/medical-staff-caring-for-special-needs-students.jpg",
+      titleAr: "فريق طبي متخصص",
+      titleEn: "Specialized Medical Team",
+      descAr: "كادر طبي مؤهل لرعاية ذوي الاحتياجات الخاصة",
+      descEn: "Qualified medical staff to care for special needs students",
+    },
+    {
+      image: "/modern-school-health-clinic-equipment.jpg",
+      titleAr: "أحدث المعدات الطبية",
+      titleEn: "Latest Medical Equipment",
+      descAr: "تجهيزات طبية حديثة لضمان أفضل رعاية صحية",
+      descEn: "Modern medical equipment to ensure the best healthcare",
+    },
+  ]
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length)
+    }, 3000)
+    return () => clearInterval(timer)
+  }, [slides.length])
+
+  return (
+    <LayoutWrapper>
+      <section className="relative h-[500px] overflow-hidden">
+        {slides.map((slide, index) => (
+          <div
+            key={index}
+            className={`absolute inset-0 transition-opacity duration-1000 ${
+              index === currentSlide ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent z-10" />
+            <img
+              src={slide.image || "/placeholder.svg"}
+              alt={language === "ar" ? slide.titleAr : slide.titleEn}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 z-20 flex items-center justify-center">
+              <div className="text-center px-4 max-w-4xl">
+                <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 drop-shadow-lg">
+                  {language === "ar" ? slide.titleAr : slide.titleEn}
+                </h1>
+                <p className="text-xl md:text-2xl text-white/90 drop-shadow-lg">
+                  {language === "ar" ? slide.descAr : slide.descEn}
+                </p>
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-3">{service.title}</h3>
-              <p className="text-muted-foreground leading-relaxed">{service.description}</p>
-            </Card>
+            </div>
+          </div>
+        ))}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex gap-2">
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentSlide(index)}
+              className={`w-3 h-3 rounded-full transition-all ${
+                index === currentSlide ? "bg-white w-8" : "bg-white/50"
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
           ))}
         </div>
+      </section>
 
-        {/* Main Content */}
-        <div className="grid lg:grid-cols-2 gap-12 items-center mb-16">
-          <div className="relative">
-            <div className="absolute -inset-4 bg-gradient-to-br from-red-500/20 to-pink-500/20 rounded-3xl blur-2xl" />
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl">
-              <img src="/school-medical-clinic-interior.jpg" alt="القسم الطبي" className="w-full h-auto" />
+      <main className="min-h-screen pt-24 pb-16">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-12">
+              <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+                {language === "ar" ? "القسم الطبي" : "Medical Department"}
+              </h1>
+              <p className="text-xl text-muted-foreground">
+                {language === "ar" ? "رعاية صحية شاملة لجميع الطلاب" : "Comprehensive healthcare for all students"}
+              </p>
             </div>
-          </div>
-          <div className="space-y-6">
-            <h2 className="text-3xl font-bold text-foreground">عن القسم الطبي</h2>
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              يوفر القسم الطبي في المدرسة النموذجية رعاية صحية شاملة لجميع الطلاب، مع التركيز على الوقاية والعلاج
-              المبكر.
-            </p>
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              نمتلك عيادة طبية مجهزة بأحدث المعدات الطبية، ويشرف عليها فريق طبي متخصص متواجد طوال اليوم الدراسي.
-            </p>
-            <div className="space-y-3 pt-4">
-              <h3 className="font-bold text-foreground">خدماتنا تشمل:</h3>
-              <ul className="space-y-2">
-                {[
-                  "فحوصات طبية دورية شاملة",
-                  "متابعة الحالات المزمنة",
-                  "برامج التطعيم والتحصين",
-                  "الإسعافات الأولية الفورية",
-                  "استشارات طبية لأولياء الأمور",
-                  "ملفات صحية إلكترونية",
-                ].map((item, index) => (
-                  <li key={index} className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-red-500 rounded-full" />
-                    <span className="text-muted-foreground">{item}</span>
-                  </li>
-                ))}
-              </ul>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {[
+                {
+                  icon: Heart,
+                  title: language === "ar" ? "رعاية صحية" : "Healthcare",
+                  description:
+                    language === "ar" ? "رعاية صحية متكاملة لجميع الطلاب" : "Comprehensive healthcare for all students",
+                },
+                {
+                  icon: Stethoscope,
+                  title: language === "ar" ? "فحوصات دورية" : "Regular Checkups",
+                  description: language === "ar" ? "فحوصات طبية دورية للطلاب" : "Regular medical checkups for students",
+                },
+                {
+                  icon: Activity,
+                  title: language === "ar" ? "متابعة صحية" : "Health Monitoring",
+                  description:
+                    language === "ar"
+                      ? "متابعة مستمرة للحالة الصحية للطلاب"
+                      : "Continuous monitoring of students' health status",
+                },
+                {
+                  icon: Shield,
+                  title: language === "ar" ? "إسعافات أولية" : "First Aid",
+                  description:
+                    language === "ar" ? "توفير الإسعافات الأولية عند الحاجة" : "Providing first aid when needed",
+                },
+              ].map((item, index) => (
+                <Card key={index} className="p-6 hover:shadow-lg transition-shadow">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center flex-shrink-0">
+                      <item.icon className="w-6 h-6 text-primary-foreground" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-foreground mb-2">{item.title}</h3>
+                      <p className="text-muted-foreground">{item.description}</p>
+                    </div>
+                  </div>
+                </Card>
+              ))}
             </div>
           </div>
         </div>
-
-        {/* Team Section */}
-        <Card className="p-12 bg-gradient-to-br from-red-500/5 to-pink-500/5">
-          <h2 className="text-3xl font-bold text-foreground text-center mb-8">الفريق الطبي</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { name: "د. أحمد محمود", role: "طبيب عام", image: "/male-doctor.png" },
-              { name: "د. سارة علي", role: "ممرضة", image: "/female-nurse.png" },
-              { name: "د. خالد حسن", role: "أخصائي تغذية", image: "/male-nutritionist.jpg" },
-            ].map((member, index) => (
-              <div key={index} className="text-center">
-                <img
-                  src={member.image || "/placeholder.svg"}
-                  alt={member.name}
-                  className="w-32 h-32 rounded-full mx-auto mb-4 object-cover"
-                />
-                <h3 className="font-bold text-foreground">{member.name}</h3>
-                <p className="text-sm text-muted-foreground">{member.role}</p>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        {/* CTA */}
-        <div className="text-center mt-16">
-          <Link href="/#contact">
-            <Button size="lg">تواصل معنا للاستفسار</Button>
-          </Link>
-        </div>
-      </div>
-    </div>
+      </main>
+    </LayoutWrapper>
   )
 }

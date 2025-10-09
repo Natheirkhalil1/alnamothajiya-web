@@ -5,7 +5,7 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
-import { LogIn, User, Hash, Lock, Home, LayoutDashboard } from "lucide-react"
+import { LogIn, Mail, Lock, Home, LayoutDashboard } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -17,8 +17,7 @@ export default function LoginPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [formData, setFormData] = useState({
-    username: "",
-    number: "",
+    email: "",
     password: "",
   })
   const [showOptions, setShowOptions] = useState(false)
@@ -26,18 +25,16 @@ export default function LoginPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    const success = login(formData.username, formData.number, formData.password)
-
-    if (success) {
+    if (login(formData.email, formData.password)) {
       setShowOptions(true)
       toast({
         title: "تم تسجيل الدخول بنجاح",
-        description: "مرحباً بك في المدرسة النموذجية",
+        description: "مرحباً بك في لوحة التحكم",
       })
     } else {
       toast({
         title: "خطأ في تسجيل الدخول",
-        description: "يرجى التحقق من بيانات الدخول",
+        description: "البريد الإلكتروني أو كلمة المرور غير صحيحة",
         variant: "destructive",
       })
     }
@@ -90,31 +87,17 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="username" className="text-base font-semibold flex items-center gap-2">
-              <User className="w-4 h-4 text-primary" />
-              اسم المستخدم
+            <Label htmlFor="email" className="text-base font-semibold flex items-center gap-2">
+              <Mail className="w-4 h-4 text-primary" />
+              البريد الإلكتروني
             </Label>
             <Input
-              id="username"
-              value={formData.username}
-              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               required
-              placeholder="أدخل اسم المستخدم"
-              className="h-12 text-lg"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="number" className="text-base font-semibold flex items-center gap-2">
-              <Hash className="w-4 h-4 text-primary" />
-              رقم المستخدم
-            </Label>
-            <Input
-              id="number"
-              value={formData.number}
-              onChange={(e) => setFormData({ ...formData, number: e.target.value })}
-              required
-              placeholder="أدخل رقم المستخدم"
+              placeholder="admin@example.com"
               className="h-12 text-lg"
             />
           </div>

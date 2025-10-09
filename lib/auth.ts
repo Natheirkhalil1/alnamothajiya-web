@@ -1,20 +1,18 @@
 export interface User {
-  username: string
-  number: string
+  email: string
   password: string
 }
 
 const ADMIN_USER: User = {
-  username: "diaailian",
-  number: "123",
-  password: "12345",
+  email: "admin@namothajia.com",
+  password: "admin123",
 }
 
-export function login(username: string, number: string, password: string): boolean {
-  if (username === ADMIN_USER.username && number === ADMIN_USER.number && password === ADMIN_USER.password) {
+export function login(email: string, password: string): boolean {
+  if (email === ADMIN_USER.email && password === ADMIN_USER.password) {
     if (typeof window !== "undefined") {
       localStorage.setItem("isAuthenticated", "true")
-      localStorage.setItem("username", username)
+      localStorage.setItem("userEmail", email)
     }
     return true
   }
@@ -24,7 +22,7 @@ export function login(username: string, number: string, password: string): boole
 export function logout(): void {
   if (typeof window !== "undefined") {
     localStorage.removeItem("isAuthenticated")
-    localStorage.removeItem("username")
+    localStorage.removeItem("userEmail")
   }
 }
 
@@ -35,9 +33,13 @@ export function isAuthenticated(): boolean {
   return false
 }
 
-export function getUsername(): string | null {
+export function getUserEmail(): string | null {
   if (typeof window !== "undefined") {
-    return localStorage.getItem("username")
+    return localStorage.getItem("userEmail")
   }
   return null
+}
+
+export function getUsername(): string | null {
+  return getUserEmail()
 }

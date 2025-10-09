@@ -1,23 +1,26 @@
-import { Header } from "@/components/header"
+"use client"
+
 import { HeroSlider } from "@/components/hero-slider"
 import { AboutSection } from "@/components/about-section"
 import { GallerySection } from "@/components/gallery-section"
 import { JobsSection } from "@/components/jobs-section"
 import { DepartmentsSection } from "@/components/departments-section"
+import { TestimonialsSection } from "@/components/testimonials-section"
 import { ContactSection } from "@/components/contact-section"
-import { Footer } from "@/components/footer"
+import { LayoutWrapper } from "@/components/layout-wrapper"
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <main className="min-h-screen">
-      <Header />
-      <HeroSlider />
-      <AboutSection />
-      <GallerySection />
-      <JobsSection />
-      <DepartmentsSection />
-      <ContactSection />
-      <Footer />
-    </main>
+    <LayoutWrapper>
+      <main className="min-h-screen">
+        <HeroSlider />
+        <AboutSection />
+        <DepartmentsSection />
+        <GallerySection />
+        <TestimonialsSection />
+        <JobsSection />
+        <ContactSection />
+      </main>
+    </LayoutWrapper>
   )
 }

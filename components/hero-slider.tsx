@@ -4,47 +4,42 @@ import { useState, useEffect } from "react"
 import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/lib/language-context"
+import { getHeroSlides, type HeroSlide } from "@/lib/storage"
 
 export function HeroSlider() {
   const [currentSlide, setCurrentSlide] = useState(0)
   const { language, t } = useLanguage()
-
-  const slides = [
-    {
-      image: "/modern-special-education-school-classroom-with-div.jpg",
-      titleAr: "المدرسة النموذجية",
-      titleEn: "Al Namothajia School",
-      subtitleAr: "رؤية جديدة",
-      subtitleEn: "A New Vision",
-      descriptionAr: "لتعزيز التعليم والإبداع في بيئة مريحة وآمنة",
-      descriptionEn: "To enhance education and creativity in a comfortable and safe environment",
-    },
-    {
-      image: "/happy-special-needs-students-learning-together-wit.jpg",
-      titleAr: "تعليم متميز",
-      titleEn: "Distinguished Education",
-      subtitleAr: "مستقبل واعد",
-      subtitleEn: "Promising Future",
-      descriptionAr: "نبني جيلاً واعياً ومبدعاً لمستقبل أفضل",
-      descriptionEn: "Building a conscious and creative generation for a better future",
-    },
-    {
-      image: "/modern-special-education-school-facilities-with-ad.jpg",
-      titleAr: "بيئة تعليمية حديثة",
-      titleEn: "Modern Learning Environment",
-      subtitleAr: "تقنيات متطورة",
-      subtitleEn: "Advanced Technology",
-      descriptionAr: "نوفر أحدث الوسائل التعليمية لتجربة تعلم فريدة",
-      descriptionEn: "We provide the latest educational tools for a unique learning experience",
-    },
-  ]
+  const [slides, setSlides] = useState<HeroSlide[]>([])
 
   useEffect(() => {
+    const loadSlides = () => {
+      const loadedSlides = getHeroSlides()
+      setSlides(loadedSlides.sort((a, b) => a.order - b.order))
+    }
+
+    loadSlides()
+
+    const handleStorageChange = () => {
+      loadSlides()
+    }
+
+    window.addEventListener("storage", handleStorageChange)
+    window.addEventListener("localStorageChange", handleStorageChange)
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange)
+      window.removeEventListener("localStorageChange", handleStorageChange)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (slides.length === 0) return
+
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length)
-    }, 3000)
+    }, 5000)
     return () => clearInterval(timer)
-  }, [])
+  }, [slides.length])
 
   const goToSlide = (index: number) => {
     setCurrentSlide(index)
@@ -58,27 +53,30 @@ export function HeroSlider() {
     setCurrentSlide((prev) => (prev + 1) % slides.length)
   }
 
+  if (slides.length === 0) {
+    return null
+  }
+
   return (
     <section id="home" className="relative h-screen w-full overflow-hidden">
       {/* Slides */}
       {slides.map((slide, index) => (
         <div
-          key={index}
+          key={slide.id}
           className={`absolute inset-0 transition-opacity duration-1000 ${
             index === currentSlide ? "opacity-100" : "opacity-0"
           }`}
         >
-          <div className="absolute inset-0 bg-gradient-to-l from-background/95 via-background/75 to-background/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/60 to-background/40" />
           <img
             src={slide.image || "/placeholder.svg"}
             alt={language === "ar" ? slide.titleAr : slide.titleEn}
             className="w-full h-full object-cover"
           />
 
-          {/* Content */}
-          <div className="absolute inset-0 flex items-center">
+          <div className="absolute inset-0 flex items-center justify-center">
             <div className="container mx-auto px-4">
-              <div className={`max-w-2xl ${language === "ar" ? "mr-auto" : "ml-auto"}`}>
+              <div className="max-w-4xl mx-auto text-center">
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
                   <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary/20 to-accent/20 backdrop-blur-md rounded-full border border-primary/30 shadow-lg animate-float">
                     <Sparkles className="w-4 h-4 text-primary" />
@@ -92,10 +90,10 @@ export function HeroSlider() {
                       {language === "ar" ? slide.subtitleAr : slide.subtitleEn}
                     </span>
                   </h2>
-                  <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed text-pretty">
+                  <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed text-pretty max-w-3xl mx-auto">
                     {language === "ar" ? slide.descriptionAr : slide.descriptionEn}
                   </p>
-                  <div className="flex gap-4 pt-4">
+                  <div className="flex gap-4 pt-4 justify-center">
                     <Button
                       size="lg"
                       onClick={() => document.getElementById("about")?.scrollIntoView({ behavior: "smooth" })}
@@ -107,7 +105,7 @@ export function HeroSlider() {
                       size="lg"
                       variant="outline"
                       onClick={() => document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" })}
-                      className="text-lg px-8 bg-background/50 backdrop-blur-sm border-2 hover:bg-accent/10 hover:border-accent transition-all duration-300 hover:scale-105"
+                      className="text-lg px-8 border-2 hover:bg-primary/10 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                     >
                       {language === "ar" ? "تواصل معنا" : "Contact Us"}
                     </Button>

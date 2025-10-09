@@ -1,116 +1,153 @@
-import Link from "next/link"
-import { ArrowRight, Calculator, Atom, Microscope, FlaskConical } from "lucide-react"
-import { Button } from "@/components/ui/button"
+"use client"
+
+import { LayoutWrapper } from "@/components/layout-wrapper"
+import { useLanguage } from "@/lib/language-context"
 import { Card } from "@/components/ui/card"
+import { Microscope, Atom, FlaskConical, Calculator } from "lucide-react"
+import { useState, useEffect } from "react"
 
 export default function ScienceDepartmentPage() {
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white py-20">
-        <div className="container mx-auto px-4">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-white/80 hover:text-white mb-6 transition-colors"
-          >
-            <ArrowRight className="w-5 h-5" />
-            <span>العودة للرئيسية</span>
-          </Link>
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-              <Calculator className="w-8 h-8" />
-            </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-balance">القسم العلمي</h1>
-          </div>
-          <p className="text-xl text-white/90 max-w-2xl leading-relaxed text-pretty">
-            تعليم متميز في العلوم والرياضيات مع مختبرات حديثة وبرامج متقدمة
-          </p>
-        </div>
-      </div>
+  const { language } = useLanguage()
+  const [currentSlide, setCurrentSlide] = useState(0)
 
-      {/* Content */}
-      <div className="container mx-auto px-4 py-16">
-        {/* Subjects Grid */}
-        <div className="grid md:grid-cols-4 gap-6 mb-16">
-          {[
-            { icon: Calculator, title: "الرياضيات", color: "from-blue-500 to-blue-600" },
-            { icon: Atom, title: "الفيزياء", color: "from-cyan-500 to-cyan-600" },
-            { icon: FlaskConical, title: "الكيمياء", color: "from-teal-500 to-teal-600" },
-            { icon: Microscope, title: "الأحياء", color: "from-green-500 to-green-600" },
-          ].map((subject, index) => (
-            <Card key={index} className="p-6 text-center hover:shadow-xl transition-shadow group">
-              <div
-                className={`w-16 h-16 bg-gradient-to-br ${subject.color} rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform`}
-              >
-                <subject.icon className="w-8 h-8 text-white" />
+  const slides = [
+    {
+      image: "/science-and-mathematics-classroom-with-modern-tech.jpg",
+      titleAr: "القسم العلمي",
+      titleEn: "Science Department",
+      descAr: "تعليم العلوم والرياضيات بأحدث الأساليب التعليمية",
+      descEn: "Teaching science and mathematics with the latest educational methods",
+    },
+    {
+      image: "/students-in-science-lab-doing-experiments.jpg",
+      titleAr: "مختبرات علمية متطورة",
+      titleEn: "Advanced Science Labs",
+      descAr: "مختبرات مجهزة بأحدث الأجهزة العلمية",
+      descEn: "Laboratories equipped with the latest scientific equipment",
+    },
+    {
+      image: "/mathematics-and-physics-classroom.jpg",
+      titleAr: "تعليم تفاعلي",
+      titleEn: "Interactive Learning",
+      descAr: "أساليب تعليمية تفاعلية لتعزيز الفهم العلمي",
+      descEn: "Interactive teaching methods to enhance scientific understanding",
+    },
+  ]
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length)
+    }, 3000)
+    return () => clearInterval(timer)
+  }, [slides.length])
+
+  return (
+    <LayoutWrapper>
+      <section className="relative h-[500px] overflow-hidden">
+        {slides.map((slide, index) => (
+          <div
+            key={index}
+            className={`absolute inset-0 transition-opacity duration-1000 ${
+              index === currentSlide ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent z-10" />
+            <img
+              src={slide.image || "/placeholder.svg"}
+              alt={language === "ar" ? slide.titleAr : slide.titleEn}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 z-20 flex items-center justify-center">
+              <div className="text-center px-4 max-w-4xl">
+                <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 drop-shadow-lg">
+                  {language === "ar" ? slide.titleAr : slide.titleEn}
+                </h1>
+                <p className="text-xl md:text-2xl text-white/90 drop-shadow-lg">
+                  {language === "ar" ? slide.descAr : slide.descEn}
+                </p>
               </div>
-              <h3 className="text-xl font-bold text-foreground">{subject.title}</h3>
-            </Card>
+            </div>
+          </div>
+        ))}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex gap-2">
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentSlide(index)}
+              className={`w-3 h-3 rounded-full transition-all ${
+                index === currentSlide ? "bg-white w-8" : "bg-white/50"
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
           ))}
         </div>
+      </section>
 
-        {/* Main Content */}
-        <div className="grid lg:grid-cols-2 gap-12 items-center mb-16">
-          <div className="space-y-6">
-            <h2 className="text-3xl font-bold text-foreground">عن القسم العلمي</h2>
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              يقدم القسم العلمي برامج تعليمية متقدمة في الرياضيات والعلوم، مع التركيز على تنمية مهارات التفكير العلمي
-              والتحليلي.
-            </p>
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              نوفر مختبرات علمية حديثة مجهزة بأحدث الأدوات والتقنيات، مما يتيح للطلاب إجراء تجارب عملية متقدمة.
-            </p>
-            <div className="space-y-3 pt-4">
-              <h3 className="font-bold text-foreground">مميزات القسم:</h3>
-              <ul className="space-y-2">
-                {[
-                  "مناهج علمية متطورة ومحدثة",
-                  "مختبرات مجهزة بأحدث التقنيات",
-                  "معلمون متخصصون وذوو خبرة",
-                  "مشاريع بحثية ومسابقات علمية",
-                  "برامج إثرائية للطلاب المتميزين",
-                  "ربط العلوم بالحياة العملية",
-                ].map((item, index) => (
-                  <li key={index} className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full" />
-                    <span className="text-muted-foreground">{item}</span>
-                  </li>
-                ))}
-              </ul>
+      <main className="min-h-screen pt-24 pb-16">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-12">
+              <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+                {language === "ar" ? "القسم العلمي" : "Science Department"}
+              </h1>
+              <p className="text-xl text-muted-foreground">
+                {language === "ar"
+                  ? "تعليم العلوم والرياضيات بأحدث الأساليب"
+                  : "Teaching science and mathematics with the latest methods"}
+              </p>
             </div>
-          </div>
-          <div className="relative">
-            <div className="absolute -inset-4 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-3xl blur-2xl" />
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl">
-              <img src="/modern-science-laboratory.jpg" alt="القسم العلمي" className="w-full h-auto" />
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {[
+                {
+                  icon: Microscope,
+                  title: language === "ar" ? "مختبرات حديثة" : "Modern Labs",
+                  description:
+                    language === "ar"
+                      ? "مختبرات علمية مجهزة بأحدث الأجهزة"
+                      : "Scientific laboratories equipped with the latest devices",
+                },
+                {
+                  icon: Atom,
+                  title: language === "ar" ? "تجارب عملية" : "Practical Experiments",
+                  description:
+                    language === "ar"
+                      ? "تجارب علمية عملية لتعزيز الفهم"
+                      : "Practical scientific experiments to enhance understanding",
+                },
+                {
+                  icon: FlaskConical,
+                  title: language === "ar" ? "كيمياء وفيزياء" : "Chemistry & Physics",
+                  description:
+                    language === "ar"
+                      ? "تدريس الكيمياء والفيزياء بطرق تفاعلية"
+                      : "Teaching chemistry and physics with interactive methods",
+                },
+                {
+                  icon: Calculator,
+                  title: language === "ar" ? "رياضيات متقدمة" : "Advanced Mathematics",
+                  description:
+                    language === "ar"
+                      ? "برامج رياضيات متقدمة لجميع المستويات"
+                      : "Advanced mathematics programs for all levels",
+                },
+              ].map((item, index) => (
+                <Card key={index} className="p-6 hover:shadow-lg transition-shadow">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center flex-shrink-0">
+                      <item.icon className="w-6 h-6 text-primary-foreground" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-foreground mb-2">{item.title}</h3>
+                      <p className="text-muted-foreground">{item.description}</p>
+                    </div>
+                  </div>
+                </Card>
+              ))}
             </div>
           </div>
         </div>
-
-        {/* Achievements */}
-        <Card className="p-12 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 mb-16">
-          <h2 className="text-3xl font-bold text-foreground text-center mb-8">إنجازاتنا</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { number: "15+", label: "جائزة علمية" },
-              { number: "95%", label: "نسبة النجاح" },
-              { number: "50+", label: "مشروع بحثي" },
-            ].map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="text-5xl font-bold text-primary mb-2">{stat.number}</div>
-                <div className="text-muted-foreground">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        {/* CTA */}
-        <div className="text-center">
-          <Link href="/#contact">
-            <Button size="lg">تواصل معنا للاستفسار</Button>
-          </Link>
-        </div>
-      </div>
-    </div>
+      </main>
+    </LayoutWrapper>
   )
 }
