@@ -108,12 +108,13 @@ export interface GalleryImage {
   titleEn: string
   descriptionAr: string
   descriptionEn: string
+  category?: string // Made category optional with specific types
   order: number
 }
 
 export interface DepartmentContent {
   id: string
-  type: "medical" | "science" | "experimental"
+  type: "medical" | "science" | "experimental" | "technical" | "vocational" | "occupational" | "housing" | "activities"
   titleAr: string
   titleEn: string
   descriptionAr: string
@@ -136,6 +137,16 @@ export interface ContactInfo {
   responsiblePersonEn: string
   responsibleTitle: string
   responsibleTitleEn: string
+}
+
+function dispatchStorageChange(key: string, value: any): void {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(
+      new CustomEvent("localStorageChange", {
+        detail: { key, value },
+      }),
+    )
+  }
 }
 
 export function saveEmploymentApplication(data: Omit<EmploymentApplication, "id" | "submittedAt">): void {
@@ -588,6 +599,7 @@ export function saveHeroSlide(data: Omit<HeroSlide, "id">): void {
     }
     slides.push(newSlide)
     localStorage.setItem("heroSlides", JSON.stringify(slides))
+    dispatchStorageChange("heroSlides", slides)
   }
 }
 
@@ -598,6 +610,7 @@ export function updateHeroSlide(id: string, data: Partial<HeroSlide>): void {
     if (index !== -1) {
       slides[index] = { ...slides[index], ...data }
       localStorage.setItem("heroSlides", JSON.stringify(slides))
+      dispatchStorageChange("heroSlides", slides)
     }
   }
 }
@@ -606,176 +619,159 @@ export function deleteHeroSlide(id: string): void {
   if (typeof window !== "undefined") {
     const slides = getHeroSlides().filter((s) => s.id !== id)
     localStorage.setItem("heroSlides", JSON.stringify(slides))
+    dispatchStorageChange("heroSlides", slides)
   }
 }
 
-// Functions for managing About Content
-export function getAboutContent(): AboutContent | null {
-  if (typeof window !== "undefined") {
-    const data = localStorage.getItem("aboutContent")
-    if (data) {
-      return JSON.parse(data)
-    }
-    // المحتوى الافتراضي
-    const defaultContent: AboutContent = {
-      id: "1",
-      titleAr: "المدرسة النموذجية للتربية الخاصة",
-      titleEn: "Al Namothajia School for Special Education",
-      descriptionAr:
-        "مؤسسة تعليمية رائدة مع أكثر من 30 عاماً من التميز في تقديم برامج تعليمية وتأهيلية شاملة للأفراد من ذوي الإعاقة. تهدف المدرسة لتوفير برامج تراعي الفروق الفردية وتصل بالطلاب إلى أقصى ما تسمح به إمكانياتهم من نمو وتحصيل واستقلالية ومساعدتهم على الاندماج بالمجتمع. حاصلون على شهادة ISO 9001:2015 ونخدم الفئات العمرية من 5-55 سنة.",
-      descriptionEn:
-        "A leading educational institution with over 30 years of excellence in providing comprehensive educational and rehabilitation programs for individuals with disabilities. ISO 9001:2015 certified, serving age groups from 5-55 years.",
-      image: "/modern-special-education-school-building-exterior-.jpg",
-      features: [
-        {
-          titleAr: "رسالتنا",
-          titleEn: "Our Mission",
-          descriptionAr: "توفير برامج تعليمية وتأهيلية تراعي الفروق الفردية وتصل بالطلاب إلى أقصى إمكانياتهم",
-          descriptionEn: "Providing educational and rehabilitation programs that respect individual differences",
-        },
-        {
-          titleAr: "رؤيتنا",
-          titleEn: "Our Vision",
-          descriptionAr: "أن نكون المدرسة الرائدة في التربية الخاصة على مستوى المنطقة والعالم",
-          descriptionEn: "To be the leading school in special education regionally and globally",
-        },
-        {
-          titleAr: "الاعتماد الدولي",
-          titleEn: "International Accreditation",
-          descriptionAr: "حاصلون على شهادة ISO 9001:2015 لضمان الجودة في جميع خدماتنا",
-          descriptionEn: "ISO 9001:2015 certified for quality assurance in all our services",
-        },
-        {
-          titleAr: "الفئات المستهدفة",
-          titleEn: "Target Groups",
-          descriptionAr: "نخدم جميع فئات الإعاقة من عمر 5-55 سنة من مختلف بلدان العالم",
-          descriptionEn: "Serving all disability categories aged 5-55 from various countries",
-        },
-      ],
-    }
-    localStorage.setItem("aboutContent", JSON.stringify(defaultContent))
-    return defaultContent
-  }
-  return null
-}
-
-export function updateAboutContent(data: AboutContent): void {
-  if (typeof window !== "undefined") {
-    localStorage.setItem("aboutContent", JSON.stringify(data))
-  }
-}
-
-// Functions for managing Gallery Images
-export function getGalleryImages(): GalleryImage[] {
-  if (typeof window !== "undefined") {
-    const data = localStorage.getItem("galleryImages")
-    if (data) {
-      return JSON.parse(data)
-    }
-    // الصور الافتراضية
-    const defaultImages: GalleryImage[] = [
-      {
-        id: "1",
-        image: "/modern-special-education-school-classroom-with-div.jpg",
-        titleAr: "الفصول الدراسية",
-        titleEn: "Classrooms",
-        descriptionAr: "فصول دراسية حديثة مجهزة بأحدث التقنيات التعليمية",
-        descriptionEn: "Modern classrooms equipped with the latest educational technology",
-        order: 1,
-      },
-      {
-        id: "2",
-        image: "/happy-special-needs-students-learning-together-wit.jpg",
-        titleAr: "الأنشطة التعليمية",
-        titleEn: "Educational Activities",
-        descriptionAr: "أنشطة تعليمية متنوعة تنمي مهارات الطلاب",
-        descriptionEn: "Diverse educational activities that develop students' skills",
-        order: 2,
-      },
-      {
-        id: "3",
-        image: "/modern-special-education-school-facilities-with-ad.jpg",
-        titleAr: "المرافق المدرسية",
-        titleEn: "School Facilities",
-        descriptionAr: "مرافق حديثة توفر بيئة تعليمية مريحة",
-        descriptionEn: "Modern facilities providing a comfortable learning environment",
-        order: 3,
-      },
-    ]
-    localStorage.setItem("galleryImages", JSON.stringify(defaultImages))
-    return defaultImages
-  }
-  return []
-}
-
-export function saveGalleryImage(data: Omit<GalleryImage, "id">): void {
-  if (typeof window !== "undefined") {
-    const images = getGalleryImages()
-    const newImage: GalleryImage = {
-      ...data,
-      id: Date.now().toString(),
-    }
-    images.push(newImage)
-    localStorage.setItem("galleryImages", JSON.stringify(images))
-  }
-}
-
-export function updateGalleryImage(id: string, data: Partial<GalleryImage>): void {
-  if (typeof window !== "undefined") {
-    const images = getGalleryImages()
-    const index = images.findIndex((img) => img.id === id)
-    if (index !== -1) {
-      images[index] = { ...images[index], ...data }
-      localStorage.setItem("galleryImages", JSON.stringify(images))
-    }
-  }
-}
-
-export function deleteGalleryImage(id: string): void {
-  if (typeof window !== "undefined") {
-    const images = getGalleryImages().filter((img) => img.id !== id)
-    localStorage.setItem("galleryImages", JSON.stringify(images))
-  }
-}
-
-// Functions for managing Department Contents
 export function getDepartmentContents(): DepartmentContent[] {
   if (typeof window !== "undefined") {
     const data = localStorage.getItem("departmentContents")
+
     if (data) {
-      return JSON.parse(data)
+      const existingContents = JSON.parse(data)
+      // إذا كان عدد الأقسام أقل من 6 أو أكثر من 8، نقوم بإعادة تحميل البيانات الافتراضية
+      if (existingContents.length < 6 || existingContents.length > 8) {
+        const defaultContents: DepartmentContent[] = [
+          {
+            id: "1",
+            type: "technical",
+            titleAr: "القسم الفني",
+            titleEn: "Technical Department",
+            descriptionAr:
+              "القسم الفني هو العمود الفقري للمدرسة، يضم 8 أقسام متخصصة تعمل بتكامل تام لتقديم خدمات تعليمية وتأهيلية شاملة",
+            descriptionEn:
+              "The Technical Department is the backbone of the school, comprising 8 specialized sections working in complete integration",
+            image: "/professional-psychologist-conducting-assessment-wi.jpg",
+          },
+          {
+            id: "2",
+            type: "vocational",
+            titleAr: "التأهيل المهني",
+            titleEn: "Vocational Rehabilitation",
+            descriptionAr:
+              "تدريب الطلاب على مهن معينة تساعد في إعدادهم لسوق العمل، يشمل الزراعة والحدادة والنجارة والتدبير المنزلي والخياطة",
+            descriptionEn:
+              "Training students in specific professions to prepare them for the job market, including agriculture, blacksmithing, carpentry, home management, and sewing",
+            image: "/special-needs-students-learning-agriculture-in-gre.jpg",
+          },
+          {
+            id: "3",
+            type: "occupational",
+            titleAr: "العلاج الوظيفي",
+            titleEn: "Occupational Therapy",
+            descriptionAr:
+              "يتناول جميع المهارات الوظيفية التي تساعد الطالب لتخطي متطلبات الحياة اليومية، يشمل التسوق والتكامل الحسي والجلسات الفردية",
+            descriptionEn:
+              "Addresses all functional skills that help students overcome daily life requirements, including shopping, sensory integration, and individual sessions",
+            image: "/special-needs-students-learning-shopping-skills-in.jpg",
+          },
+          {
+            id: "4",
+            type: "medical",
+            titleAr: "القسم الطبي",
+            titleEn: "Medical Department",
+            descriptionAr:
+              "قسم طبي متكامل يوفر الرعاية الصحية للطلاب مع فريق طبي متخصص، يشمل العيادة والصيدلية والمتابعة العلاجية",
+            descriptionEn:
+              "Comprehensive medical department providing healthcare for students with specialized medical team, including clinic, pharmacy, and medical follow-up",
+            image: "/modern-medical-clinic-for-special-needs-school-wit.jpg",
+          },
+          {
+            id: "5",
+            type: "housing",
+            titleAr: "السكن الداخلي",
+            titleEn: "Internal Housing",
+            descriptionAr:
+              "شقق سكنية مجهزة بتجهيزات فندقية مع خدمات شاملة تشمل النظافة والمصبغة والمطبخ والمكالمات المرئية والمراقبة",
+            descriptionEn:
+              "Residential apartments equipped with hotel furnishings and comprehensive services including cleaning, laundry, kitchen, video calls, and surveillance",
+            image: "/comfortable-residential-apartment-for-special-need.jpg",
+          },
+          {
+            id: "6",
+            type: "activities",
+            titleAr: "الأنشطة اللامنهجية",
+            titleEn: "Extracurricular Activities",
+            descriptionAr:
+              "رحلات أسبوعية ونشاطات ترفيهية متنوعة، بالإضافة إلى قسم الحاسوب والعلاج الطبيعي لتنمية المهارات التقنية والحركية",
+            descriptionEn:
+              "Weekly trips and various recreational activities, plus Computer and Physical Therapy sections for developing technical and motor skills",
+            image: "/special-needs-students-on-educational-field-trip-w.jpg",
+          },
+        ]
+        localStorage.setItem("departmentContents", JSON.stringify(defaultContents))
+        return defaultContents
+      }
+      return existingContents
     }
-    // المحتوى الافتراضي
+
+    // المحتوى الافتراضي إذا لم توجد بيانات
     const defaultContents: DepartmentContent[] = [
       {
         id: "1",
-        type: "medical",
-        titleAr: "القسم الطبي",
-        titleEn: "Medical Department",
-        descriptionAr: "قسم طبي متكامل يوفر الرعاية الصحية للطلاب مع فريق طبي متخصص ومجهز بأحدث المعدات الطبية",
+        type: "technical",
+        titleAr: "القسم الفني",
+        titleEn: "Technical Department",
+        descriptionAr:
+          "القسم الفني هو العمود الفقري للمدرسة، يضم 8 أقسام متخصصة تعمل بتكامل تام لتقديم خدمات تعليمية وتأهيلية شاملة",
         descriptionEn:
-          "Comprehensive medical department providing healthcare for students with specialized medical team",
-        image: "/school-medical-clinic-with-modern-equipment-for-sp.jpg",
+          "The Technical Department is the backbone of the school, comprising 8 specialized sections working in complete integration",
+        image: "/professional-psychologist-conducting-assessment-wi.jpg",
       },
       {
         id: "2",
-        type: "science",
-        titleAr: "القسم العلمي",
-        titleEn: "Scientific Department",
-        descriptionAr: "قسم متخصص في العلوم والرياضيات مع مختبرات حديثة وبرامج تعليمية متقدمة لتنمية المهارات العلمية",
+        type: "vocational",
+        titleAr: "التأهيل المهني",
+        titleEn: "Vocational Rehabilitation",
+        descriptionAr:
+          "تدريب الطلاب على مهن معينة تساعد في إعدادهم لسوق العمل، يشمل الزراعة والحدادة والنجارة والتدبير المنزلي والخياطة",
         descriptionEn:
-          "Specialized department in science and mathematics with modern laboratories and advanced programs",
-        image: "/science-and-mathematics-classroom-with-modern-tech.jpg",
+          "Training students in specific professions to prepare them for the job market, including agriculture, blacksmithing, carpentry, home management, and sewing",
+        image: "/special-needs-students-learning-agriculture-in-gre.jpg",
       },
       {
         id: "3",
-        type: "experimental",
-        titleAr: "القسم التجريبي",
-        titleEn: "Experimental Department",
-        descriptionAr: "قسم مخصص للتجارب العملية والأبحاث العلمية مع إشراف متخصص لتطوير مهارات البحث والاستكشاف",
+        type: "occupational",
+        titleAr: "العلاج الوظيفي",
+        titleEn: "Occupational Therapy",
+        descriptionAr:
+          "يتناول جميع المهارات الوظيفية التي تساعد الطالب لتخطي متطلبات الحياة اليومية، يشمل التسوق والتكامل الحسي والجلسات الفردية",
         descriptionEn:
-          "Department dedicated to practical experiments and scientific research with specialized supervision",
-        image: "/science-laboratory-with-experiments-for-special-ne.jpg",
+          "Addresses all functional skills that help students overcome daily life requirements, including shopping, sensory integration, and individual sessions",
+        image: "/special-needs-students-learning-shopping-skills-in.jpg",
+      },
+      {
+        id: "4",
+        type: "medical",
+        titleAr: "القسم الطبي",
+        titleEn: "Medical Department",
+        descriptionAr:
+          "قسم طبي متكامل يوفر الرعاية الصحية للطلاب مع فريق طبي متخصص، يشمل العيادة والصيدلية والمتابعة العلاجية",
+        descriptionEn:
+          "Comprehensive medical department providing healthcare for students with specialized medical team, including clinic, pharmacy, and medical follow-up",
+        image: "/modern-medical-clinic-for-special-needs-school-wit.jpg",
+      },
+      {
+        id: "5",
+        type: "housing",
+        titleAr: "السكن الداخلي",
+        titleEn: "Internal Housing",
+        descriptionAr:
+          "شقق سكنية مجهزة بتجهيزات فندقية مع خدمات شاملة تشمل النظافة والمصبغة والمطبخ والمكالمات المرئية والمراقبة",
+        descriptionEn:
+          "Residential apartments equipped with hotel furnishings and comprehensive services including cleaning, laundry, kitchen, video calls, and surveillance",
+        image: "/comfortable-residential-apartment-for-special-need.jpg",
+      },
+      {
+        id: "6",
+        type: "activities",
+        titleAr: "الأنشطة اللامنهجية",
+        titleEn: "Extracurricular Activities",
+        descriptionAr:
+          "رحلات أسبوعية ونشاطات ترفيهية متنوعة، بالإضافة إلى قسم الحاسوب والعلاج الطبيعي لتنمية المهارات التقنية والحركية",
+        descriptionEn:
+          "Weekly trips and various recreational activities, plus Computer and Physical Therapy sections for developing technical and motor skills",
+        image: "/special-needs-students-on-educational-field-trip-w.jpg",
       },
     ]
     localStorage.setItem("departmentContents", JSON.stringify(defaultContents))
@@ -791,11 +787,11 @@ export function updateDepartmentContent(id: string, data: Partial<DepartmentCont
     if (index !== -1) {
       contents[index] = { ...contents[index], ...data }
       localStorage.setItem("departmentContents", JSON.stringify(contents))
+      dispatchStorageChange("departmentContents", contents)
     }
   }
 }
 
-// Functions for managing Contact Info
 export function getContactInfo(): ContactInfo | null {
   if (typeof window !== "undefined") {
     const data = localStorage.getItem("contactInfo")
@@ -828,5 +824,203 @@ export function getContactInfo(): ContactInfo | null {
 export function updateContactInfo(data: ContactInfo): void {
   if (typeof window !== "undefined") {
     localStorage.setItem("contactInfo", JSON.stringify(data))
+    dispatchStorageChange("contactInfo", data)
+  }
+}
+
+export function getAboutContent(): AboutContent | null {
+  if (typeof window !== "undefined") {
+    const data = localStorage.getItem("aboutContent")
+    if (data) {
+      return JSON.parse(data)
+    }
+    // المحتوى الافتراضي لقسم "عن المدرسة"
+    const defaultContent: AboutContent = {
+      id: "1",
+      titleAr: "المدرسة النموذجية للتربية الخاصة",
+      titleEn: "Al Namothajia School for Special Education",
+      descriptionAr:
+        "مؤسسة تعليمية رائدة تأسست عام 1994، نقدم خدمات تعليمية وتأهيلية متميزة لذوي الاحتياجات الخاصة في بيئة آمنة ومحفزة تراعي الفروق الفردية وتطور قدرات كل طالب",
+      descriptionEn:
+        "A leading educational institution established in 1994, providing distinguished educational and rehabilitation services for people with special needs in a safe and stimulating environment",
+      image: "/modern-special-education-school-building-exterior.jpg",
+      features: [
+        {
+          titleAr: "رؤيتنا",
+          titleEn: "Our Vision",
+          descriptionAr: "أن نكون المؤسسة الرائدة في تقديم خدمات التربية الخاصة على مستوى المنطقة",
+          descriptionEn: "To be the leading institution in providing special education services in the region",
+        },
+        {
+          titleAr: "رسالتنا",
+          titleEn: "Our Mission",
+          descriptionAr: "تقديم برامج تعليمية وتأهيلية شاملة تمكن ذوي الاحتياجات الخاصة من تحقيق أقصى إمكانياتهم",
+          descriptionEn:
+            "Providing comprehensive educational and rehabilitation programs that enable people with special needs to achieve their full potential",
+        },
+        {
+          titleAr: "قيمنا",
+          titleEn: "Our Values",
+          descriptionAr: "الاحترام، التميز، الشمولية، والالتزام بأعلى معايير الجودة في التعليم والرعاية",
+          descriptionEn: "Respect, excellence, inclusivity, and commitment to the highest standards of quality",
+        },
+        {
+          titleAr: "فريقنا",
+          titleEn: "Our Team",
+          descriptionAr: "كادر متخصص ومؤهل من المعلمين والأخصائيين ذوي الخبرة في التربية الخاصة",
+          descriptionEn: "Specialized and qualified staff of teachers and specialists experienced in special education",
+        },
+        {
+          titleAr: "مرافقنا",
+          titleEn: "Our Facilities",
+          descriptionAr: "بنية تحتية حديثة ومجهزة بأحدث التقنيات والوسائل التعليمية المتطورة",
+          descriptionEn: "Modern infrastructure equipped with the latest technologies and advanced educational tools",
+        },
+        {
+          titleAr: "شراكاتنا",
+          titleEn: "Our Partnerships",
+          descriptionAr: "تعاون مستمر مع المؤسسات المحلية والدولية لتطوير خدماتنا التعليمية",
+          descriptionEn: "Continuous collaboration with local and international institutions to develop our services",
+        },
+      ],
+    }
+    localStorage.setItem("aboutContent", JSON.stringify(defaultContent))
+    return defaultContent
+  }
+  return null
+}
+
+export function updateAboutContent(data: AboutContent): void {
+  if (typeof window !== "undefined") {
+    localStorage.setItem("aboutContent", JSON.stringify(data))
+    dispatchStorageChange("aboutContent", data)
+  }
+}
+
+export function getGalleryImages(): GalleryImage[] {
+  if (typeof window !== "undefined") {
+    const data = localStorage.getItem("galleryImages")
+    if (data) {
+      return JSON.parse(data)
+    }
+    // الصور الافتراضية للمعرض
+    const defaultImages: GalleryImage[] = [
+      {
+        id: "1",
+        image: "/modern-school-classroom-with-students.jpg",
+        titleAr: "الفصول الدراسية الحديثة",
+        titleEn: "Modern Classrooms",
+        descriptionAr: "فصول دراسية مجهزة بأحدث التقنيات التعليمية",
+        descriptionEn: "Classrooms equipped with the latest educational technologies",
+        category: "المرافق",
+        order: 1,
+      },
+      {
+        id: "2",
+        image: "/happy-students-learning-together.jpg",
+        titleAr: "طلاب سعداء",
+        titleEn: "Happy Students",
+        descriptionAr: "طلابنا يتعلمون في بيئة محفزة وداعمة",
+        descriptionEn: "Our students learn in a stimulating and supportive environment",
+        category: "الأنشطة",
+        order: 2,
+      },
+      {
+        id: "3",
+        image: "/modern-school-facilities-and-technology.jpg",
+        titleAr: "التقنيات المتطورة",
+        titleEn: "Advanced Technology",
+        descriptionAr: "نستخدم أحدث التقنيات في التعليم",
+        descriptionEn: "We use the latest technologies in education",
+        category: "المرافق",
+        order: 3,
+      },
+      {
+        id: "4",
+        image: "/students-in-science-lab.jpg",
+        titleAr: "مختبر العلوم",
+        titleEn: "Science Laboratory",
+        descriptionAr: "مختبرات علمية مجهزة للتجارب العملية",
+        descriptionEn: "Scientific laboratories equipped for practical experiments",
+        category: "المرافق",
+        order: 4,
+      },
+      {
+        id: "5",
+        image: "/school-library-with-books.jpg",
+        titleAr: "المكتبة المدرسية",
+        titleEn: "School Library",
+        descriptionAr: "مكتبة غنية بالكتب والمراجع التعليمية",
+        descriptionEn: "Library rich with books and educational references",
+        category: "المرافق",
+        order: 5,
+      },
+      {
+        id: "6",
+        image: "/art-class-students-painting.jpg",
+        titleAr: "حصة الفنون",
+        titleEn: "Art Class",
+        descriptionAr: "تنمية المواهب الفنية والإبداعية",
+        descriptionEn: "Developing artistic and creative talents",
+        category: "الأنشطة",
+        order: 6,
+      },
+      {
+        id: "7",
+        image: "/computer-lab-students.jpg",
+        titleAr: "مختبر الحاسوب",
+        titleEn: "Computer Lab",
+        descriptionAr: "تعليم المهارات التقنية والبرمجة",
+        descriptionEn: "Teaching technical skills and programming",
+        category: "المرافق",
+        order: 7,
+      },
+      {
+        id: "8",
+        image: "/gallery-hero-4.jpg",
+        titleAr: "الأنشطة الرياضية",
+        titleEn: "Sports Activities",
+        descriptionAr: "برامج رياضية متنوعة لتنمية المهارات البدنية",
+        descriptionEn: "Various sports programs to develop physical skills",
+        category: "الأنشطة",
+        order: 8,
+      },
+    ]
+    localStorage.setItem("galleryImages", JSON.stringify(defaultImages))
+    return defaultImages
+  }
+  return []
+}
+
+export function saveGalleryImage(data: Omit<GalleryImage, "id">): void {
+  if (typeof window !== "undefined") {
+    const images = getGalleryImages()
+    const newImage: GalleryImage = {
+      ...data,
+      id: Date.now().toString(),
+    }
+    images.push(newImage)
+    localStorage.setItem("galleryImages", JSON.stringify(images))
+    dispatchStorageChange("galleryImages", images)
+  }
+}
+
+export function updateGalleryImage(id: string, data: Partial<GalleryImage>): void {
+  if (typeof window !== "undefined") {
+    const images = getGalleryImages()
+    const index = images.findIndex((img) => img.id === id)
+    if (index !== -1) {
+      images[index] = { ...images[index], ...data }
+      localStorage.setItem("galleryImages", JSON.stringify(images))
+      dispatchStorageChange("galleryImages", images)
+    }
+  }
+}
+
+export function deleteGalleryImage(id: string): void {
+  if (typeof window !== "undefined") {
+    const images = getGalleryImages().filter((img) => img.id !== id)
+    localStorage.setItem("galleryImages", JSON.stringify(images))
+    dispatchStorageChange("galleryImages", images)
   }
 }

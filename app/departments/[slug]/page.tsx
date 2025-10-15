@@ -456,9 +456,9 @@ const departmentsData = {
     welcomeAr: "مرحباً بكم في قسم الأنشطة اللامنهجية - حيث المتعة والتعلم",
     welcomeEn: "Welcome to Extracurricular Activities - Where Fun Meets Learning",
     descriptionAr:
-      "يتم في هذا القسم تنظيم رحلات أسبوعية للطلاب خارج المدرسة وترتيب عملية نقلهم وحاجاتهم في الرحلة. نقدم مجموعة متنوعة من الأنشطة الترفيهية والتعليمية التي تساعد على تنمية المهارات الاجتماعية والترفيهية للطلاب.",
+      "يتم في هذا القسم تنظيم رحلات أسبوعية للطلاب خارج المدرسة وترتيب عملية نقلهم وحاجاتهم في الرحلة. بالإضافة إلى قسم الحاسوب لتعليم المهارات التقنية والبرمجة، وقسم العلاج الطبيعي لمعالجة وتأهيل ذوي الإعاقة الحركية والجسدية.",
     descriptionEn:
-      "In this section, weekly trips are organized for students outside the school, arranging their transportation and needs during the trip. We offer a variety of recreational and educational activities that help develop students' social and recreational skills.",
+      "In this section, weekly trips are organized for students outside the school, arranging their transportation and needs. Plus Computer section for teaching technical skills and programming, and Physical Therapy section for treating and rehabilitating motor and physical disabilities.",
     heroSlides: [
       {
         image: "/special-needs-students-on-educational-field-trip-w.jpg",
@@ -468,18 +468,18 @@ const departmentsData = {
         descriptionEn: "Organized recreational and educational trips",
       },
       {
-        image: "/special-needs-students-participating-in-recreation.jpg",
-        titleAr: "الأنشطة الترفيهية",
-        titleEn: "Recreational Activities",
-        descriptionAr: "أنشطة متنوعة لتنمية المهارات الاجتماعية",
-        descriptionEn: "Various activities for developing social skills",
+        image: "/special-needs-students-learning-computer-skills-in.jpg",
+        titleAr: "قسم الحاسوب",
+        titleEn: "Computer Section",
+        descriptionAr: "تعليم المهارات التقنية والبرمجة",
+        descriptionEn: "Teaching technical skills and programming",
       },
       {
-        image: "/special-needs-students-celebrating-special-event-w.jpg",
-        titleAr: "الفعاليات الخاصة",
-        titleEn: "Special Events",
-        descriptionAr: "احتفالات ومناسبات خاصة للطلاب",
-        descriptionEn: "Celebrations and special occasions for students",
+        image: "/hydrotherapy-pool-with-jacuzzi-for-special-needs-s.jpg",
+        titleAr: "العلاج الطبيعي",
+        titleEn: "Physical Therapy",
+        descriptionAr: "معالجة وتأهيل ذوي الإعاقة الحركية",
+        descriptionEn: "Treatment and rehabilitation of motor disabilities",
       },
     ],
     subsections: [
@@ -500,11 +500,49 @@ const departmentsData = {
         descriptionEn: "Various extracurricular activities that help with adaptation and social integration.",
       },
       {
+        icon: Laptop,
+        titleAr: "قسم الحاسوب",
+        titleEn: "Computer Section",
+        descriptionAr:
+          "يقدم هذا القسم للطلاب والطالبات فرص تعلم المهارات الأساسية، مثل التحكم بحركة الماوس والتعرف على أجزاء الحاسوب. وكذلك التعامل مع برنامج فوتوشوب وبرامج تعديل الصور. حيث يعمل الفريق الفني المشرف بالقسم على توظيف هذه المهارات في النواحي التعليمية والنواحي الترفيهية وفقاً لقدرات كل طالب على حدى.",
+        descriptionEn:
+          "This section offers students opportunities to learn basic skills, such as mouse control and computer parts recognition. As well as dealing with Photoshop and image editing programs. The technical team supervising the section works to employ these skills in educational and recreational aspects according to each student's abilities.",
+      },
+      {
+        icon: Brain,
+        titleAr: "قسم الإلكترونيات والروبوت",
+        titleEn: "Electronics and Robotics Section",
+        descriptionAr:
+          "توفر المدرسة بيئة مخبرية عملية وعلمية متخصصة بتعليم علوم الروبوت (وهو فرع من فروع الفيزياء والهندسة)؛ ويهدف هذا المختبر إلى تطوير مهارات التفكير لدى الطلبة ذوي الإعاقة، واكتشاف مواطن القوة والعمل على تطويرها، حيث يقوم الطالب ببناء نماذج مصغرة (روبوتات) لتطبيقات في المجالات الصناعية والعلمية.",
+        descriptionEn:
+          "The school provides a practical and scientific laboratory environment specialized in teaching robotics (a branch of physics and engineering); this laboratory aims to develop thinking skills for students with disabilities, discover strengths and work on developing them, where the student builds miniature models (robots) for applications in industrial and scientific fields.",
+      },
+      {
+        icon: Activity,
+        titleAr: "العلاج الطبيعي",
+        titleEn: "Physical Therapy",
+        descriptionAr:
+          "هو أحد أقسام المدرسة الذي يختص بمعالجة وتأهيل ذوي الإعاقة الحركية والجسدية لتنمية القدرات الحركية والوظيفية، وتمكين الأفراد على الاعتماد على أنفسهم في نواحي الحياة المختلفة، ويتوفر في المدرسة غرفتين علاج طبيعي غرفة للذكور وأخرى للإناث.",
+        descriptionEn:
+          "One of the school sections specializing in treating and rehabilitating those with motor and physical disabilities to develop motor and functional abilities, enabling individuals to depend on themselves in various aspects of life. The school has two physical therapy rooms, one for males and one for females.",
+      },
+      {
+        icon: Target,
+        titleAr: "العلاج المائي",
+        titleEn: "Hydrotherapy",
+        descriptionAr:
+          "يتضمن الجاكوزي والبركة المائية، يتم فيه استخدام الماء بدرجات حرارة متفاوتة لغايات صحية متنوعة، يعتبر هذا القسم من أهم العلاجات الطبيعية لتخفيف الآلام والأعراض، حيث يتم معالجة المشاكل العضوية والتنفسية والاسترخاء الجسدي وإعادة التأهيل البدني.",
+        descriptionEn:
+          "Includes jacuzzi and water pool, where water is used at varying temperatures for various health purposes. This section is one of the most important natural treatments for pain and symptom relief, treating organic and respiratory problems, physical relaxation, and physical rehabilitation.",
+      },
+      {
         icon: Heart,
-        titleAr: "الفعاليات الترفيهية",
-        titleEn: "Recreational Events",
-        descriptionAr: "احتفالات ومناسبات خاصة تعزز روح الفريق والانتماء.",
-        descriptionEn: "Celebrations and special occasions that enhance team spirit and belonging.",
+        titleAr: "التأهيل الرياضي العلاجي",
+        titleEn: "Therapeutic Sports Rehabilitation",
+        descriptionAr:
+          "يعمل قسم التأهيل الرياضي لرفع مستوى الأداء البدني، وممارسة تمرينات وألعاب تسهم في تطور مختلف جوانب اللياقة البدنية لدى طلاب الإعاقة ويتوفر في المدرسة صالتي أنشطة وألعاب وملعبين خارجيين.",
+        descriptionEn:
+          "The sports rehabilitation section works to raise the level of physical performance, practicing exercises and games that contribute to the development of various aspects of physical fitness for students with disabilities. The school has two activity and game halls and two outdoor playgrounds.",
       },
     ],
   },
