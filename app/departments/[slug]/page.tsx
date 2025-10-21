@@ -75,6 +75,7 @@ const departmentsData = {
         icon: Stethoscope,
         titleAr: "العيادة",
         titleEn: "Clinic",
+        image: "/modern-medical-clinic-for-special-needs-school-wit.jpg",
         descriptionAr:
           "تتميز العيادة بقسم طبي مجهز بكوادر طبية ذوي كفاءات (أطباء وممرضين متواجدين على مدار الساعة)، وفيها معدات طبية شاملة لجميع الحالات الطارئة واليومية، ويتوفر فيها سيارة إسعاف مجهزة بكامل لوازم الإسعافات الأولية على مدار الساعة.",
         descriptionEn:
@@ -84,6 +85,7 @@ const departmentsData = {
         icon: Pill,
         titleAr: "الصيدلية",
         titleEn: "Pharmacy",
+        image: "/school-pharmacy-with-organized-medications-and-pha.jpg",
         descriptionAr: "تحتوي الصيدلية على جميع الأدوية التي يحتاجها الطلاب، مصنفة حسب اسم الطالب، ومحفوظة إلكترونياً.",
         descriptionEn:
           "The pharmacy contains all medications needed by students, classified by student name, and stored electronically.",
@@ -92,6 +94,7 @@ const departmentsData = {
         icon: Activity,
         titleAr: "المتابعة الصحية",
         titleEn: "Health Monitoring",
+        image: "/medical-monitoring-room-with-nurse-caring-for-spec.jpg",
         descriptionAr:
           "تعتبر هذه الوحدة بمثابة العناية المركزة في المدرسة حيث يتم وضع الطلاب الذين يحتاجون للمتابعة والمراقبة الصحية على مدار الساعة بإشراف العيادة الطبية وكوادرها.",
         descriptionEn:
@@ -138,127 +141,310 @@ const departmentsData = {
         icon: Award,
         titleAr: "قسم التربية الخاصة",
         titleEn: "Special Education Section",
+        image: "/special-education-teacher-creating-individualized-.jpg",
         descriptionAr:
           "يحتوي هذا القسم على صفوف دراسية ووحدات تعديل سلوك، بحيث يتم تقسيم الطلاب في الصفوف الدراسية حسب درجة إعاقتهم وأعمارهم، ويتم تدريبهم على المهارات الأكاديمية والمهارات الاستقلالية الموجودة حسب البرنامج التربوي الفردي، ويعمل هذا القسم بشكل متكامل مع جميع أقسام المدرسة.",
         descriptionEn:
           "This section contains classrooms and behavior modification units, where students are divided into classes according to their disability level and age, trained in academic and independence skills according to the individual educational program, working in integration with all school departments.",
+        branches: [],
       },
       {
         icon: Heart,
         titleAr: "العلاج الوظيفي",
         titleEn: "Occupational Therapy",
+        image: "/occupational-therapist-working-one-on-one-with-spe.jpg",
         descriptionAr:
-          "يعتبر من أهم أقسام المدرسة والذي يتناول جميع المهارات الوظيفية التي تساعد الطالب لتخطي متطلبات الحياة اليومية. ويندرج تحته: قسم التسوق لتعليم مهارات الشراء واستخدام الأموال، وقسم التكامل الحسي لتنظيم العمليات الحسية لدى الطلاب ذوي الاضطرابات الحسية.",
+          "يعتبر من أهم أقسام المدرسة والذي يتناول جميع المهارات الوظيفية التي تساعد الطالب لتخطي متطلبات الحياة اليومية.",
         descriptionEn:
-          "One of the most important school sections addressing all functional skills that help students overcome daily life requirements. It includes: Shopping Section for teaching purchasing skills and money use, and Sensory Integration Section for organizing sensory processes for students with sensory disorders.",
+          "One of the most important school sections addressing all functional skills that help students overcome daily life requirements.",
+        branches: [
+          {
+            titleAr: "قسم التسوق",
+            titleEn: "Shopping Section",
+            image: "/occupational-therapy-shopping-section-with-simul.jpg",
+            descriptionAr:
+              "يتم من خلال هذا القسم تعليم الطلاب مهارات ما قبل الشراء وبعدها، وكيفية استخدام الأموال للوصول إلى الاستقلالية الكاملة. يحتوي هذا القسم على سوبر ماركت فيه كاشير وبضائع تجعل الطالب يجد نفسه أنه في سوق مصغر.",
+            descriptionEn:
+              "Through this section, students learn pre and post-purchase skills, and how to use money to achieve complete independence. This section contains a supermarket with a cashier and goods that make the student feel like they are in a miniature market.",
+          },
+          {
+            titleAr: "قسم التكامل الحسي",
+            titleEn: "Sensory Integration Section",
+            image: "/sensory-integration-room-with-therapeutic-equipm.jpg",
+            descriptionAr:
+              "يقوم هذا القسم على تنظيم العمليات الحسية لدى الطلاب ذوي الاضطرابات الحسية، والعمل على تحقيق حل للمشاكل التي تتولد منها.",
+            descriptionEn:
+              "This section organizes sensory processes for students with sensory disorders, working to solve the problems that arise from them.",
+          },
+        ],
       },
       {
         icon: Lightbulb,
         titleAr: "قسم النطق واللغة",
         titleEn: "Speech and Language Section",
+        image: "/speech-therapist-working-with-special-needs-studen.jpg",
         descriptionAr:
           "يعمل القسم على الاكتشاف المبكر لأية اختلالات لغوية أو لفظية لدى الطلاب بالاستعانة بأخصائيين نطق ولغة وتدريب الأشخاص حتى يتمكنوا من اكتساب المهارات اللغوية الأساسية والفردية لهم والتي تمكنهم من تطوير قدراتهم اللغوية والتعليمية.",
         descriptionEn:
           "The section works on early detection of any linguistic or verbal disorders in students with the help of speech and language specialists, training individuals to acquire basic and individual language skills that enable them to develop their linguistic and educational abilities.",
+        branches: [],
       },
       {
         icon: Camera,
         titleAr: "قسم المراقبة والتحكم",
         titleEn: "Surveillance and Control Section",
+        image: "/surveillance-control-room-with-monitors-showing-sc.jpg",
         descriptionAr:
           "يحتوي هذا القسم على شاشات عرض مربوطة بكاميرات مراقبة في جميع أقسام المدرسة، تضمن مراقبة الطلاب والموظفين على مدار اليوم وبواقع 24/7.",
         descriptionEn:
           "This section contains display screens connected to surveillance cameras in all school sections, ensuring monitoring of students and staff throughout the day 24/7.",
+        branches: [],
       },
       {
         icon: Brain,
         titleAr: "قسم التقييم النفسي",
         titleEn: "Psychological Assessment Section",
+        image: "/psychologist-conducting-assessment-with-special-nee.jpg",
         descriptionAr:
           "يقوم الأخصائي النفسي في هذا القسم على تطبيق الاختبارات والمقاييس النفسية المختلفة، ويعمل على تحليل نتائج الاختبارات والمقاييس وتفسيرها بهدف تقييم قدرات الطلبة العقلية واضطراباتهم النفسية والسلوكية ثم يقوم بإعداد التقرير التشخيصي الشامل.",
         descriptionEn:
           "The psychologist in this section applies various psychological tests and scales, analyzes and interprets test results to assess students' mental abilities and psychological and behavioral disorders, then prepares a comprehensive diagnostic report.",
+        branches: [],
       },
       {
         icon: Target,
         titleAr: "قسم الخطط والبرامج",
         titleEn: "Plans and Programs Section",
+        image: "/educational-planning-team-meeting-with-individual-.jpg",
         descriptionAr:
           "يقوم هذا القسم بالتقييم التربوي وإعداد الخطط التربوية الفردية وخطط تعديل السلوك لكل طالب، ويقوم هذا القسم بالاجتماع مع فريق متعدد التخصصات لإعداد البرنامج التربوي الشامل.",
         descriptionEn:
           "This section conducts educational assessment and prepares individual educational plans and behavior modification plans for each student, meeting with a multidisciplinary team to prepare a comprehensive educational program.",
+        branches: [],
       },
       {
         icon: Wrench,
         titleAr: "قسم التأهيل المهني",
         titleEn: "Vocational Rehabilitation Section",
+        image: "/vocational-training-workshop-with-carpentry-and-me.jpg",
         descriptionAr:
-          "يتم تدريب الطلاب على المهارات الرئيسية التي تهيئهم للدخول لسوق العمل. يحتوي على أقسام: الزراعة (بيت بلاستيكي مجهز)، قسم الحاسوب والإلكترونيات (تعليم البرمجة والروبوت)، قسم الحلاقة (للذكور والإناث)، المشغل المهني، قسم العطور، والتدريب المنزلي.",
+          "يتم تدريب الطلاب على المهارات الرئيسية التي تهيئهم للدخول لسوق العمل. يحتوي على عدة أقسام متخصصة تساعد الطلاب على اكتساب مهارات مهنية متنوعة.",
         descriptionEn:
-          "Students are trained in key skills that prepare them to enter the job market. It includes sections: Agriculture (equipped greenhouse), Computer and Electronics (programming and robotics), Barbering (for males and females), Professional Workshop, Perfumes Section, and Home Training.",
+          "Students are trained in key skills that prepare them to enter the job market. It contains several specialized sections that help students acquire various professional skills.",
+        branches: [
+          {
+            titleAr: "قسم الزراعة",
+            titleEn: "Agriculture Section",
+            image: "/greenhouse-agriculture-training-for-special-needs.jpg",
+            descriptionAr:
+              "يحتوي هذا القسم على بيت بلاستيكي، يتم فيه زراعة نباتات من خلال خطوات تُعد الطالب لسوق العمل، ويتعرف الطالب على جميع الأدوات الزراعية، حيث تمكنه من ممارسة الأعمال الزراعية بنجاح.",
+            descriptionEn:
+              "This section contains a greenhouse where plants are grown through steps that prepare the student for the job market. The student learns about all agricultural tools, enabling them to practice agricultural work successfully.",
+          },
+          {
+            titleAr: "قسم الحاسوب والإلكترونيات",
+            titleEn: "Computer and Electronics Section",
+            image: "/computer-lab-with-robotics-training-for-special-.jpg",
+            descriptionAr:
+              "يقدم هذا القسم للطلاب فرص تعلم المهارات الأساسية، مثل التحكم بحركة الماوس والتعرف على أجزاء الحاسوب. كما يوفر بيئة مخبرية لتعليم علوم الروبوت والبرمجة، مما يساعد في تطوير مهارات التفكير واكتشاف مواطن القوة.",
+            descriptionEn:
+              "This section offers students opportunities to learn basic skills, such as mouse control and computer parts recognition. It also provides a laboratory environment for teaching robotics and programming, helping to develop thinking skills and discover strengths.",
+          },
+          {
+            titleAr: "قسم الحلاقة",
+            titleEn: "Barbering Section",
+            image: "/barbering-training-salon-for-special-needs-stude.jpg",
+            descriptionAr:
+              "يتم تدريب الطلاب (ذكور وإناث) على مهارات الحلاقة والعناية بالشعر، مما يؤهلهم للعمل في هذا المجال.",
+            descriptionEn:
+              "Students (males and females) are trained in barbering and hair care skills, qualifying them to work in this field.",
+          },
+          {
+            titleAr: "المشغل المهني",
+            titleEn: "Professional Workshop",
+            image: "/professional-workshop-with-various-vocational-tr.jpg",
+            descriptionAr:
+              "يحتوي على أقسام متعددة مثل النجارة والحدادة والخياطة، حيث يتم تعريف وتدريب الطالب على كل ما يتعلق بهذه المهن وإعدادهم لها مع مراعاة السلامة العامة.",
+            descriptionEn:
+              "Contains multiple sections such as carpentry, blacksmithing, and sewing, where students are introduced and trained in everything related to these professions, preparing them while observing general safety.",
+          },
+          {
+            titleAr: "قسم العطور",
+            titleEn: "Perfumes Section",
+            image: "/perfume-making-workshop-for-special-needs-student.jpg",
+            descriptionAr:
+              "يتم تدريب الطلاب على صناعة العطور والزيوت العطرية، مما يفتح لهم فرص عمل في هذا المجال المميز.",
+            descriptionEn:
+              "Students are trained in perfume and essential oil making, opening job opportunities in this distinctive field.",
+          },
+          {
+            titleAr: "التدريب المنزلي",
+            titleEn: "Home Training",
+            image: "/home-economics-training-room-for-special-needs-s.jpg",
+            descriptionAr:
+              "هذا القسم يستهدف الإناث، بحيث يتم تدريبهم على كل ما يخص العناية الشخصية والمنزل وإعداد الواجبات.",
+            descriptionEn:
+              "This section targets females, training them in everything related to personal care, home management, and meal preparation.",
+          },
+        ],
       },
       {
         icon: Heart,
         titleAr: "قسم الإرشاد النفسي",
         titleEn: "Psychological Counseling Section",
+        image: "/psychological-counseling-session-with-special-needs.jpg",
         descriptionAr:
           "يقوم قسم الإرشاد النفسي على وضع خطط إرشادية تأهيلية تساعد الطلاب في حل المشكلات النفسية التي تنعكس على سلوكهم، وعمل جلسات استرخاء نفسية ممنهجة لهم.",
         descriptionEn:
           "The psychological counseling section develops rehabilitative counseling plans to help students solve psychological problems that affect their behavior, and conducts systematic psychological relaxation sessions.",
+        branches: [],
       },
       {
         icon: Users,
         titleAr: "القسم الاجتماعي",
         titleEn: "Social Section",
+        image: "/social-worker-conducting-case-study-with-special-n.jpg",
         descriptionAr:
           "يقوم الأخصائي الاجتماعي بعمل دراسة الحالة للطلاب لمعرفة احتياجاتهم واهتماماتهم وسلوكياتهم، ويتم وضع خطط اجتماعية وبرامج علاجية وبرامج تعديل السلوك وعمل نشاطات لا منهجية ومتابعتها وتقييمها للوصول لأعلى درجة من التكيف والدمج الاجتماعي.",
         descriptionEn:
           "The social worker conducts case studies of students to understand their needs, interests, and behaviors, developing social plans, therapeutic programs, behavior modification programs, and extracurricular activities to achieve the highest degree of adaptation and social integration.",
+        branches: [],
       },
       {
         icon: Utensils,
         titleAr: "قسم التغذية والمطبخ",
         titleEn: "Nutrition and Kitchen Section",
+        image: "/professional-kitchen-with-chef-preparing-nutritious.jpg",
         descriptionAr:
-          "يتم في هذا القسم إعداد الطعام تحت إشراف طاقم مختص في الطهي من حملة شهادات عليا، مع أخصائية تغذية تحدد الوجبات الغذائية للطلاب حسب حاجتهم الصحية. يشمل: المطبخ، قسم التغذية، صالة الطعام المجهزة بطاولات وكراسي مهيأة لكافة أنواع الإعاقة، والكافيتيريا.",
+          "يتم في هذا القسم إعداد الطعام تحت إشراف طاقم مختص في الطهي من حملة شهادات عليا، مع أخصائية تغذية تحدد الوجبات الغذائية للطلاب حسب حاجتهم الصحية.",
         descriptionEn:
-          "In this section, food is prepared under the supervision of specialized cooking staff with advanced degrees, with a nutritionist who determines students' meals according to their health needs. Includes: Kitchen, Nutrition Section, Dining Hall equipped with tables and chairs suitable for all types of disabilities, and Cafeteria.",
+          "In this section, food is prepared under the supervision of specialized cooking staff with advanced degrees, with a nutritionist who determines students' meals according to their health needs.",
+        branches: [
+          {
+            titleAr: "المطبخ",
+            titleEn: "Kitchen",
+            image: "/professional-kitchen-with-chef-preparing-nutritious.jpg",
+            descriptionAr:
+              "مطبخ مجهز بأحدث المعدات، يشرف عليه طاقم مختص في الطهي من حملة شهادات عليا، ويتم تزويده بالمواد الغذائية اللازمة من خلال قسم الثلاجة المركزية.",
+            descriptionEn:
+              "A kitchen equipped with the latest equipment, supervised by specialized cooking staff with advanced degrees, supplied with necessary food materials through the central refrigerator section.",
+          },
+          {
+            titleAr: "قسم التغذية",
+            titleEn: "Nutrition Section",
+            image: "/nutritionist-planning-meals-for-special-needs-stu.jpg",
+            descriptionAr:
+              "يقوم بتحديد الوجبات الغذائية للطلاب حسب حاجتهم الصحية، ويتم ضبط أعمال تحضير الطعام من خلال أخصائية تغذية.",
+            descriptionEn:
+              "Determines students' meals according to their health needs, with food preparation controlled by a nutritionist.",
+          },
+          {
+            titleAr: "صالة الطعام",
+            titleEn: "Dining Hall",
+            image: "/accessible-dining-hall-for-special-needs-students.jpg",
+            descriptionAr: "صالة طعام مجهزة بطاولات وكراسي مهيأة لكافة أنواع الإعاقة، توفر بيئة مريحة لتناول الطعام.",
+            descriptionEn:
+              "A dining hall equipped with tables and chairs suitable for all types of disabilities, providing a comfortable dining environment.",
+          },
+          {
+            titleAr: "الكافيتيريا",
+            titleEn: "Cafeteria",
+            image: "/school-cafeteria-with-healthy-snacks-and-beverag.jpg",
+            descriptionAr: "كافيتيريا توفر وجبات خفيفة ومشروبات صحية للطلاب والموظفين.",
+            descriptionEn: "A cafeteria providing healthy snacks and beverages for students and staff.",
+          },
+        ],
       },
       {
         icon: Droplet,
         titleAr: "قسم المصبغة",
         titleEn: "Laundry Section",
+        image: "/modern-laundry-facility-with-industrial-washing-ma.jpg",
         descriptionAr:
           "هو قسم التعقيم في المدرسة لملابس الطلاب حيث يتم غسل وكوي وتعقيم الملابس على درجات حرارة عالية تضمن نظافة عالية وترتيب مستمر لملابس الطلاب.",
         descriptionEn:
           "This is the sterilization section in the school for students' clothes where clothes are washed, ironed, and sterilized at high temperatures ensuring high cleanliness and continuous organization of students' clothes.",
+        branches: [],
       },
       {
         icon: Sparkles,
         titleAr: "قسم خدمات التنظيف",
         titleEn: "Cleaning Services Section",
+        image: "/cleaning-staff-maintaining-school-facilities-with-.jpg",
         descriptionAr:
           "يتم في هذا القسم متابعة نظافة المرافق المدرسية (الحمامات، المسرح، الصالة الرياضية، الغرف الصفية، الغرف الفردية، الأجنحة، الملعب وغيرها). ويتم العمل على تعقيم وتنظيف المرافق بشكل دوري وعلى مدار الساعة.",
         descriptionEn:
           "In this section, the cleanliness of school facilities is monitored (bathrooms, theater, gym, classrooms, individual rooms, wings, playground, etc.). Facilities are sterilized and cleaned periodically and around the clock.",
+        branches: [],
       },
       {
         icon: Activity,
         titleAr: "قسم العلاج الطبيعي",
         titleEn: "Physical Therapy Section",
+        image: "/physical-therapy-room-with-equipment-and-therapist.jpg",
         descriptionAr:
-          "يختص بمعالجة وتأهيل ذوي الإعاقة الحركية والجسدية لتنمية القدرات الحركية والوظيفية. يشمل: العلاج الفيزيائي (غرفتين للذكور والإناث)، العلاج التنفسي (لمعالجة الجهاز التنفسي واستخلاص البلغم)، والعلاج المائي (جاكوزي وبركة مائية لتخفيف الآلام والاسترخاء).",
+          "يختص بمعالجة وتأهيل ذوي الإعاقة الحركية والجسدية لتنمية القدرات الحركية والوظيفية. يتوفر في المدرسة غرفتين علاج طبيعي غرفة للذكور وأخرى للإناث.",
         descriptionEn:
-          "Specializes in treating and rehabilitating those with motor and physical disabilities to develop motor and functional abilities. Includes: Physical Therapy (two rooms for males and females), Respiratory Therapy (for treating respiratory system and phlegm extraction), and Hydrotherapy (jacuzzi and water pool for pain relief and relaxation).",
+          "Specializes in treating and rehabilitating those with motor and physical disabilities to develop motor and functional abilities. The school has two physical therapy rooms, one for males and one for females.",
+        branches: [
+          {
+            titleAr: "العلاج الفيزيائي",
+            titleEn: "Physical Therapy",
+            image: "/physical-therapy-room-with-equipment-and-therapist.jpg",
+            descriptionAr:
+              "يتوفر في المدرسة غرفتين علاج طبيعي (غرفة للذكور وأخرى للإناث)، مجهزة بأحدث المعدات لتنمية القدرات الحركية والوظيفية.",
+            descriptionEn:
+              "The school has two physical therapy rooms (one for males and one for females), equipped with the latest equipment to develop motor and functional abilities.",
+          },
+          {
+            titleAr: "العلاج التنفسي",
+            titleEn: "Respiratory Therapy",
+            image: "/respiratory-therapy-unit-for-special-needs-stude.jpg",
+            descriptionAr:
+              "وحدة المعالجة التنفسية تهتم بمعالجة الجهاز التنفسي الرئوي من حيث استخلاص البلغم وتحسين طريقة التنفس بشكل يومي للحالات التي تحتاج ذلك.",
+            descriptionEn:
+              "The respiratory therapy unit focuses on treating the pulmonary respiratory system in terms of phlegm extraction and improving breathing methods daily for cases that need it.",
+          },
+          {
+            titleAr: "العلاج المائي",
+            titleEn: "Hydrotherapy",
+            image: "/hydrotherapy-pool-with-jacuzzi-for-special-needs-.jpg",
+            descriptionAr:
+              "يتضمن الجاكوزي والبركة المائية، يتم فيه استخدام الماء بدرجات حرارة متفاوتة لغايات صحية متنوعة. يعتبر من أهم العلاجات الطبيعية لتخفيف الآلام والأعراض، حيث يتم معالجة المشاكل العضوية والتنفسية والاسترخاء الجسدي وإعادة التأهيل البدني.",
+            descriptionEn:
+              "Includes jacuzzi and water pool, using water at varying temperatures for various health purposes. It is one of the most important natural treatments for pain and symptom relief, treating organic and respiratory problems, physical relaxation, and physical rehabilitation.",
+          },
+        ],
       },
       {
         icon: Dumbbell,
         titleAr: "قسم الرياضة",
         titleEn: "Sports Section",
+        image: "/sports-hall-with-karate-class-and-gym-equipment-fo.jpg",
         descriptionAr:
-          "يعمل قسم التأهيل الرياضي لرفع مستوى الأداء البدني، وممارسة تمرينات وألعاب تسهم في تطور مختلف جوانب اللياقة البدنية. يشمل: صالة كاراتيه، صالة رياضية مجهزة، وملعبين خارجيين.",
+          "يعمل قسم التأهيل الرياضي لرفع مستوى الأداء البدني، وممارسة تمرينات وألعاب تسهم في تطور مختلف جوانب اللياقة البدنية. يتوفر في المدرسة صالتي أنشطة وألعاب وملعبين خارجيين.",
         descriptionEn:
-          "The sports rehabilitation section works to raise the level of physical performance, practicing exercises and games that contribute to the development of various aspects of physical fitness. Includes: Karate Hall, Equipped Gym, and Two Outdoor Playgrounds.",
+          "The sports rehabilitation section works to raise the level of physical performance, practicing exercises and games that contribute to the development of various aspects of physical fitness. The school has two activity and game halls and two outdoor playgrounds.",
+        branches: [
+          {
+            titleAr: "صالة كاراتيه",
+            titleEn: "Karate Hall",
+            image: "/karate-training-hall-for-special-needs-students.jpg",
+            descriptionAr:
+              "صالة مخصصة لتدريب الطلاب على فنون الدفاع عن النفس والكاراتيه، مما يساعد على تطوير الانضباط والثقة بالنفس.",
+            descriptionEn:
+              "A hall dedicated to training students in martial arts and karate, helping to develop discipline and self-confidence.",
+          },
+          {
+            titleAr: "صالة رياضية",
+            titleEn: "Gym",
+            image: "/gym-with-adaptive-equipment-for-special-needs-stu.jpg",
+            descriptionAr:
+              "صالة رياضية مجهزة بمعدات رياضية متنوعة، تساعد الطلاب على ممارسة التمارين الرياضية وتطوير اللياقة البدنية.",
+            descriptionEn:
+              "A gym equipped with various sports equipment, helping students practice exercises and develop physical fitness.",
+          },
+        ],
       },
     ],
   },
@@ -301,6 +487,7 @@ const departmentsData = {
         icon: Home,
         titleAr: "الشقق السكنية",
         titleEn: "Residential Apartments",
+        image: "/comfortable-residential-apartment-for-special-need.jpg",
         descriptionAr:
           "يحتوي القسم الداخلي على شقق سكنية مجهزة تجهيزات فندقية، معدة بأفضل الأثاث ومعقمة بأفضل الطرق، ومجهزة بنظام التدفئة المركزية شتاءً وبمكيفات صيفاً. تحتوي الشقق على غرف نوم مجهزة بأسرة وصالات معيشة فيها جانب ترفيهي كبير ومناسب لجلوس كل طالب حسب حاجته، حيث يتم توزيع الطلاب في كل شقة إلى مجموعات متشابهة في الفئة العمرية وشدة الإعاقة والسلوكيات.",
         descriptionEn:
@@ -310,6 +497,7 @@ const departmentsData = {
         icon: Sparkles,
         titleAr: "المرافق الترفيهية",
         titleEn: "Recreational Facilities",
+        image: "/recreational-facilities-with-sports-hall-and-cinem.jpg",
         descriptionAr:
           "تتوفر ملاعب وصالات رياضية ملحقة بالسكن من أجل الترفيه، وهناك قاعة سينما تعرض فيها أفلام مناسبة لحاجات الطلاب.",
         descriptionEn:
@@ -356,6 +544,7 @@ const departmentsData = {
         icon: Sparkles,
         titleAr: "الرحلات الأسبوعية",
         titleEn: "Weekly Trips",
+        image: "/special-needs-students-on-educational-field-trip-w.jpg",
         descriptionAr:
           "يتم في هذا القسم تنظيم رحلات أسبوعية للطلاب خارج المدرسة وترتيب عملية نقلهم وحاجاتهم في الرحلة.",
         descriptionEn:
@@ -365,6 +554,7 @@ const departmentsData = {
         icon: Users,
         titleAr: "الأنشطة الاجتماعية",
         titleEn: "Social Activities",
+        image: "/special-needs-students-in-social-activities-and-ga.jpg",
         descriptionAr: "نشاطات لا منهجية متنوعة تساعد على التكيف والدمج الاجتماعي.",
         descriptionEn: "Various extracurricular activities that help with adaptation and social integration.",
       },
@@ -381,6 +571,8 @@ export default function DepartmentPage() {
   const { language, t } = useLanguage()
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isVisible, setIsVisible] = useState(false) // State for scroll animation
+  const [showWelcome, setShowWelcome] = useState(true)
+  const [isWelcomeAnimatingOut, setIsWelcomeAnimatingOut] = useState(false)
   const [selectedSubsection, setSelectedSubsection] = useState<number | "all">("all")
   const slug = params.slug as string
 
@@ -401,6 +593,27 @@ export default function DepartmentPage() {
 
     return () => clearInterval(interval)
   }, [department])
+
+  useEffect(() => {
+    console.log("[v0] Welcome section timer started")
+
+    // بدء animation الاختفاء بعد 29 ثانية
+    const animateOutTimer = setTimeout(() => {
+      console.log("[v0] Starting welcome section fade out animation")
+      setIsWelcomeAnimatingOut(true)
+    }, 29000)
+
+    // الإخفاء الكامل بعد 30 ثانية
+    const hideTimer = setTimeout(() => {
+      console.log("[v0] Hiding welcome section completely")
+      setShowWelcome(false)
+    }, 30000)
+
+    return () => {
+      clearTimeout(animateOutTimer)
+      clearTimeout(hideTimer)
+    }
+  }, [])
 
   useEffect(() => {
     setIsVisible(true)
@@ -582,91 +795,95 @@ export default function DepartmentPage() {
         </button>
       </section>
 
-      <section
-        id="welcome"
-        className="py-24 bg-gradient-to-b from-muted/40 via-background to-muted/40 relative overflow-hidden scroll-animate opacity-0 transition-all duration-1000"
-      >
-        {/* Animated background patterns */}
-        <div className="absolute top-0 left-0 w-full h-full opacity-20">
-          <div className="absolute top-20 left-20 w-72 h-72 bg-primary/30 rounded-full blur-3xl animate-float-slow" />
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-accent/30 rounded-full blur-3xl animate-float-delayed" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-secondary/20 rounded-full blur-3xl animate-pulse-slow" />
-        </div>
+      {showWelcome && (
+        <section
+          id="welcome"
+          className={`py-24 bg-gradient-to-b from-muted/40 via-background to-muted/40 relative overflow-hidden scroll-animate transition-all duration-1000 ${
+            isWelcomeAnimatingOut ? "opacity-0 -translate-y-8" : "opacity-100 translate-y-0"
+          }`}
+        >
+          {/* Animated background patterns */}
+          <div className="absolute top-0 left-0 w-full h-full opacity-20">
+            <div className="absolute top-20 left-20 w-72 h-72 bg-primary/30 rounded-full blur-3xl animate-float-slow" />
+            <div className="absolute bottom-20 right-20 w-96 h-96 bg-accent/30 rounded-full blur-3xl animate-float-delayed" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-secondary/20 rounded-full blur-3xl animate-pulse-slow" />
+          </div>
 
-        <div className="container mx-auto px-4 relative z-10">
-          <Card className="p-12 md:p-20 bg-gradient-to-br from-background via-background to-muted/50 border-2 border-primary/30 shadow-2xl hover:shadow-3xl transition-all duration-700 hover:-translate-y-4 backdrop-blur-sm relative overflow-hidden group">
-            {/* Animated border gradient */}
-            <div className="absolute inset-0 bg-gradient-to-r from-primary via-accent to-secondary opacity-0 group-hover:opacity-20 transition-opacity duration-700 animate-gradient-x" />
+          <div className="container mx-auto px-4 relative z-10">
+            <Card className="p-12 md:p-20 bg-gradient-to-br from-background via-background to-muted/50 border-2 border-primary/30 shadow-2xl hover:shadow-3xl transition-all duration-700 hover:-translate-y-4 backdrop-blur-sm relative overflow-hidden group">
+              {/* Animated border gradient */}
+              <div className="absolute inset-0 bg-gradient-to-r from-primary via-accent to-secondary opacity-0 group-hover:opacity-20 transition-opacity duration-700 animate-gradient-x" />
 
-            {/* Shine effect */}
-            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+              {/* Shine effect */}
+              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
-            <div className="flex flex-col md:flex-row items-start gap-10 relative z-10">
-              <div
-                className={`p-10 bg-gradient-to-br ${department.color} rounded-3xl shadow-2xl hover:scale-110 hover:rotate-6 transition-all duration-700 cursor-pointer relative overflow-hidden group/icon`}
-                onClick={() => scrollToSection("subsections")}
-              >
-                {/* Pulsing glow effect */}
-                <div className="absolute inset-0 bg-white/20 rounded-3xl animate-pulse-glow" />
-                <Icon className="w-20 h-20 text-white relative z-10 group-hover/icon:scale-110 transition-transform" />
-                {/* Rotating ring */}
-                <div className="absolute inset-0 border-4 border-white/30 rounded-3xl animate-spin-slow" />
-              </div>
+              <div className="flex flex-col md:flex-row items-start gap-10 relative z-10">
+                <div
+                  className={`p-10 bg-gradient-to-br ${department.color} rounded-3xl shadow-2xl hover:scale-110 hover:rotate-6 transition-all duration-700 cursor-pointer relative overflow-hidden group/icon`}
+                  onClick={() => scrollToSection("subsections")}
+                >
+                  {/* Pulsing glow effect */}
+                  <div className="absolute inset-0 bg-white/20 rounded-3xl animate-pulse-glow" />
+                  <Icon className="w-20 h-20 text-white relative z-10 group-hover/icon:scale-110 transition-transform" />
+                  {/* Rotating ring */}
+                  <div className="absolute inset-0 border-4 border-white/30 rounded-3xl animate-spin-slow" />
+                </div>
 
-              <div className="flex-1">
-                <h2 className="text-5xl md:text-6xl font-bold mb-8 bg-gradient-to-r from-foreground via-primary to-accent bg-clip-text text-transparent animate-gradient-x">
-                  {language === "ar" ? department.welcomeAr : department.welcomeEn}
-                </h2>
-                <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed mb-8">
-                  {language === "ar" ? department.descriptionAr : department.descriptionEn}
-                </p>
+                <div className="flex-1">
+                  <h2 className="text-5xl md:text-6xl font-bold mb-8 bg-gradient-to-r from-foreground via-primary to-accent bg-clip-text text-transparent animate-gradient-x">
+                    {language === "ar" ? department.welcomeAr : department.welcomeEn}
+                  </h2>
+                  <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed mb-8">
+                    {language === "ar" ? department.descriptionAr : department.descriptionEn}
+                  </p>
 
-                {/* Enhanced statistics cards */}
-                <div className="grid grid-cols-3 gap-6 mt-10">
-                  <button
-                    onClick={() => scrollToSection("subsections")}
-                    className="text-center p-6 bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl hover:from-primary/20 hover:to-primary/10 transition-all duration-500 hover:scale-110 hover:-translate-y-2 cursor-pointer group relative overflow-hidden border-2 border-primary/20 hover:border-primary/40"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                    <div className="text-4xl font-bold text-primary mb-3 group-hover:scale-125 transition-transform relative z-10">
-                      {departmentSubsections.length}+
-                    </div>
-                    <div className="text-sm font-medium text-muted-foreground relative z-10">
-                      {language === "ar" ? "قسم فرعي" : "Subsections"}
-                    </div>
-                  </button>
+                  {/* Enhanced statistics cards */}
+                  <div className="grid grid-cols-3 gap-6 mt-10">
+                    <button
+                      onClick={() => scrollToSection("subsections")}
+                      className="text-center p-6 bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl hover:from-primary/20 hover:to-primary/10 transition-all duration-500 hover:scale-110 hover:-translate-y-2 cursor-pointer group relative overflow-hidden border-2 border-primary/20 hover:border-primary/40"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500" />
+                      <div className="text-4xl font-bold text-primary mb-3 group-hover:scale-125 transition-transform relative z-10">
+                        {departmentSubsections.length}+
+                      </div>
+                      <div className="text-sm font-medium text-muted-foreground relative z-10">
+                        {language === "ar" ? "قسم فرعي" : "Subsections"}
+                      </div>
+                    </button>
 
-                  <button
-                    onClick={handleContactClick}
-                    className="text-center p-6 bg-gradient-to-br from-accent/10 to-accent/5 rounded-2xl hover:from-accent/20 hover:to-accent/10 transition-all duration-500 hover:scale-110 hover:-translate-y-2 cursor-pointer group relative overflow-hidden border-2 border-accent/20 hover:border-accent/40"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-accent/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                    <div className="text-4xl font-bold text-accent mb-3 group-hover:scale-125 transition-transform relative z-10">
-                      24/7
-                    </div>
-                    <div className="text-sm font-medium text-muted-foreground relative z-10">
-                      {language === "ar" ? "خدمة مستمرة" : "Continuous Service"}
-                    </div>
-                  </button>
+                    <button
+                      onClick={handleContactClick}
+                      className="text-center p-6 bg-gradient-to-br from-accent/10 to-accent/5 rounded-2xl hover:from-accent/20 hover:to-accent/10 transition-all duration-500 hover:scale-110 hover:-translate-y-2 cursor-pointer group relative overflow-hidden border-2 border-accent/20 hover:border-accent/40"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-accent/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500" />
+                      <div className="text-4xl font-bold text-accent mb-3 group-hover:scale-125 transition-transform relative z-10">
+                        24/7
+                      </div>
+                      <div className="text-sm font-medium text-muted-foreground relative z-10">
+                        {language === "ar" ? "خدمة مستمرة" : "Continuous Service"}
+                      </div>
+                    </button>
 
-                  <button
-                    onClick={() => scrollToSection("cta")}
-                    className="text-center p-6 bg-gradient-to-br from-secondary/10 to-secondary/5 rounded-2xl hover:from-secondary/20 hover:to-secondary/10 transition-all duration-500 hover:scale-110 hover:-translate-y-2 cursor-pointer group relative overflow-hidden border-2 border-secondary/20 hover:border-secondary/40"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-secondary/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                    <div className="text-4xl font-bold text-secondary-foreground mb-3 group-hover:scale-125 transition-transform relative z-10">
-                      100%
-                    </div>
-                    <div className="text-sm font-medium text-muted-foreground relative z-10">
-                      {language === "ar" ? "التزام بالجودة" : "Quality Commitment"}
-                    </div>
-                  </button>
+                    <button
+                      onClick={() => scrollToSection("cta")}
+                      className="text-center p-6 bg-gradient-to-br from-secondary/10 to-secondary/5 rounded-2xl hover:from-secondary/20 hover:to-secondary/10 transition-all duration-500 hover:scale-110 hover:-translate-y-2 cursor-pointer group relative overflow-hidden border-2 border-secondary/20 hover:border-secondary/40"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-secondary/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500" />
+                      <div className="text-4xl font-bold text-secondary-foreground mb-3 group-hover:scale-125 transition-transform relative z-10">
+                        100%
+                      </div>
+                      <div className="text-sm font-medium text-muted-foreground relative z-10">
+                        {language === "ar" ? "التزام بالجودة" : "Quality Commitment"}
+                      </div>
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </Card>
-        </div>
-      </section>
+            </Card>
+          </div>
+        </section>
+      )}
 
       <section
         id="subsections"
@@ -763,32 +980,62 @@ export default function DepartmentPage() {
 
           <div id="subsections-content" className="scroll-mt-32">
             {selectedSubsection === "all" ? (
-              <div className="grid md:grid-cols-2 gap-8">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {displayedSubsections.map((subsection, index) => {
                   const SubIcon = subsection.icon
                   return (
                     <Card
                       key={index}
-                      className="group relative p-8 bg-white dark:bg-gray-900 hover:shadow-xl transition-all duration-300 border border-gray-200 dark:border-gray-800 hover:border-primary/30 hover:-translate-y-2 cursor-pointer rounded-2xl"
+                      className="group relative overflow-hidden bg-white dark:bg-gray-900 hover:shadow-2xl transition-all duration-500 border-2 border-gray-200 dark:border-gray-800 hover:border-primary/50 hover:-translate-y-4 cursor-pointer rounded-3xl"
                       style={{ animationDelay: `${index * 100}ms` }}
                       onClick={() => handleSubsectionSelect(index)}
                     >
-                      <div className="flex items-start gap-6">
-                        {/* Simple gradient icon box */}
+                      {/* Image */}
+                      <div className="relative h-64 overflow-hidden">
+                        <img
+                          src={subsection.image || "/placeholder.svg"}
+                          alt={language === "ar" ? subsection.titleAr : subsection.titleEn}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+
+                        {/* Icon badge */}
                         <div
-                          className={`flex-shrink-0 p-5 bg-gradient-to-br ${department.color} rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-300`}
+                          className={`absolute top-4 ${language === "ar" ? "right-4" : "left-4"} p-4 bg-gradient-to-br ${department.color} rounded-2xl shadow-xl group-hover:scale-110 group-hover:rotate-12 transition-all duration-500`}
                         >
-                          <SubIcon className="w-10 h-10 text-white" />
+                          <SubIcon className="w-8 h-8 text-white" />
                         </div>
 
-                        {/* Content */}
-                        <div className="flex-1">
-                          <h3 className="text-2xl font-bold mb-3 text-gray-900 dark:text-white group-hover:text-primary transition-colors">
+                        {/* Title overlay */}
+                        <div className="absolute bottom-0 left-0 right-0 p-6">
+                          <h3 className="text-2xl font-bold text-white mb-2">
                             {language === "ar" ? subsection.titleAr : subsection.titleEn}
                           </h3>
-                          <p className="text-base text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-3">
-                            {language === "ar" ? subsection.descriptionAr : subsection.descriptionEn}
-                          </p>
+                        </div>
+                      </div>
+
+                      {/* Content */}
+                      <div className="p-6">
+                        <p className="text-base text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-3 mb-4">
+                          {language === "ar" ? subsection.descriptionAr : subsection.descriptionEn}
+                        </p>
+
+                        {/* Branches indicator */}
+                        {subsection.branches && subsection.branches.length > 0 && (
+                          <div className="flex items-center gap-2 text-sm text-primary font-semibold">
+                            <Grid3x3 className="w-4 h-4" />
+                            <span>
+                              {language === "ar"
+                                ? `${subsection.branches.length} أفرع متخصصة`
+                                : `${subsection.branches.length} Specialized Branches`}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* View details button */}
+                        <div className="mt-4 flex items-center gap-2 text-primary font-semibold group-hover:gap-4 transition-all">
+                          <span>{language === "ar" ? "عرض التفاصيل" : "View Details"}</span>
+                          <ArrowIcon className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
                         </div>
                       </div>
                     </Card>
@@ -800,88 +1047,194 @@ export default function DepartmentPage() {
                 {displayedSubsections.map((subsection, index) => {
                   const SubIcon = subsection.icon
                   return (
-                    <Card
-                      key={index}
-                      className="p-12 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-lg rounded-3xl"
-                    >
-                      {/* Icon and title */}
-                      <div className="flex flex-col md:flex-row items-center gap-8 mb-10">
-                        <div className={`p-10 bg-gradient-to-br ${department.color} rounded-3xl shadow-xl`}>
-                          <SubIcon className="w-20 h-20 text-white" />
-                        </div>
+                    <div key={index} className="space-y-12">
+                      {/* Hero section with image and overlay */}
+                      {subsection.image && (
+                        <div className="relative h-[600px] rounded-3xl overflow-hidden shadow-2xl group">
+                          <img
+                            src={subsection.image || "/placeholder.svg"}
+                            alt={language === "ar" ? subsection.titleAr : subsection.titleEn}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                          />
 
-                        <div className="flex-1 text-center md:text-right">
-                          <h3 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900 dark:text-white">
-                            {language === "ar" ? subsection.titleAr : subsection.titleEn}
-                          </h3>
-                          <div className="flex flex-wrap gap-3 justify-center md:justify-start">
-                            <div className="px-5 py-2 bg-primary/10 rounded-full border border-primary/30">
-                              <span className="text-primary font-semibold text-sm">
-                                {language === "ar" ? "خدمة متخصصة" : "Specialized Service"}
-                              </span>
-                            </div>
-                            <div className="px-5 py-2 bg-accent/10 rounded-full border border-accent/30">
-                              <span className="text-accent font-semibold text-sm">
-                                {language === "ar" ? "كوادر مؤهلة" : "Qualified Staff"}
-                              </span>
+                          {/* Gradient overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
+
+                          {/* Floating particles */}
+                          <div className="absolute top-10 left-10 w-20 h-20 bg-white/10 rounded-full blur-xl animate-float-slow" />
+                          <div className="absolute bottom-20 right-20 w-32 h-32 bg-primary/20 rounded-full blur-2xl animate-float-delayed" />
+
+                          {/* Content overlay */}
+                          <div className="absolute inset-0 flex flex-col justify-end p-12">
+                            <div className="flex items-end gap-8">
+                              {/* Icon */}
+                              <div
+                                className={`p-8 bg-gradient-to-br ${department.color} rounded-3xl shadow-2xl hover:scale-110 hover:rotate-6 transition-all duration-500 relative overflow-hidden group/icon`}
+                              >
+                                <div className="absolute inset-0 bg-white/20 rounded-3xl animate-pulse-glow" />
+                                <SubIcon className="w-16 h-16 text-white relative z-10" />
+                                <div className="absolute inset-0 border-4 border-white/30 rounded-3xl animate-spin-slow" />
+                              </div>
+
+                              {/* Title */}
+                              <div className="flex-1">
+                                <h3 className="text-5xl md:text-6xl font-bold text-white mb-4 drop-shadow-2xl">
+                                  {language === "ar" ? subsection.titleAr : subsection.titleEn}
+                                </h3>
+                                <div className="flex flex-wrap gap-3">
+                                  <div className="px-6 py-2 bg-white/20 backdrop-blur-md rounded-full border border-white/30">
+                                    <span className="text-white font-semibold">
+                                      {language === "ar" ? "خدمة متخصصة" : "Specialized Service"}
+                                    </span>
+                                  </div>
+                                  <div className="px-6 py-2 bg-white/20 backdrop-blur-md rounded-full border border-white/30">
+                                    <span className="text-white font-semibold">
+                                      {language === "ar" ? "كوادر مؤهلة" : "Qualified Staff"}
+                                    </span>
+                                  </div>
+                                  {subsection.branches && subsection.branches.length > 0 && (
+                                    <div className="px-6 py-2 bg-white/20 backdrop-blur-md rounded-full border border-white/30">
+                                      <span className="text-white font-semibold">
+                                        {language === "ar"
+                                          ? `${subsection.branches.length} أفرع`
+                                          : `${subsection.branches.length} Branches`}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
+                      )}
 
-                      {/* Description */}
-                      <div className="bg-gray-50 dark:bg-gray-800/50 p-8 rounded-2xl mb-8">
-                        <p className="text-xl text-gray-700 dark:text-gray-300 leading-relaxed">
-                          {language === "ar" ? subsection.descriptionAr : subsection.descriptionEn}
-                        </p>
-                      </div>
+                      {/* Description card */}
+                      <Card className="p-10 bg-gradient-to-br from-white via-gray-50 to-white dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 border-2 border-gray-200 dark:border-gray-700 shadow-xl rounded-3xl relative overflow-hidden group">
+                        {/* Decorative elements */}
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-3xl" />
+                        <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-accent/10 to-transparent rounded-full blur-3xl" />
 
-                      {/* Features grid */}
-                      <div className="grid md:grid-cols-3 gap-6 mb-10">
-                        <div className="p-6 bg-primary/5 rounded-xl border border-primary/20 hover:border-primary/40 hover:shadow-md transition-all duration-300">
-                          <CheckCircle className="w-10 h-10 text-primary mb-3" />
-                          <h4 className="text-lg font-bold mb-2 text-gray-900 dark:text-white">
-                            {language === "ar" ? "برامج متطورة" : "Advanced Programs"}
-                          </h4>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {language === "ar" ? "أحدث الأساليب والتقنيات" : "Latest methods and techniques"}
+                        <div className="relative z-10">
+                          <div className="flex items-center gap-4 mb-6">
+                            <div className="h-1 w-20 bg-gradient-to-r from-primary to-accent rounded-full" />
+                            <h4 className="text-2xl font-bold text-gray-900 dark:text-white">
+                              {language === "ar" ? "نبذة عن القسم" : "About the Section"}
+                            </h4>
+                          </div>
+
+                          <p className="text-xl text-gray-700 dark:text-gray-300 leading-relaxed">
+                            {language === "ar" ? subsection.descriptionAr : subsection.descriptionEn}
                           </p>
                         </div>
+                      </Card>
 
-                        <div className="p-6 bg-accent/5 rounded-xl border border-accent/20 hover:border-accent/40 hover:shadow-md transition-all duration-300">
-                          <Users className="w-10 h-10 text-accent mb-3" />
-                          <h4 className="text-lg font-bold mb-2 text-gray-900 dark:text-white">
-                            {language === "ar" ? "فريق متخصص" : "Specialized Team"}
-                          </h4>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {language === "ar" ? "خبراء في المجال" : "Field experts"}
-                          </p>
+                      {/* Branches section */}
+                      {subsection.branches && subsection.branches.length > 0 && (
+                        <div className="space-y-10">
+                          {/* Section header */}
+                          <div className="text-center relative">
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent" />
+                            </div>
+                            <div className="relative inline-flex items-center gap-4 px-10 py-5 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 rounded-full border-2 border-primary/20">
+                              <Grid3x3 className="w-7 h-7 text-primary animate-pulse" />
+                              <h4 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                                {language === "ar" ? "الأفرع المتخصصة" : "Specialized Branches"}
+                              </h4>
+                              <div className="px-4 py-1 bg-gradient-to-r from-primary to-accent rounded-full">
+                                <span className="text-white font-bold">{subsection.branches.length}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Branches grid */}
+                          <div className="grid md:grid-cols-2 gap-8">
+                            {subsection.branches.map((branch, branchIndex) => (
+                              <Card
+                                key={branchIndex}
+                                className="group relative overflow-hidden bg-white dark:bg-gray-900 hover:shadow-2xl transition-all duration-500 border-2 border-gray-200 dark:border-gray-800 hover:border-accent/50 hover:-translate-y-4 rounded-3xl"
+                              >
+                                {/* Branch image with overlay */}
+                                <div className="relative h-80 overflow-hidden">
+                                  <img
+                                    src={branch.image || "/placeholder.svg"}
+                                    alt={language === "ar" ? branch.titleAr : branch.titleEn}
+                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                  />
+
+                                  {/* Gradient overlay */}
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
+
+                                  {/* Number badge */}
+                                  <div
+                                    className={`absolute top-6 ${language === "ar" ? "right-6" : "left-6"} w-14 h-14 bg-gradient-to-br ${department.color} rounded-2xl flex items-center justify-center shadow-xl group-hover:scale-110 group-hover:rotate-12 transition-all duration-500`}
+                                  >
+                                    <span className="text-2xl font-bold text-white">{branchIndex + 1}</span>
+                                  </div>
+
+                                  {/* Title overlay */}
+                                  <div className="absolute bottom-0 left-0 right-0 p-8">
+                                    <h5 className="text-3xl font-bold text-white mb-2 drop-shadow-lg">
+                                      {language === "ar" ? branch.titleAr : branch.titleEn}
+                                    </h5>
+                                    <div className="h-1 w-20 bg-gradient-to-r from-accent to-transparent rounded-full" />
+                                  </div>
+                                </div>
+
+                                {/* Branch description */}
+                                <div className="p-8 bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-900">
+                                  <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
+                                    {language === "ar" ? branch.descriptionAr : branch.descriptionEn}
+                                  </p>
+                                </div>
+                              </Card>
+                            ))}
+                          </div>
                         </div>
+                      )}
 
-                        <div className="p-6 bg-secondary/5 rounded-xl border border-secondary/20 hover:border-secondary/40 hover:shadow-md transition-all duration-300">
-                          <Award className="w-10 h-10 text-secondary-foreground mb-3" />
-                          <h4 className="text-lg font-bold mb-2 text-gray-900 dark:text-white">
-                            {language === "ar" ? "نتائج مميزة" : "Outstanding Results"}
+                      {/* CTA section */}
+                      <Card className="p-12 bg-gradient-to-br from-primary/5 via-accent/5 to-primary/5 border-2 border-primary/20 rounded-3xl text-center relative overflow-hidden group">
+                        {/* Animated background */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+
+                        <div className="relative z-10">
+                          <div className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-primary/20 to-accent/20 rounded-full mb-6">
+                            <Sparkles className="w-6 h-6 text-primary animate-pulse" />
+                            <span className="text-xl font-bold">
+                              {language === "ar" ? "هل أنت مهتم؟" : "Interested?"}
+                            </span>
+                          </div>
+
+                          <h4 className="text-4xl font-bold mb-4 bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
+                            {language === "ar" ? "تواصل معنا للمزيد من المعلومات" : "Contact Us for More Information"}
                           </h4>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {language === "ar" ? "تحقيق أفضل النتائج" : "Achieving best results"}
-                          </p>
-                        </div>
-                      </div>
 
-                      {/* CTA */}
-                      <div className="text-center">
-                        <Button
-                          size="lg"
-                          onClick={handleContactClick}
-                          className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-lg px-10 py-6 rounded-full"
-                        >
-                          <Phone className={`w-6 h-6 ${language === "ar" ? "ml-2" : "mr-2"}`} />
-                          {language === "ar" ? "استفسر عن هذه الخدمة" : "Inquire About This Service"}
-                          <ArrowIcon className={`w-6 h-6 ${language === "ar" ? "mr-2" : "ml-2"}`} />
-                        </Button>
-                      </div>
-                    </Card>
+                          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+                            {language === "ar"
+                              ? "فريقنا المتخصص جاهز للإجابة على جميع استفساراتكم ومساعدتكم"
+                              : "Our specialized team is ready to answer all your questions and assist you"}
+                          </p>
+
+                          <Button
+                            size="lg"
+                            onClick={handleContactClick}
+                            className="bg-gradient-to-r from-primary via-accent to-primary hover:from-primary/90 hover:via-accent/90 hover:to-primary/90 text-white shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-110 text-xl px-12 py-7 rounded-full group relative overflow-hidden"
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                            <Phone
+                              className={`w-7 h-7 ${language === "ar" ? "ml-3" : "mr-3"} group-hover:rotate-12 transition-transform relative z-10`}
+                            />
+                            <span className="relative z-10">
+                              {language === "ar" ? "استفسر عن هذه الخدمة" : "Inquire About This Service"}
+                            </span>
+                            <ArrowIcon
+                              className={`w-7 h-7 ${language === "ar" ? "mr-3" : "ml-3"} group-hover:translate-x-2 transition-transform relative z-10`}
+                            />
+                          </Button>
+                        </div>
+                      </Card>
+                    </div>
                   )
                 })}
               </div>

@@ -137,6 +137,7 @@ export default function EmploymentPage() {
   }
 
   const addExperience = () => {
+    console.log("[v0] Adding new experience entry")
     setFormData({
       ...formData,
       experience: [
@@ -147,11 +148,13 @@ export default function EmploymentPage() {
   }
 
   const removeExperience = (index: number) => {
+    console.log("[v0] Removing experience at index:", index)
     const newExperience = formData.experience.filter((_, i) => i !== index)
     setFormData({ ...formData, experience: newExperience })
   }
 
   const updateExperience = (index: number, field: keyof ExperienceEntry, value: string | boolean) => {
+    console.log("[v0] Updating experience at index:", index, "field:", field, "value:", value)
     const newExperience = [...formData.experience]
     newExperience[index] = { ...newExperience[index], [field]: value }
     setFormData({ ...formData, experience: newExperience })
@@ -159,6 +162,11 @@ export default function EmploymentPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    console.log("[v0] Submitting application with data:", {
+      ...formData,
+      experienceCount: formData.experience.length,
+    })
 
     const applicationData = {
       fullName: formData.fullName,
@@ -175,9 +183,12 @@ export default function EmploymentPage() {
       cvFileName: cvFile?.name,
     }
 
+    console.log("[v0] Saving application to localStorage...")
     const savedApplication = saveEnhancedEmploymentApplication(applicationData)
+    console.log("[v0] Application saved:", savedApplication)
 
     try {
+      console.log("[v0] Sending application to API...")
       const response = await fetch("/api/send-application", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -185,18 +196,20 @@ export default function EmploymentPage() {
       })
 
       const result = await response.json()
+      console.log("[v0] API response:", result)
 
       if (result.success) {
         console.log("[v0] Application sent successfully")
-        // Optionally open WhatsApp
-        // window.open(result.whatsappUrl, '_blank')
       }
     } catch (error) {
       console.error("[v0] Error sending application:", error)
     }
 
+    console.log("[v0] Showing thank you message...")
     setSubmitted(true)
+
     setTimeout(() => {
+      console.log("[v0] Resetting form...")
       setSubmitted(false)
       setFormData({
         fullName: "",
@@ -214,7 +227,7 @@ export default function EmploymentPage() {
       setSelectedJob("")
       setCvFile(null)
       setCurrentStep(1)
-    }, 5000) // Reset form after 5 seconds instead of 3
+    }, 5000)
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

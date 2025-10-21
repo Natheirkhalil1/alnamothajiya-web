@@ -114,7 +114,7 @@ export interface GalleryImage {
 
 export interface DepartmentContent {
   id: string
-  type: "medical" | "science" | "experimental" | "technical" | "vocational" | "occupational" | "housing" | "activities"
+  type: "medical" | "heart" | "housing" | "activities"
   titleAr: string
   titleEn: string
   descriptionAr: string
@@ -684,55 +684,33 @@ export function getDepartmentContents(): DepartmentContent[] {
 
     if (data) {
       const existingContents = JSON.parse(data)
-      // إذا كان عدد الأقسام أقل من 6 أو أكثر من 8، نقوم بإعادة تحميل البيانات الافتراضية
-      if (existingContents.length < 6 || existingContents.length > 8) {
+      if (existingContents.length !== 4 || !existingContents.some((c: DepartmentContent) => c.type === "heart")) {
+        // إعادة تحميل البيانات الافتراضية الجديدة
         const defaultContents: DepartmentContent[] = [
           {
             id: "1",
-            type: "technical",
-            titleAr: "القسم الفني",
-            titleEn: "Technical Department",
-            descriptionAr:
-              "القسم الفني هو العمود الفقري للمدرسة، يضم 8 أقسام متخصصة تعمل بتكامل تام لتقديم خدمات تعليمية وتأهيلية شاملة",
-            descriptionEn:
-              "The Technical Department is the backbone of the school, comprising 8 specialized sections working in complete integration",
-            image: "/professional-psychologist-conducting-assessment-wi.jpg",
-          },
-          {
-            id: "2",
-            type: "vocational",
-            titleAr: "التأهيل المهني",
-            titleEn: "Vocational Rehabilitation",
-            descriptionAr:
-              "تدريب الطلاب على مهن معينة تساعد في إعدادهم لسوق العمل، يشمل الزراعة والحدادة والنجارة والتدبير المنزلي والخياطة",
-            descriptionEn:
-              "Training students in specific professions to prepare them for the job market, including agriculture, blacksmithing, carpentry, home management, and sewing",
-            image: "/special-needs-students-learning-agriculture-in-gre.jpg",
-          },
-          {
-            id: "3",
-            type: "occupational",
-            titleAr: "العلاج الوظيفي",
-            titleEn: "Occupational Therapy",
-            descriptionAr:
-              "يتناول جميع المهارات الوظيفية التي تساعد الطالب لتخطي متطلبات الحياة اليومية، يشمل التسوق والتكامل الحسي والجلسات الفردية",
-            descriptionEn:
-              "Addresses all functional skills that help students overcome daily life requirements, including shopping, sensory integration, and individual sessions",
-            image: "/special-needs-students-learning-shopping-skills-in.jpg",
-          },
-          {
-            id: "4",
             type: "medical",
             titleAr: "القسم الطبي",
             titleEn: "Medical Department",
             descriptionAr:
-              "قسم طبي متكامل يوفر الرعاية الصحية للطلاب مع فريق طبي متخصص، يشمل العيادة والصيدلية والمتابعة العلاجية",
+              "قسم طبي متكامل يوفر الرعاية الصحية الشاملة للطلاب على مدار الساعة، يشمل العيادة والصيدلية والمتابعة العلاجية",
             descriptionEn:
-              "Comprehensive medical department providing healthcare for students with specialized medical team, including clinic, pharmacy, and medical follow-up",
+              "Comprehensive medical department providing 24/7 healthcare for students, including clinic, pharmacy, and medical follow-up",
             image: "/modern-medical-clinic-for-special-needs-school-wit.jpg",
           },
           {
-            id: "5",
+            id: "2",
+            type: "heart",
+            titleAr: "قلب المدرسة",
+            titleEn: "Heart of the School",
+            descriptionAr:
+              "القسم الأساسي الذي يضم 14 قسماً متخصصاً يعملون بتكامل تام لتقديم خدمات تعليمية وتأهيلية شاملة لجميع الطلاب",
+            descriptionEn:
+              "The core department comprising 14 specialized sections working in complete integration to provide comprehensive educational and rehabilitation services",
+            image: "/professional-psychologist-conducting-assessment-wi.jpg",
+          },
+          {
+            id: "3",
             type: "housing",
             titleAr: "السكن الداخلي",
             titleEn: "Internal Housing",
@@ -743,71 +721,48 @@ export function getDepartmentContents(): DepartmentContent[] {
             image: "/comfortable-residential-apartment-for-special-need.jpg",
           },
           {
-            id: "6",
+            id: "4",
             type: "activities",
             titleAr: "الأنشطة اللامنهجية",
             titleEn: "Extracurricular Activities",
-            descriptionAr:
-              "رحلات أسبوعية ونشاطات ترفيهية متنوعة، بالإضافة إلى قسم الحاسوب والعلاج الطبيعي لتنمية المهارات التقنية والحركية",
+            descriptionAr: "رحلات أسبوعية ونشاطات ترفيهية متنوعة تساهم في تنمية المهارات الاجتماعية والترفيهية للطلاب",
             descriptionEn:
-              "Weekly trips and various recreational activities, plus Computer and Physical Therapy sections for developing technical and motor skills",
+              "Weekly trips and various recreational activities contributing to the development of students' social and recreational skills",
             image: "/special-needs-students-on-educational-field-trip-w.jpg",
           },
         ]
         localStorage.setItem("departmentContents", JSON.stringify(defaultContents))
+        dispatchStorageChange("departmentContents", defaultContents)
         return defaultContents
       }
       return existingContents
     }
 
-    // المحتوى الافتراضي إذا لم توجد بيانات
     const defaultContents: DepartmentContent[] = [
       {
         id: "1",
-        type: "technical",
-        titleAr: "القسم الفني",
-        titleEn: "Technical Department",
-        descriptionAr:
-          "القسم الفني هو العمود الفقري للمدرسة، يضم 8 أقسام متخصصة تعمل بتكامل تام لتقديم خدمات تعليمية وتأهيلية شاملة",
-        descriptionEn:
-          "The Technical Department is the backbone of the school, comprising 8 specialized sections working in complete integration",
-        image: "/professional-psychologist-conducting-assessment-wi.jpg",
-      },
-      {
-        id: "2",
-        type: "vocational",
-        titleAr: "التأهيل المهني",
-        titleEn: "Vocational Rehabilitation",
-        descriptionAr:
-          "تدريب الطلاب على مهن معينة تساعد في إعدادهم لسوق العمل، يشمل الزراعة والحدادة والنجارة والتدبير المنزلي والخياطة",
-        descriptionEn:
-          "Training students in specific professions to prepare them for the job market, including agriculture, blacksmithing, carpentry, home management, and sewing",
-        image: "/special-needs-students-learning-agriculture-in-gre.jpg",
-      },
-      {
-        id: "3",
-        type: "occupational",
-        titleAr: "العلاج الوظيفي",
-        titleEn: "Occupational Therapy",
-        descriptionAr:
-          "يتناول جميع المهارات الوظيفية التي تساعد الطالب لتخطي متطلبات الحياة اليومية، يشمل التسوق والتكامل الحسي والجلسات الفردية",
-        descriptionEn:
-          "Addresses all functional skills that help students overcome daily life requirements, including shopping, sensory integration, and individual sessions",
-        image: "/special-needs-students-learning-shopping-skills-in.jpg",
-      },
-      {
-        id: "4",
         type: "medical",
         titleAr: "القسم الطبي",
         titleEn: "Medical Department",
         descriptionAr:
-          "قسم طبي متكامل يوفر الرعاية الصحية للطلاب مع فريق طبي متخصص، يشمل العيادة والصيدلية والمتابعة العلاجية",
+          "قسم طبي متكامل يوفر الرعاية الصحية الشاملة للطلاب على مدار الساعة، يشمل العيادة والصيدلية والمتابعة العلاجية",
         descriptionEn:
-          "Comprehensive medical department providing healthcare for students with specialized medical team, including clinic, pharmacy, and medical follow-up",
+          "Comprehensive medical department providing 24/7 healthcare for students, including clinic, pharmacy, and medical follow-up",
         image: "/modern-medical-clinic-for-special-needs-school-wit.jpg",
       },
       {
-        id: "5",
+        id: "2",
+        type: "heart",
+        titleAr: "قلب المدرسة",
+        titleEn: "Heart of the School",
+        descriptionAr:
+          "القسم الأساسي الذي يضم 14 قسماً متخصصاً يعملون بتكامل تام لتقديم خدمات تعليمية وتأهيلية شاملة لجميع الطلاب",
+        descriptionEn:
+          "The core department comprising 14 specialized sections working in complete integration to provide comprehensive educational and rehabilitation services",
+        image: "/professional-psychologist-conducting-assessment-wi.jpg",
+      },
+      {
+        id: "3",
         type: "housing",
         titleAr: "السكن الداخلي",
         titleEn: "Internal Housing",
@@ -818,18 +773,18 @@ export function getDepartmentContents(): DepartmentContent[] {
         image: "/comfortable-residential-apartment-for-special-need.jpg",
       },
       {
-        id: "6",
+        id: "4",
         type: "activities",
         titleAr: "الأنشطة اللامنهجية",
         titleEn: "Extracurricular Activities",
-        descriptionAr:
-          "رحلات أسبوعية ونشاطات ترفيهية متنوعة، بالإضافة إلى قسم الحاسوب والعلاج الطبيعي لتنمية المهارات التقنية والحركية",
+        descriptionAr: "رحلات أسبوعية ونشاطات ترفيهية متنوعة تساهم في تنمية المهارات الاجتماعية والترفيهية للطلاب",
         descriptionEn:
-          "Weekly trips and various recreational activities, plus Computer and Physical Therapy sections for developing technical and motor skills",
+          "Weekly trips and various recreational activities contributing to the development of students' social and recreational skills",
         image: "/special-needs-students-on-educational-field-trip-w.jpg",
       },
     ]
     localStorage.setItem("departmentContents", JSON.stringify(defaultContents))
+    dispatchStorageChange("departmentContents", defaultContents)
     return defaultContents
   }
   return []
