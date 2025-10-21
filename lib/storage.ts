@@ -139,6 +139,61 @@ export interface ContactInfo {
   responsibleTitleEn: string
 }
 
+export interface EnhancedEmploymentApplication {
+  id: string
+  // Personal Information
+  fullName: string
+  birthPlace: string
+  birthDate: string
+  nationalId: string
+  maritalStatus: string
+  address: string
+  phone: string
+  email?: string
+  position: string
+  expectedSalary: string
+
+  // Education
+  education: {
+    degree: string
+    major: string
+    university: string
+    graduationYear: string
+    gpa?: string
+  }[]
+
+  // Experience
+  experience: {
+    company: string
+    position: string
+    startDate: string
+    endDate: string
+    description: string
+    currentlyWorking: boolean
+  }[]
+
+  // CV
+  cvFileName?: string
+  cvFileUrl?: string
+
+  // Metadata
+  submittedAt: string
+  status: "pending" | "reviewed" | "accepted" | "rejected"
+  notes?: string
+}
+
+export interface ServiceRequest {
+  id: string
+  name: string
+  phone: string
+  email: string
+  serviceType: string
+  message: string
+  submittedAt: string
+  status: "pending" | "contacted" | "completed" | "cancelled"
+  notes?: string
+}
+
 function dispatchStorageChange(key: string, value: any): void {
   if (typeof window !== "undefined") {
     window.dispatchEvent(
@@ -557,7 +612,7 @@ export function getHeroSlides(): HeroSlide[] {
         titleEn: "Al Namothajia School",
         subtitleAr: "رؤية جديدة",
         subtitleEn: "A New Vision",
-        descriptionAr: "لتعزيز التعليم والإبداع في بيئة مريحة وآمنة",
+        descriptionAr: "لتعزيز التعليم والإبداع في بيئة مريحة وآمنة تراعي الفروق الفردية وتطور قدرات كل طالب",
         descriptionEn: "To enhance education and creativity in a comfortable and safe environment",
         order: 1,
       },
@@ -1022,5 +1077,109 @@ export function deleteGalleryImage(id: string): void {
     const images = getGalleryImages().filter((img) => img.id !== id)
     localStorage.setItem("galleryImages", JSON.stringify(images))
     dispatchStorageChange("galleryImages", images)
+  }
+}
+
+export function saveEnhancedEmploymentApplication(
+  data: Omit<EnhancedEmploymentApplication, "id" | "submittedAt" | "status">,
+): EnhancedEmploymentApplication {
+  if (typeof window !== "undefined") {
+    const applications = getEnhancedEmploymentApplications()
+    const newApplication: EnhancedEmploymentApplication = {
+      ...data,
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      submittedAt: new Date().toISOString(),
+      status: "pending",
+    }
+    applications.push(newApplication)
+    localStorage.setItem("enhancedEmploymentApplications", JSON.stringify(applications))
+    dispatchStorageChange("enhancedEmploymentApplications", applications)
+    return newApplication
+  }
+  return {} as EnhancedEmploymentApplication
+}
+
+export function getEnhancedEmploymentApplications(): EnhancedEmploymentApplication[] {
+  if (typeof window !== "undefined") {
+    const data = localStorage.getItem("enhancedEmploymentApplications")
+    return data ? JSON.parse(data) : []
+  }
+  return []
+}
+
+export function updateEmploymentApplicationStatus(
+  id: string,
+  status: EnhancedEmploymentApplication["status"],
+  notes?: string,
+): void {
+  if (typeof window !== "undefined") {
+    const applications = getEnhancedEmploymentApplications()
+    const index = applications.findIndex((app) => app.id === id)
+    if (index !== -1) {
+      applications[index] = {
+        ...applications[index],
+        status,
+        notes: notes || applications[index].notes,
+      }
+      localStorage.setItem("enhancedEmploymentApplications", JSON.stringify(applications))
+      dispatchStorageChange("enhancedEmploymentApplications", applications)
+    }
+  }
+}
+
+export function deleteEnhancedEmploymentApplication(id: string): void {
+  if (typeof window !== "undefined") {
+    const applications = getEnhancedEmploymentApplications().filter((app) => app.id !== id)
+    localStorage.setItem("enhancedEmploymentApplications", JSON.stringify(applications))
+    dispatchStorageChange("enhancedEmploymentApplications", applications)
+  }
+}
+
+export function saveServiceRequest(data: Omit<ServiceRequest, "id" | "submittedAt" | "status">): ServiceRequest {
+  if (typeof window !== "undefined") {
+    const requests = getServiceRequests()
+    const newRequest: ServiceRequest = {
+      ...data,
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      submittedAt: new Date().toISOString(),
+      status: "pending",
+    }
+    requests.push(newRequest)
+    localStorage.setItem("serviceRequests", JSON.stringify(requests))
+    dispatchStorageChange("serviceRequests", requests)
+    return newRequest
+  }
+  return {} as ServiceRequest
+}
+
+export function getServiceRequests(): ServiceRequest[] {
+  if (typeof window !== "undefined") {
+    const data = localStorage.getItem("serviceRequests")
+    return data ? JSON.parse(data) : []
+  }
+  return []
+}
+
+export function updateServiceRequestStatus(id: string, status: ServiceRequest["status"], notes?: string): void {
+  if (typeof window !== "undefined") {
+    const requests = getServiceRequests()
+    const index = requests.findIndex((req) => req.id === id)
+    if (index !== -1) {
+      requests[index] = {
+        ...requests[index],
+        status,
+        notes: notes || requests[index].notes,
+      }
+      localStorage.setItem("serviceRequests", JSON.stringify(requests))
+      dispatchStorageChange("serviceRequests", requests)
+    }
+  }
+}
+
+export function deleteServiceRequest(id: string): void {
+  if (typeof window !== "undefined") {
+    const requests = getServiceRequests().filter((req) => req.id !== id)
+    localStorage.setItem("serviceRequests", JSON.stringify(requests))
+    dispatchStorageChange("serviceRequests", requests)
   }
 }

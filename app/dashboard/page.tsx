@@ -43,6 +43,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { isAuthenticated, logout, getUsername } from "@/lib/auth"
 import {
   getEmploymentApplications,
@@ -74,6 +75,14 @@ import {
   updateDepartmentContent,
   getContactInfo,
   updateContactInfo,
+  getEnhancedEmploymentApplications,
+  updateEmploymentApplicationStatus,
+  deleteEnhancedEmploymentApplication,
+  getServiceRequests,
+  updateServiceRequestStatus,
+  deleteServiceRequest,
+  type EnhancedEmploymentApplication,
+  type ServiceRequest,
   type EmploymentApplication,
   type ContactMessage,
   type Testimonial,
@@ -99,6 +108,8 @@ export default function DashboardPage() {
 
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [activeSection, setActiveSection] = useState("overview")
+  // Add new tabs for applications and service requests
+  const [activeTab, setActiveTab] = useState("overview")
 
   const [applications, setApplications] = useState<EmploymentApplication[]>([])
   const [messages, setMessages] = useState<ContactMessage[]>([])
@@ -112,6 +123,9 @@ export default function DashboardPage() {
   const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([])
   const [departmentContents, setDepartmentContents] = useState<DepartmentContent[]>([])
   const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null)
+
+  const [employmentApplications, setEmploymentApplications] = useState<EnhancedEmploymentApplication[]>([])
+  const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([])
 
   const [isHeroDialogOpen, setIsHeroDialogOpen] = useState(false)
   const [editingHeroSlide, setEditingHeroSlide] = useState<HeroSlide | null>(null)
@@ -130,6 +144,21 @@ export default function DashboardPage() {
 
     setUsername(getUsername() || "")
     loadData()
+    setEmploymentApplications(getEnhancedEmploymentApplications())
+    setServiceRequests(getServiceRequests())
+
+    // Listen for storage changes
+    const handleStorageChange = (e: CustomEvent) => {
+      if (e.detail.key === "enhancedEmploymentApplications") {
+        setEmploymentApplications(e.detail.value)
+      }
+      if (e.detail.key === "serviceRequests") {
+        setServiceRequests(e.detail.value)
+      }
+    }
+
+    window.addEventListener("localStorageChange", handleStorageChange as EventListener)
+    return () => window.removeEventListener("localStorageChange", handleStorageChange as EventListener)
   }, [router])
 
   const loadData = () => {
@@ -499,7 +528,10 @@ export default function DashboardPage() {
             {navigationItems.map((item) => (
               <button
                 key={item.id}
-                onClick={() => setActiveSection(item.id)}
+                onClick={() => {
+                  setActiveSection(item.id)
+                  setActiveTab(item.id) // Set active tab to match active section
+                }}
                 className={cn(
                   "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative overflow-hidden",
                   activeSection === item.id
@@ -563,6 +595,41 @@ export default function DashboardPage() {
                   {language === "ar" ? "إدارة محتوى الموقع بسهولة" : "Manage website content easily"}
                 </p>
               </div>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant={activeTab === "applications" ? "default" : "ghost"}
+                onClick={() => {
+                  setActiveTab("applications")
+                  setActiveSection("applications") // Ensure section also updates
+                }}
+                className="flex items-center gap-2"
+              >
+                <Briefcase className="w-5 h-5" />
+                {language === "ar" ? "طلبات التوظيف" : "Job Applications"}
+                {employmentApplications.filter((app) => app.status === "pending").length > 0 && (
+                  <span className="bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs font-bold">
+                    {employmentApplications.filter((app) => app.status === "pending").length}
+                  </span>
+                )}
+              </Button>
+
+              <Button
+                variant={activeTab === "service-requests" ? "default" : "ghost"}
+                onClick={() => {
+                  setActiveTab("service-requests")
+                  setActiveSection("messages") // Map 'service-requests' tab to 'messages' section for consistency if needed, or create a new section ID
+                }}
+                className="flex items-center gap-2"
+              >
+                <MessageSquare className="w-5 h-5" />
+                {language === "ar" ? "طلبات الخدمة" : "Service Requests"}
+                {serviceRequests.filter((req) => req.status === "pending").length > 0 && (
+                  <span className="bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs font-bold">
+                    {serviceRequests.filter((req) => req.status === "pending").length}
+                  </span>
+                )}
+              </Button>
             </div>
           </div>
         </header>
@@ -1917,6 +1984,273 @@ export default function DashboardPage() {
                   </div>
                 )}
               </Card>
+            </div>
+          )}
+
+          {activeTab === "applications" && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-3xl font-bold">{language === "ar" ? "طلبات التوظيف" : "Job Applications"}</h2>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="gap-2 bg-transparent"
+                    onClick={() => exportToExcel(employmentApplications, "enhanced-employment-applications")}
+                    disabled={employmentApplications.length === 0}
+                  >
+                    <Download className="w-4 h-4" />
+                    {language === "ar" ? "تصدير" : "Export"}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid gap-4">
+                {employmentApplications.length === 0 ? (
+                  <Card className="p-12 text-center">
+                    <Briefcase className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground text-lg">
+                      {language === "ar" ? "لا توجد طلبات توظيف" : "No job applications yet"}
+                    </p>
+                  </Card>
+                ) : (
+                  employmentApplications.map((app) => (
+                    <Card key={app.id} className="p-6">
+                      <div className="flex flex-col md:flex-row items-start justify-between gap-4">
+                        <div className="flex-1 space-y-4 w-full md:w-auto">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                              <User className="w-6 h-6 text-white" />
+                            </div>
+                            <div>
+                              <h3 className="font-bold text-xl">{app.fullName}</h3>
+                              <p className="text-muted-foreground">{app.position}</p>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <p className="text-sm text-muted-foreground">{language === "ar" ? "الهاتف" : "Phone"}</p>
+                              <p className="font-medium">{app.phone}</p>
+                            </div>
+                            <div className="space-y-2">
+                              <p className="text-sm text-muted-foreground">
+                                {language === "ar" ? "الراتب المتوقع" : "Expected Salary"}
+                              </p>
+                              <p className="font-medium">{app.expectedSalary}</p>
+                            </div>
+                            <div className="space-y-2">
+                              <p className="text-sm text-muted-foreground">
+                                {language === "ar" ? "المؤهلات" : "Education"}
+                              </p>
+                              <p className="font-medium">
+                                {app.education.length} {language === "ar" ? "مؤهل" : "degrees"}
+                              </p>
+                            </div>
+                            <div className="space-y-2">
+                              <p className="text-sm text-muted-foreground">
+                                {language === "ar" ? "الخبرات" : "Experience"}
+                              </p>
+                              <p className="font-medium">
+                                {app.experience.length} {language === "ar" ? "خبرة" : "positions"}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`px-3 py-1 rounded-full text-sm font-bold ${
+                                app.status === "pending"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : app.status === "reviewed"
+                                    ? "bg-blue-100 text-blue-800"
+                                    : app.status === "accepted"
+                                      ? "bg-green-100 text-green-800"
+                                      : "bg-red-100 text-red-800"
+                              }`}
+                            >
+                              {app.status === "pending" && (language === "ar" ? "قيد المراجعة" : "Pending")}
+                              {app.status === "reviewed" && (language === "ar" ? "تمت المراجعة" : "Reviewed")}
+                              {app.status === "accepted" && (language === "ar" ? "مقبول" : "Accepted")}
+                              {app.status === "rejected" && (language === "ar" ? "مرفوض" : "Rejected")}
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              {new Date(app.submittedAt).toLocaleDateString("ar-EG")}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col md:flex-col gap-2 mt-4 md:mt-0 w-full md:w-auto">
+                          <Select
+                            value={app.status}
+                            onValueChange={(value) => {
+                              updateEmploymentApplicationStatus(app.id, value as any)
+                              // Optionally update local state immediately for responsiveness
+                              setEmploymentApplications((prevApps) =>
+                                prevApps.map((a) => (a.id === app.id ? { ...a, status: value as any } : a)),
+                              )
+                            }}
+                          >
+                            <SelectTrigger className="w-40">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pending">{language === "ar" ? "قيد المراجعة" : "Pending"}</SelectItem>
+                              <SelectItem value="reviewed">
+                                {language === "ar" ? "تمت المراجعة" : "Reviewed"}
+                              </SelectItem>
+                              <SelectItem value="accepted">{language === "ar" ? "مقبول" : "Accepted"}</SelectItem>
+                              <SelectItem value="rejected">{language === "ar" ? "مرفوض" : "Rejected"}</SelectItem>
+                            </SelectContent>
+                          </Select>
+
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              window.open(`https://wa.me/${app.phone}`, "_blank")
+                            }}
+                          >
+                            <MessageSquare className="w-4 h-4 mr-2" />
+                            {language === "ar" ? "واتساب" : "WhatsApp"}
+                          </Button>
+
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => {
+                              if (confirm(language === "ar" ? "هل تريد حذف هذا الطلب؟" : "Delete this application?")) {
+                                deleteEnhancedEmploymentApplication(app.id)
+                                setEmploymentApplications(getEnhancedEmploymentApplications())
+                              }
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === "service-requests" && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-3xl font-bold">{language === "ar" ? "طلبات الخدمة" : "Service Requests"}</h2>
+              </div>
+
+              <div className="grid gap-4">
+                {serviceRequests.length === 0 ? (
+                  <Card className="p-12 text-center">
+                    <MessageSquare className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground text-lg">
+                      {language === "ar" ? "لا توجد طلبات خدمة" : "No service requests yet"}
+                    </p>
+                  </Card>
+                ) : (
+                  serviceRequests.map((req) => (
+                    <Card key={req.id} className="p-6">
+                      <div className="flex flex-col md:flex-row items-start justify-between gap-4">
+                        <div className="flex-1 space-y-4 w-full md:w-auto">
+                          <div>
+                            <h3 className="font-bold text-xl">{req.name}</h3>
+                            <p className="text-muted-foreground">{req.serviceType}</p>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <p className="text-sm text-muted-foreground">{language === "ar" ? "الهاتف" : "Phone"}</p>
+                              <p className="font-medium">{req.phone}</p>
+                            </div>
+                            <div className="space-y-2">
+                              <p className="text-sm text-muted-foreground">{language === "ar" ? "البريد" : "Email"}</p>
+                              <p className="font-medium">{req.email}</p>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <p className="text-sm text-muted-foreground">{language === "ar" ? "الرسالة" : "Message"}</p>
+                            <p className="text-base">{req.message}</p>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`px-3 py-1 rounded-full text-sm font-bold ${
+                                req.status === "pending"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : req.status === "contacted"
+                                    ? "bg-blue-100 text-blue-800"
+                                    : req.status === "completed"
+                                      ? "bg-green-100 text-green-800"
+                                      : "bg-red-100 text-red-800"
+                              }`}
+                            >
+                              {req.status === "pending" && (language === "ar" ? "جديد" : "Pending")}
+                              {req.status === "contacted" && (language === "ar" ? "تم التواصل" : "Contacted")}
+                              {req.status === "completed" && (language === "ar" ? "مكتمل" : "Completed")}
+                              {req.status === "cancelled" && (language === "ar" ? "ملغي" : "Cancelled")}
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              {new Date(req.submittedAt).toLocaleDateString("ar-EG")}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col md:flex-col gap-2 mt-4 md:mt-0 w-full md:w-auto">
+                          <Select
+                            value={req.status}
+                            onValueChange={(value) => {
+                              updateServiceRequestStatus(req.id, value as any)
+                              // Optionally update local state immediately for responsiveness
+                              setServiceRequests((prevReqs) =>
+                                prevReqs.map((r) => (r.id === req.id ? { ...r, status: value as any } : r)),
+                              )
+                            }}
+                          >
+                            <SelectTrigger className="w-40">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pending">{language === "ar" ? "جديد" : "Pending"}</SelectItem>
+                              <SelectItem value="contacted">
+                                {language === "ar" ? "تم التواصل" : "Contacted"}
+                              </SelectItem>
+                              <SelectItem value="completed">{language === "ar" ? "مكتمل" : "Completed"}</SelectItem>
+                              <SelectItem value="cancelled">{language === "ar" ? "ملغي" : "Cancelled"}</SelectItem>
+                            </SelectContent>
+                          </Select>
+
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              window.open(`https://wa.me/${req.phone}`, "_blank")
+                            }}
+                          >
+                            <MessageSquare className="w-4 h-4 mr-2" />
+                            {language === "ar" ? "واتساب" : "WhatsApp"}
+                          </Button>
+
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => {
+                              if (confirm(language === "ar" ? "هل تريد حذف هذا الطلب؟" : "Delete this request?")) {
+                                deleteServiceRequest(req.id)
+                                setServiceRequests(getServiceRequests())
+                              }
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </div>
             </div>
           )}
         </div>

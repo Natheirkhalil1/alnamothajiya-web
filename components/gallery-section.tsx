@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ZoomIn, Sparkles, ChevronDown } from "lucide-react"
+import { ZoomIn, Sparkles, ChevronDown, ChevronUp } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -49,9 +49,15 @@ export function GallerySection() {
 
   const displayedItems = filteredItems.slice(0, visibleCount)
   const hasMore = filteredItems.length > visibleCount
+  const hasLess = visibleCount > 6
 
   const handleLoadMore = () => {
     setVisibleCount((prev) => prev + 3)
+  }
+
+  const handleShowLess = () => {
+    setVisibleCount(6)
+    document.getElementById("gallery")?.scrollIntoView({ behavior: "smooth", block: "start" })
   }
 
   return (
@@ -159,20 +165,40 @@ export function GallerySection() {
               ))}
             </div>
 
-            {hasMore && (
-              <div className="flex justify-center mt-16 animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
-                <Button
-                  onClick={handleLoadMore}
-                  size="lg"
-                  className="group relative overflow-hidden bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%] hover:bg-[position:100%_0] text-primary-foreground font-bold px-10 py-6 rounded-full shadow-2xl shadow-primary/30 hover:shadow-primary/50 transition-all duration-500 hover:scale-110 border-2 border-white/20"
-                >
-                  <span className="relative z-10 flex items-center gap-3 text-lg">
-                    <span>{language === "ar" ? "عرض المزيد" : "Load More"}</span>
-                    <ChevronDown className="w-5 h-5 group-hover:translate-y-1 transition-transform duration-300 animate-bounce" />
-                  </span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-accent via-primary to-accent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-full blur-xl opacity-30 group-hover:opacity-60 transition-opacity duration-500" />
-                </Button>
+            {(hasMore || hasLess) && (
+              <div
+                className="flex justify-center items-center gap-4 mt-16 animate-fade-in-up"
+                style={{ animationDelay: "0.3s" }}
+              >
+                {hasMore && (
+                  <Button
+                    onClick={handleLoadMore}
+                    size="lg"
+                    className="group relative overflow-hidden bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%] hover:bg-[position:100%_0] text-primary-foreground font-bold px-10 py-6 rounded-full shadow-2xl shadow-primary/30 hover:shadow-primary/50 transition-all duration-500 hover:scale-110 border-2 border-white/20"
+                  >
+                    <span className="relative z-10 flex items-center gap-3 text-lg">
+                      <span>{language === "ar" ? "عرض المزيد" : "Load More"}</span>
+                      <ChevronDown className="w-5 h-5 group-hover:translate-y-1 transition-transform duration-300 animate-bounce" />
+                    </span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-accent via-primary to-accent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-full blur-xl opacity-30 group-hover:opacity-60 transition-opacity duration-500" />
+                  </Button>
+                )}
+
+                {hasLess && (
+                  <Button
+                    onClick={handleShowLess}
+                    size="lg"
+                    variant="outline"
+                    className="group relative overflow-hidden bg-card/50 backdrop-blur-sm hover:bg-gradient-to-r hover:from-primary/10 hover:to-accent/10 text-foreground hover:text-primary font-bold px-10 py-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-500 hover:scale-110 border-2 border-border hover:border-primary/50"
+                  >
+                    <span className="relative z-10 flex items-center gap-3 text-lg">
+                      <span>{language === "ar" ? "عرض أقل" : "Show Less"}</span>
+                      <ChevronUp className="w-5 h-5 group-hover:-translate-y-1 transition-transform duration-300 animate-bounce" />
+                    </span>
+                    <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-accent/20 rounded-full blur-xl opacity-0 group-hover:opacity-60 transition-opacity duration-500" />
+                  </Button>
+                )}
               </div>
             )}
           </>

@@ -143,12 +143,16 @@ export function DepartmentsSection() {
         )}
 
         <div className="mt-20 text-center opacity-0 animate-fade-in" style={{ animationDelay: "400ms" }}>
-          <div className="max-w-2xl mx-auto bg-card rounded-2xl p-10 border shadow-lg">
-            <Mail className="w-12 h-12 text-primary mx-auto mb-4" />
+          <div className="max-w-2xl mx-auto bg-white dark:bg-card rounded-3xl p-12 shadow-2xl border border-border/50">
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+              <Mail className="w-10 h-10 text-white" />
+            </div>
 
-            <h3 className="text-2xl font-bold mb-3">{language === "ar" ? "هل لديك استفسار؟" : "Have a Question?"}</h3>
+            <h3 className="text-3xl font-bold mb-4 text-foreground">
+              {language === "ar" ? "هل لديك استفسار؟" : "Have a Question?"}
+            </h3>
 
-            <p className="text-muted-foreground mb-6 text-base">
+            <p className="text-muted-foreground mb-8 text-lg leading-relaxed">
               {language === "ar"
                 ? "فريقنا جاهز للإجابة على جميع استفساراتكم وتقديم المساعدة"
                 : "Our team is ready to answer all your questions and provide assistance"}
@@ -156,11 +160,16 @@ export function DepartmentsSection() {
 
             <Button
               size="lg"
-              onClick={() => document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" })}
-              className="px-8"
+              onClick={() => {
+                const contactSection = document.getElementById("contact")
+                if (contactSection) {
+                  contactSection.scrollIntoView({ behavior: "smooth", block: "start" })
+                }
+              }}
+              className="px-10 py-6 text-lg font-semibold bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
             >
-              <span className="font-semibold">{language === "ar" ? "تواصل معنا الآن" : "Contact Us Now"}</span>
-              <ArrowIcon className={`w-5 h-5 ${language === "ar" ? "mr-2" : "ml-2"}`} />
+              <span>{language === "ar" ? "تواصل معنا الآن" : "Contact Us Now"}</span>
+              <ArrowLeft className={`w-5 h-5 ${language === "ar" ? "mr-3" : "ml-3"}`} />
             </Button>
           </div>
         </div>
