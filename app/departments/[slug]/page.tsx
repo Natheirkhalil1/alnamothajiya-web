@@ -80,6 +80,7 @@ const departmentsData = {
           "تتميز العيادة بقسم طبي مجهز بكوادر طبية ذوي كفاءات (أطباء وممرضين متواجدين على مدار الساعة)، وفيها معدات طبية شاملة لجميع الحالات الطارئة واليومية، ويتوفر فيها سيارة إسعاف مجهزة بكامل لوازم الإسعافات الأولية على مدار الساعة.",
         descriptionEn:
           "The clinic features a medical section equipped with qualified medical staff (doctors and nurses available 24/7), comprehensive medical equipment for all emergency and daily cases, and an ambulance equipped with complete first aid supplies available 24/7.",
+        branches: [],
       },
       {
         icon: Pill,
@@ -89,6 +90,7 @@ const departmentsData = {
         descriptionAr: "تحتوي الصيدلية على جميع الأدوية التي يحتاجها الطلاب، مصنفة حسب اسم الطالب، ومحفوظة إلكترونياً.",
         descriptionEn:
           "The pharmacy contains all medications needed by students, classified by student name, and stored electronically.",
+        branches: [],
       },
       {
         icon: Activity,
@@ -99,6 +101,7 @@ const departmentsData = {
           "تعتبر هذه الوحدة بمثابة العناية المركزة في المدرسة حيث يتم وضع الطلاب الذين يحتاجون للمتابعة والمراقبة الصحية على مدار الساعة بإشراف العيادة الطبية وكوادرها.",
         descriptionEn:
           "This unit serves as the intensive care unit in the school where students who need health monitoring and follow-up are placed 24/7 under the supervision of the medical clinic and its staff.",
+        branches: [],
       },
     ],
   },
