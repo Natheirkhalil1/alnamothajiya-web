@@ -11,10 +11,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Eye, EyeOff, Lock, Mail, LogIn, Sparkles } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
+import { useToast } from "@/hooks/use-toast"
 
 export default function StaffLoginPage() {
   const router = useRouter()
   const { login } = useAuth()
+  const { toast } = useToast()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
@@ -26,26 +28,51 @@ export default function StaffLoginPage() {
     setError("")
     setLoading(true)
 
+    console.log("[v0] Login attempt with:", { email, password: "***" })
+
     try {
       const success = await login(email, password)
 
+      console.log("[v0] Login result:", success)
+
       if (success) {
-        // Redirect based on role
+        toast({
+          title: "تم تسجيل الدخول بنجاح",
+          description: "جاري تحويلك إلى لوحة التحكم...",
+        })
+
         const isAdmin = localStorage.getItem("isAdmin") === "true"
+        console.log("[v0] Login successful, isAdmin:", isAdmin)
         if (isAdmin) {
           router.push("/dashboard")
         } else {
           router.push("/staff-dashboard")
         }
       } else {
-        setError("البريد الإلكتروني أو كلمة المرور غير صحيحة")
+        console.log("[v0] Login failed, setting error message")
+        const errorMessage = "البريد الإلكتروني أو كلمة المرور غير صحيحة"
+        setError(errorMessage)
+        toast({
+          variant: "destructive",
+          title: "خطأ في تسجيل الدخول",
+          description: errorMessage,
+        })
       }
     } catch (err) {
-      setError("حدث خطأ أثناء تسجيل الدخول")
+      console.log("[v0] Login error:", err)
+      const errorMessage = "حدث خطأ أثناء تسجيل الدخول"
+      setError(errorMessage)
+      toast({
+        variant: "destructive",
+        title: "خطأ",
+        description: errorMessage,
+      })
     } finally {
       setLoading(false)
     }
   }
+
+  console.log("[v0] Current error state:", error)
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-4 relative overflow-hidden">

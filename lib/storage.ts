@@ -37,6 +37,12 @@ export interface JobPosition {
   titleEn: string
   type: string
   typeEn: string
+  workShift?: string
+  workShiftEn?: string
+  gender?: string // "ذكر" | "أنثى" | "لا يهم"
+  genderEn?: string // "Male" | "Female" | "Doesn't matter"
+  workDuration?: string // e.g., "4-12" meaning 4 hours to 12 hours
+  workDurationEn?: string
   description: string
   descriptionEn: string
   createdAt: string
@@ -175,11 +181,13 @@ export interface EnhancedEmploymentApplication {
   birthDate: string
   nationalId: string
   maritalStatus: string
+  gender: string
   address: string
   phone: string
   email?: string
   position: string
   expectedSalary: string
+  canStayOvernight: string
 
   // Education
   education: {
@@ -192,12 +200,10 @@ export interface EnhancedEmploymentApplication {
 
   // Experience
   experience: {
-    company: string
-    position: string
-    startDate: string
-    endDate: string
-    description: string
-    currentlyWorking: boolean
+    institution: string
+    jobTitle: string
+    duration: string
+    responsibilities: string
   }[]
 
   // CV
@@ -413,6 +419,12 @@ export function getJobPositions(): JobPosition[] {
         titleEn: "Science Teacher",
         type: "دوام كامل",
         typeEn: "Full-time",
+        workShift: "8:00 ص - 3:00 م",
+        workShiftEn: "8:00 AM - 3:00 PM",
+        gender: "لا يهم",
+        genderEn: "Doesn't matter",
+        workDuration: "7 ساعات",
+        workDurationEn: "7 hours",
         description: "تدريس العلوم والتجارب العملية",
         descriptionEn: "Teaching science and practical experiments",
         createdAt: "2025/01/06",
@@ -423,6 +435,12 @@ export function getJobPositions(): JobPosition[] {
         titleEn: "Mathematics Teacher",
         type: "دوام كامل",
         typeEn: "Full-time",
+        workShift: "8:00 ص - 3:00 م",
+        workShiftEn: "8:00 AM - 3:00 PM",
+        gender: "لا يهم",
+        genderEn: "Doesn't matter",
+        workDuration: "7 ساعات",
+        workDurationEn: "7 hours",
         description: "تدريس الرياضيات بأساليب حديثة",
         descriptionEn: "Teaching mathematics with modern methods",
         createdAt: "2025/01/06",
@@ -433,6 +451,12 @@ export function getJobPositions(): JobPosition[] {
         titleEn: "Arabic Language Teacher",
         type: "دوام كامل",
         typeEn: "Full-time",
+        workShift: "8:00 ص - 3:00 م",
+        workShiftEn: "8:00 AM - 3:00 PM",
+        gender: "أنثى",
+        genderEn: "Female",
+        workDuration: "7 ساعات",
+        workDurationEn: "7 hours",
         description: "تدريس اللغة العربية لجميع المراحل",
         descriptionEn: "Teaching Arabic for all levels",
         createdAt: "2025/01/06",
@@ -443,6 +467,12 @@ export function getJobPositions(): JobPosition[] {
         titleEn: "Psychologist",
         type: "دوام كامل",
         typeEn: "Full-time",
+        workShift: "9:00 ص - 4:00 م",
+        workShiftEn: "9:00 AM - 4:00 PM",
+        gender: "لا يهم",
+        genderEn: "Doesn't matter",
+        workDuration: "7 ساعات",
+        workDurationEn: "7 hours",
         description: "تقديم الدعم النفسي للطلاب",
         descriptionEn: "Providing psychological support to students",
         createdAt: "2025/01/06",
@@ -453,6 +483,12 @@ export function getJobPositions(): JobPosition[] {
         titleEn: "Educational Supervisor",
         type: "دوام كامل",
         typeEn: "Full-time",
+        workShift: "7:30 ص - 3:30 م",
+        workShiftEn: "7:30 AM - 3:30 PM",
+        gender: "ذكر",
+        genderEn: "Male",
+        workDuration: "8 ساعات",
+        workDurationEn: "8 hours",
         description: "الإشراف على العملية التعليمية",
         descriptionEn: "Supervising the educational process",
         createdAt: "2025/01/06",
@@ -463,6 +499,12 @@ export function getJobPositions(): JobPosition[] {
         titleEn: "English Language Teacher",
         type: "دوام كامل",
         typeEn: "Full-time",
+        workShift: "8:00 ص - 3:00 م",
+        workShiftEn: "8:00 AM - 3:00 PM",
+        gender: "لا يهم",
+        genderEn: "Doesn't matter",
+        workDuration: "7 ساعات",
+        workDurationEn: "7 hours",
         description: "تدريس اللغة الإنجليزية",
         descriptionEn: "Teaching English language",
         createdAt: "2025/01/06",
@@ -473,6 +515,12 @@ export function getJobPositions(): JobPosition[] {
         titleEn: "Administrative Staff",
         type: "دوام جزئي",
         typeEn: "Part-time",
+        workShift: "9:00 ص - 1:00 م",
+        workShiftEn: "9:00 AM - 1:00 PM",
+        gender: "لا يهم",
+        genderEn: "Doesn't matter",
+        workDuration: "4 ساعات",
+        workDurationEn: "4 hours",
         description: "إدارة الشؤون الإدارية",
         descriptionEn: "Managing administrative affairs",
         createdAt: "2025/01/06",
@@ -506,6 +554,127 @@ export function updateJobPosition(id: string, data: Omit<JobPosition, "id" | "cr
       }
       localStorage.setItem("jobPositions", JSON.stringify(jobs))
     }
+  }
+}
+
+export function resetJobPositionsToDefault(): void {
+  if (typeof window !== "undefined") {
+    const defaultJobs: JobPosition[] = [
+      {
+        id: "1",
+        title: "معلم علوم",
+        titleEn: "Science Teacher",
+        type: "دوام كامل",
+        typeEn: "Full-time",
+        workShift: "8:00 ص - 3:00 م",
+        workShiftEn: "8:00 AM - 3:00 PM",
+        gender: "لا يهم",
+        genderEn: "Doesn't matter",
+        workDuration: "7 ساعات",
+        workDurationEn: "7 hours",
+        description: "تدريس العلوم والتجارب العملية",
+        descriptionEn: "Teaching science and practical experiments",
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: "2",
+        title: "معلم رياضيات",
+        titleEn: "Mathematics Teacher",
+        type: "دوام كامل",
+        typeEn: "Full-time",
+        workShift: "8:00 ص - 3:00 م",
+        workShiftEn: "8:00 AM - 3:00 PM",
+        gender: "لا يهم",
+        genderEn: "Doesn't matter",
+        workDuration: "7 ساعات",
+        workDurationEn: "7 hours",
+        description: "تدريس الرياضيات بأساليب حديثة",
+        descriptionEn: "Teaching mathematics with modern methods",
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: "3",
+        title: "معلم لغة عربية",
+        titleEn: "Arabic Language Teacher",
+        type: "دوام كامل",
+        typeEn: "Full-time",
+        workShift: "8:00 ص - 3:00 م",
+        workShiftEn: "8:00 AM - 3:00 PM",
+        gender: "أنثى",
+        genderEn: "Female",
+        workDuration: "7 ساعات",
+        workDurationEn: "7 hours",
+        description: "تدريس اللغة العربية لجميع المراحل",
+        descriptionEn: "Teaching Arabic for all levels",
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: "4",
+        title: "أخصائي نفسي",
+        titleEn: "Psychologist",
+        type: "دوام كامل",
+        typeEn: "Full-time",
+        workShift: "9:00 ص - 4:00 م",
+        workShiftEn: "9:00 AM - 4:00 PM",
+        gender: "لا يهم",
+        genderEn: "Doesn't matter",
+        workDuration: "7 ساعات",
+        workDurationEn: "7 hours",
+        description: "تقديم الدعم النفسي للطلاب",
+        descriptionEn: "Providing psychological support to students",
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: "5",
+        title: "مشرف تربوي",
+        titleEn: "Educational Supervisor",
+        type: "دوام كامل",
+        typeEn: "Full-time",
+        workShift: "7:30 ص - 3:30 م",
+        workShiftEn: "7:30 AM - 3:30 PM",
+        gender: "ذكر",
+        genderEn: "Male",
+        workDuration: "8 ساعات",
+        workDurationEn: "8 hours",
+        description: "الإشراف على العملية التعليمية",
+        descriptionEn: "Supervising the educational process",
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: "6",
+        title: "معلم لغة إنجليزية",
+        titleEn: "English Language Teacher",
+        type: "دوام كامل",
+        typeEn: "Full-time",
+        workShift: "8:00 ص - 3:00 م",
+        workShiftEn: "8:00 AM - 3:00 PM",
+        gender: "لا يهم",
+        genderEn: "Doesn't matter",
+        workDuration: "7 ساعات",
+        workDurationEn: "7 hours",
+        description: "تدريس اللغة الإنجليزية",
+        descriptionEn: "Teaching English language",
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: "7",
+        title: "موظف إداري",
+        titleEn: "Administrative Staff",
+        type: "دوام جزئي",
+        typeEn: "Part-time",
+        workShift: "9:00 ص - 1:00 م",
+        workShiftEn: "9:00 AM - 1:00 PM",
+        gender: "لا يهم",
+        genderEn: "Doesn't matter",
+        workDuration: "4 ساعات",
+        workDurationEn: "4 hours",
+        description: "إدارة الشؤون الإدارية",
+        descriptionEn: "Managing administrative affairs",
+        createdAt: new Date().toISOString(),
+      },
+    ]
+    localStorage.setItem("jobPositions", JSON.stringify(defaultJobs))
+    dispatchStorageChange("jobPositions", defaultJobs)
   }
 }
 

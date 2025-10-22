@@ -1,7 +1,6 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Cairo } from "next/font/google"
-import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
 import { LanguageProvider } from "@/lib/language-context"
 import { AuthProvider } from "@/lib/auth-context"
@@ -39,7 +38,6 @@ export default function RootLayout({
             </PageTransition>
           </LanguageProvider>
         </AuthProvider>
-        <Analytics />
       </body>
     </html>
   )

@@ -411,6 +411,12 @@ export default function DashboardPage() {
       titleEn: editingJob.titleEn,
       type: editingJob.type,
       typeEn: editingJob.typeEn,
+      workShift: editingJob.workShift || "",
+      workShiftEn: editingJob.workShiftEn || "",
+      gender: editingJob.gender || "",
+      genderEn: editingJob.genderEn || "",
+      workDuration: editingJob.workDuration || "",
+      workDurationEn: editingJob.workDurationEn || "",
       description: editingJob.description,
       descriptionEn: editingJob.descriptionEn,
     }
@@ -1581,6 +1587,30 @@ export default function DashboardPage() {
                         <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
                           {language === "ar" ? job.description : job.descriptionEn}
                         </p>
+
+                        <div className="space-y-2 mb-4">
+                          {job.workShift && (
+                            <div className="flex items-center gap-2 text-xs">
+                              <Badge variant="outline" className="bg-blue-500/10 text-blue-600">
+                                {language === "ar" ? job.workShift : job.workShiftEn}
+                              </Badge>
+                            </div>
+                          )}
+                          {job.gender && (
+                            <div className="flex items-center gap-2 text-xs">
+                              <Badge variant="outline" className="bg-purple-500/10 text-purple-600">
+                                {language === "ar" ? job.gender : job.genderEn}
+                              </Badge>
+                            </div>
+                          )}
+                          {job.workDuration && (
+                            <div className="flex items-center gap-2 text-xs">
+                              <Badge variant="outline" className="bg-green-500/10 text-green-600">
+                                {language === "ar" ? job.workDuration : job.workDurationEn}
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
 
                         <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
                           <Calendar className="w-3 h-3" />
@@ -3290,7 +3320,7 @@ export default function DashboardPage() {
                     editingGalleryImage ? { ...editingGalleryImage, category: e.target.value } : ({} as GalleryImage),
                   )
                 }
-                className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <option value="">{language === "ar" ? "اختر التصنيف" : "Select Category"}</option>
                 <option value="المرافق">{language === "ar" ? "المرافق" : "Facilities"}</option>
@@ -3448,6 +3478,86 @@ export default function DashboardPage() {
                 />
               </div>
             </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>{language === "ar" ? "فترة الدوام (عربي)" : "Work Shift (Arabic)"}</Label>
+                <Input
+                  value={editingJob?.workShift || ""}
+                  onChange={(e) =>
+                    setEditingJob(editingJob ? { ...editingJob, workShift: e.target.value } : ({} as JobPosition))
+                  }
+                  placeholder="8:00 ص - 3:00 م"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{language === "ar" ? "فترة الدوام (إنجليزي)" : "Work Shift (English)"}</Label>
+                <Input
+                  value={editingJob?.workShiftEn || ""}
+                  onChange={(e) =>
+                    setEditingJob(editingJob ? { ...editingJob, workShiftEn: e.target.value } : ({} as JobPosition))
+                  }
+                  placeholder="8:00 AM - 3:00 PM"
+                />
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>{language === "ar" ? "الجنس المطلوب (عربي)" : "Required Gender (Arabic)"}</Label>
+                <select
+                  value={editingJob?.gender || ""}
+                  onChange={(e) =>
+                    setEditingJob(editingJob ? { ...editingJob, gender: e.target.value } : ({} as JobPosition))
+                  }
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <option value="">اختر الجنس</option>
+                  <option value="ذكر">ذكر</option>
+                  <option value="أنثى">أنثى</option>
+                  <option value="لا يهم">لا يهم</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label>{language === "ar" ? "الجنس المطلوب (إنجليزي)" : "Required Gender (English)"}</Label>
+                <select
+                  value={editingJob?.genderEn || ""}
+                  onChange={(e) =>
+                    setEditingJob(editingJob ? { ...editingJob, genderEn: e.target.value } : ({} as JobPosition))
+                  }
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Doesn't matter">Doesn't matter</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>{language === "ar" ? "مدة الدوام (عربي)" : "Work Duration (Arabic)"}</Label>
+                <Input
+                  value={editingJob?.workDuration || ""}
+                  onChange={(e) =>
+                    setEditingJob(editingJob ? { ...editingJob, workDuration: e.target.value } : ({} as JobPosition))
+                  }
+                  placeholder="7 ساعات"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{language === "ar" ? "مدة الدوام (إنجليزي)" : "Work Duration (English)"}</Label>
+                <Input
+                  value={editingJob?.workDurationEn || ""}
+                  onChange={(e) =>
+                    setEditingJob(editingJob ? { ...editingJob, workDurationEn: e.target.value } : ({} as JobPosition))
+                  }
+                  placeholder="7 hours"
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label>{language === "ar" ? "الوصف (عربي)" : "Description (Arabic)"}</Label>
               <Textarea

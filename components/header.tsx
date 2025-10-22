@@ -22,12 +22,12 @@ export function Header() {
   }, [])
 
   const navItems = [
-    { name: t.nav.home, href: "#home" },
-    { name: t.nav.about, href: "#about" },
-    { name: t.nav.departments, href: "#departments" },
-    { name: t.nav.gallery, href: "#gallery" },
-    { name: t.nav.jobs, href: "#jobs" },
-    { name: t.nav.contact, href: "#contact" },
+    { name: t.nav.home, href: "/" },
+    { name: t.nav.about, href: "/#about" },
+    { name: t.nav.departments, href: "/#departments" },
+    { name: t.nav.gallery, href: "/#gallery" },
+    { name: t.nav.jobs, href: "/#jobs" },
+    { name: t.nav.contact, href: "/#contact" },
   ]
 
   return (

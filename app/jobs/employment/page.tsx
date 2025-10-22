@@ -34,6 +34,7 @@ import {
   Mail,
   Phone,
   MessageCircle,
+  FileText,
 } from "lucide-react"
 
 interface EducationEntry {
@@ -45,12 +46,10 @@ interface EducationEntry {
 }
 
 interface ExperienceEntry {
-  company: string
-  position: string
-  startDate: string
-  endDate: string
-  description: string
-  currentlyWorking: boolean
+  institution: string
+  jobTitle: string
+  duration: string
+  responsibilities: string
 }
 
 export default function EmploymentPage() {
@@ -62,7 +61,7 @@ export default function EmploymentPage() {
   const [cvFile, setCvFile] = useState<File | null>(null)
 
   const [currentStep, setCurrentStep] = useState(1)
-  const totalSteps = 3
+  const totalSteps = 4
 
   const [formData, setFormData] = useState({
     // Step 1: Personal Information
@@ -71,6 +70,8 @@ export default function EmploymentPage() {
     birthDate: "",
     nationalId: "",
     maritalStatus: "",
+    gender: "",
+    canStayOvernight: "",
     address: "",
     phone: "",
     position: "",
@@ -94,7 +95,7 @@ export default function EmploymentPage() {
     {
       image: "/happy-special-needs-students-learning-together-wit.jpg",
       titleAr: "نبحث عن المتميزين",
-      titleEn: "We're Looking for Excellence",
+      titleEn: "We're Looking For Excellence",
       descriptionAr: "نوفر بيئة عمل محفزة ومكافآت تنافسية",
       descriptionEn: "We provide a motivating work environment and competitive rewards",
     },
@@ -138,24 +139,18 @@ export default function EmploymentPage() {
   }
 
   const addExperience = () => {
-    console.log("[v0] Adding new experience entry")
     setFormData({
       ...formData,
-      experience: [
-        ...formData.experience,
-        { company: "", position: "", startDate: "", endDate: "", description: "", currentlyWorking: false },
-      ],
+      experience: [...formData.experience, { institution: "", jobTitle: "", duration: "", responsibilities: "" }],
     })
   }
 
   const removeExperience = (index: number) => {
-    console.log("[v0] Removing experience at index:", index)
     const newExperience = formData.experience.filter((_, i) => i !== index)
     setFormData({ ...formData, experience: newExperience })
   }
 
-  const updateExperience = (index: number, field: keyof ExperienceEntry, value: string | boolean) => {
-    console.log("[v0] Updating experience at index:", index, "field:", field, "value:", value)
+  const updateExperience = (index: number, field: keyof ExperienceEntry, value: string) => {
     const newExperience = [...formData.experience]
     newExperience[index] = { ...newExperience[index], [field]: value }
     setFormData({ ...formData, experience: newExperience })
@@ -175,6 +170,8 @@ export default function EmploymentPage() {
       birthDate: formData.birthDate,
       nationalId: formData.nationalId,
       maritalStatus: formData.maritalStatus,
+      gender: formData.gender,
+      canStayOvernight: formData.canStayOvernight,
       address: formData.address,
       phone: formData.phone,
       position: formData.position,
@@ -206,6 +203,8 @@ export default function EmploymentPage() {
         birthDate: "",
         nationalId: "",
         maritalStatus: "",
+        gender: "",
+        canStayOvernight: "",
         address: "",
         phone: "",
         position: "",
@@ -236,14 +235,28 @@ export default function EmploymentPage() {
   }
 
   const nextStep = () => {
+    console.log("[v0] Current step:", currentStep, "Total steps:", totalSteps)
+    console.log("[v0] Is step valid:", isStepValid())
+    console.log("[v0] Form data:", {
+      personalInfo: {
+        fullName: formData.fullName,
+        phone: formData.phone,
+        position: formData.position,
+      },
+      educationCount: formData.education.length,
+      experienceCount: formData.experience.length,
+    })
+
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1)
+      console.log("[v0] Moving to step:", currentStep + 1)
       // Scroll to form
       document.getElementById("application-form")?.scrollIntoView({ behavior: "smooth" })
     }
   }
 
   const prevStep = () => {
+    console.log("[v0] Going back from step:", currentStep)
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1)
       document.getElementById("application-form")?.scrollIntoView({ behavior: "smooth" })
@@ -252,25 +265,41 @@ export default function EmploymentPage() {
 
   const isStepValid = () => {
     if (currentStep === 1) {
-      return (
+      const isValid =
         formData.fullName &&
         formData.birthPlace &&
         formData.birthDate &&
         formData.nationalId &&
         formData.maritalStatus &&
+        formData.gender &&
+        formData.canStayOvernight &&
         formData.address &&
         formData.phone &&
         formData.position &&
         formData.expectedSalary
-      )
+      console.log("[v0] Step 1 validation:", isValid)
+      return isValid
     }
     if (currentStep === 2) {
-      return (
+      const isValid =
         formData.education.length > 0 &&
         formData.education.every((edu) => edu.degree && edu.major && edu.university && edu.graduationYear)
-      )
+      console.log("[v0] Step 2 validation:", isValid, "Education count:", formData.education.length)
+      return isValid
     }
-    return true
+    if (currentStep === 3) {
+      const isValid =
+        formData.experience.length > 0 &&
+        formData.experience.every((exp) => exp.institution && exp.jobTitle && exp.duration && exp.responsibilities)
+      console.log("[v0] Step 3 validation:", isValid, "Experience count:", formData.experience.length)
+      return isValid
+    }
+    if (currentStep === 4) {
+      // Step 4 is review, always valid if we reached here
+      console.log("[v0] Step 4 (review) - always valid")
+      return true
+    }
+    return false
   }
 
   const benefitIcons = [Heart, TrendingUp, Award, Users, Star, Briefcase]
@@ -278,7 +307,6 @@ export default function EmploymentPage() {
 
   return (
     <LayoutWrapper>
-      {/* ... existing hero section code ... */}
       <section className="relative h-[60vh] w-full overflow-hidden">
         {heroSlides.map((slide, index) => (
           <div
@@ -338,7 +366,6 @@ export default function EmploymentPage() {
 
       <main className="py-20 bg-gradient-to-b from-background via-muted/10 to-background">
         <div className="container mx-auto px-4">
-          {/* ... existing benefits and jobs cards ... */}
           <div className="grid lg:grid-cols-2 gap-10 max-w-7xl mx-auto mb-16">
             <Card className="p-10 bg-gradient-to-br from-primary/10 via-accent/5 to-primary/5 border-2 border-primary/20 shadow-2xl hover:shadow-primary/20 transition-all duration-500 hover:scale-[1.02]">
               <div className="flex items-center gap-4 mb-8">
@@ -462,8 +489,8 @@ export default function EmploymentPage() {
               </div>
 
               <div className="mb-12">
-                <div className="flex items-center justify-between max-w-2xl mx-auto">
-                  {[1, 2, 3].map((step) => (
+                <div className="flex items-center justify-between max-w-3xl mx-auto">
+                  {[1, 2, 3, 4].map((step) => (
                     <div key={step} className="flex items-center flex-1">
                       <div className="flex flex-col items-center flex-1">
                         <div
@@ -484,10 +511,11 @@ export default function EmploymentPage() {
                             {step === 1 && (language === "ar" ? "المعلومات الشخصية" : "Personal Info")}
                             {step === 2 && (language === "ar" ? "المؤهل العلمي" : "Education")}
                             {step === 3 && (language === "ar" ? "الخبرات العملية" : "Experience")}
+                            {step === 4 && (language === "ar" ? "المراجعة والإرسال" : "Review & Submit")}
                           </div>
                         </div>
                       </div>
-                      {step < 3 && (
+                      {step < 4 && (
                         <div
                           className={`h-1 flex-1 mx-2 transition-all duration-500 ${
                             currentStep > step ? "bg-gradient-to-r from-primary to-accent" : "bg-muted"
@@ -630,6 +658,25 @@ export default function EmploymentPage() {
                       </div>
 
                       <div className="space-y-3">
+                        <Label htmlFor="gender" className="text-lg font-bold text-foreground">
+                          {language === "ar" ? "الجنس *" : "Gender *"}
+                        </Label>
+                        <Select
+                          value={formData.gender}
+                          onValueChange={(value) => setFormData({ ...formData, gender: value })}
+                          required
+                        >
+                          <SelectTrigger className="h-14 text-base border-2 hover:border-primary transition-colors rounded-xl">
+                            <SelectValue placeholder={language === "ar" ? "اختر..." : "Select..."} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="male">{language === "ar" ? "ذكر" : "Male"}</SelectItem>
+                            <SelectItem value="female">{language === "ar" ? "أنثى" : "Female"}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-3">
                         <Label htmlFor="maritalStatus" className="text-lg font-bold text-foreground">
                           {language === "ar" ? "الحالة الاجتماعية *" : "Marital Status *"}
                         </Label>
@@ -646,6 +693,25 @@ export default function EmploymentPage() {
                             <SelectItem value="married">{language === "ar" ? "متزوج/متزوجة" : "Married"}</SelectItem>
                             <SelectItem value="divorced">{language === "ar" ? "مطلق/مطلقة" : "Divorced"}</SelectItem>
                             <SelectItem value="widowed">{language === "ar" ? "أرمل/أرملة" : "Widowed"}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-3">
+                        <Label htmlFor="canStayOvernight" className="text-lg font-bold text-foreground">
+                          {language === "ar" ? "هل يمكنك المبيت؟ *" : "Can you stay overnight? *"}
+                        </Label>
+                        <Select
+                          value={formData.canStayOvernight}
+                          onValueChange={(value) => setFormData({ ...formData, canStayOvernight: value })}
+                          required
+                        >
+                          <SelectTrigger className="h-14 text-base border-2 hover:border-primary transition-colors rounded-xl">
+                            <SelectValue placeholder={language === "ar" ? "اختر..." : "Select..."} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="yes">{language === "ar" ? "نعم" : "Yes"}</SelectItem>
+                            <SelectItem value="no">{language === "ar" ? "لا" : "No"}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -909,94 +975,62 @@ export default function EmploymentPage() {
                           </Button>
 
                           <div className="space-y-6 mt-8">
-                            <div className="grid md:grid-cols-2 gap-6">
-                              <div className="space-y-2">
-                                <Label className="text-base font-semibold flex items-center gap-2">
-                                  <Building className="w-4 h-4 text-primary" />
-                                  {language === "ar" ? "اسم الشركة/المؤسسة" : "Company/Organization"}
-                                </Label>
-                                <Input
-                                  value={exp.company}
-                                  onChange={(e) => updateExperience(index, "company", e.target.value)}
-                                  placeholder={language === "ar" ? "اسم الشركة" : "Company name"}
-                                  className="h-12 border-2 hover:border-primary focus:border-primary transition-colors rounded-xl"
-                                />
-                              </div>
-
-                              <div className="space-y-2">
-                                <Label className="text-base font-semibold flex items-center gap-2">
-                                  <Briefcase className="w-4 h-4 text-primary" />
-                                  {language === "ar" ? "المسمى الوظيفي" : "Job Title"}
-                                </Label>
-                                <Input
-                                  value={exp.position}
-                                  onChange={(e) => updateExperience(index, "position", e.target.value)}
-                                  placeholder={language === "ar" ? "المسمى الوظيفي" : "Job title"}
-                                  className="h-12 border-2 hover:border-primary focus:border-primary transition-colors rounded-xl"
-                                />
-                              </div>
-                            </div>
-
-                            <div className="grid md:grid-cols-2 gap-6">
-                              <div className="space-y-2">
-                                <Label className="text-base font-semibold">
-                                  {language === "ar" ? "تاريخ البدء" : "Start Date"}
-                                </Label>
-                                <Input
-                                  type="date"
-                                  value={exp.startDate}
-                                  onChange={(e) => updateExperience(index, "startDate", e.target.value)}
-                                  className="h-12 border-2 hover:border-primary focus:border-primary transition-colors rounded-xl"
-                                />
-                              </div>
-
-                              <div className="space-y-2">
-                                <Label className="text-base font-semibold">
-                                  {language === "ar" ? "تاريخ الانتهاء" : "End Date"}
-                                </Label>
-                                <Input
-                                  type="date"
-                                  value={exp.endDate}
-                                  onChange={(e) => updateExperience(index, "endDate", e.target.value)}
-                                  disabled={exp.currentlyWorking}
-                                  className="h-12 border-2 hover:border-primary focus:border-primary transition-colors rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
-                                />
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-primary/5 to-accent/5 rounded-xl border border-primary/20">
-                              <input
-                                type="checkbox"
-                                id={`currently-working-${index}`}
-                                checked={exp.currentlyWorking}
-                                onChange={(e) => {
-                                  updateExperience(index, "currentlyWorking", e.target.checked)
-                                  if (e.target.checked) {
-                                    updateExperience(index, "endDate", "")
-                                  }
-                                }}
-                                className="w-5 h-5 rounded border-2 border-primary text-primary focus:ring-2 focus:ring-primary cursor-pointer"
-                              />
-                              <Label
-                                htmlFor={`currently-working-${index}`}
-                                className="text-base cursor-pointer font-medium"
-                              >
-                                {language === "ar" ? "أعمل حالياً في هذه الوظيفة" : "Currently working here"}
+                            <div className="space-y-2">
+                              <Label className="text-base font-semibold flex items-center gap-2">
+                                <Building className="w-4 h-4 text-primary" />
+                                {language === "ar" ? "اسم المؤسسة/الشركة *" : "Institution/Company Name *"}
                               </Label>
+                              <Input
+                                value={exp.institution}
+                                onChange={(e) => updateExperience(index, "institution", e.target.value)}
+                                placeholder={
+                                  language === "ar" ? "مثال: مدرسة الشرق الأوسط" : "Example: Middle East School"
+                                }
+                                required
+                                className="h-12 border-2 hover:border-primary focus:border-primary transition-colors rounded-xl"
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label className="text-base font-semibold flex items-center gap-2">
+                                <Briefcase className="w-4 h-4 text-primary" />
+                                {language === "ar" ? "المسمى الوظيفي *" : "Job Title *"}
+                              </Label>
+                              <Input
+                                value={exp.jobTitle}
+                                onChange={(e) => updateExperience(index, "jobTitle", e.target.value)}
+                                placeholder={language === "ar" ? "مثال: معلم لغة عربية" : "Example: Arabic Teacher"}
+                                required
+                                className="h-12 border-2 hover:border-primary focus:border-primary transition-colors rounded-xl"
+                              />
                             </div>
 
                             <div className="space-y-2">
                               <Label className="text-base font-semibold">
-                                {language === "ar" ? "وصف المهام والمسؤوليات" : "Job Description"}
+                                {language === "ar" ? "مدة العمل *" : "Duration *"}
+                              </Label>
+                              <Input
+                                value={exp.duration}
+                                onChange={(e) => updateExperience(index, "duration", e.target.value)}
+                                placeholder={language === "ar" ? "مثال: 2018 - 2022" : "Example: 2018 - 2022"}
+                                required
+                                className="h-12 border-2 hover:border-primary focus:border-primary transition-colors rounded-xl"
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label className="text-base font-semibold">
+                                {language === "ar" ? "المهام والمسؤوليات *" : "Responsibilities *"}
                               </Label>
                               <Textarea
-                                value={exp.description}
-                                onChange={(e) => updateExperience(index, "description", e.target.value)}
+                                value={exp.responsibilities}
+                                onChange={(e) => updateExperience(index, "responsibilities", e.target.value)}
                                 placeholder={
                                   language === "ar"
-                                    ? "اكتب وصفاً مختصراً للمهام والمسؤوليات..."
-                                    : "Brief description of responsibilities..."
+                                    ? "اذكر أهم المهام والمسؤوليات التي قمت بها..."
+                                    : "Mention the main tasks and responsibilities..."
                                 }
+                                required
                                 rows={4}
                                 className="border-2 hover:border-primary focus:border-primary transition-colors rounded-xl resize-none"
                               />
@@ -1008,13 +1042,13 @@ export default function EmploymentPage() {
                       <div className="space-y-3">
                         <Label htmlFor="cv" className="text-lg font-bold text-foreground flex items-center gap-2">
                           <Upload className="w-5 h-5 text-primary" />
-                          {language === "ar" ? "السيرة الذاتية" : "Curriculum Vitae"}
+                          {language === "ar" ? "السيرة الذاتية (صورة أو ملف)" : "CV (Image or File)"}
                         </Label>
                         <div className="relative">
                           <Input
                             id="cv"
                             type="file"
-                            accept=".pdf,.doc,.docx"
+                            accept=".pdf,.doc,.docx,image/*"
                             onChange={handleFileChange}
                             className="hidden"
                           />
@@ -1041,11 +1075,248 @@ export default function EmploymentPage() {
                                   {language === "ar" ? "اضغط لرفع السيرة الذاتية" : "Click to upload CV"}
                                 </p>
                                 <p className="text-sm text-muted-foreground">
-                                  {language === "ar" ? "PDF, DOC, DOCX (حتى 5MB)" : "PDF, DOC, DOCX (up to 5MB)"}
+                                  {language === "ar"
+                                    ? "PDF, DOC, DOCX, أو صورة (حتى 5MB)"
+                                    : "PDF, DOC, DOCX, or Image (up to 5MB)"}
                                 </p>
                               </div>
                             )}
                           </label>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {currentStep === 4 && (
+                    <div className="space-y-8 animate-in fade-in slide-in-from-right duration-500">
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg">
+                          <FileText className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-2xl font-bold text-green-600">
+                            {language === "ar" ? "مراجعة البيانات قبل الإرسال" : "Review Before Submitting"}
+                          </h3>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {language === "ar"
+                              ? "تأكد من صحة جميع البيانات قبل الإرسال"
+                              : "Verify all information before submitting"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="p-6 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-500 rounded-xl shadow-lg">
+                        <div className="flex items-center gap-4">
+                          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center flex-shrink-0 shadow-lg animate-pulse">
+                            <CheckCircle className="w-8 h-8 text-white" />
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-bold text-green-700 mb-1">
+                              {language === "ar" ? "جاهز للإرسال!" : "Ready to Submit!"}
+                            </h4>
+                            <p className="text-sm text-green-600">
+                              {language === "ar"
+                                ? "راجع بياناتك أدناه، ثم اضغط على زر 'إرسال الطلب' في الأسفل"
+                                : "Review your data below, then click 'Submit Application' button at the bottom"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="sticky top-4 z-10 p-4 bg-gradient-to-r from-green-500 via-green-600 to-green-500 rounded-xl shadow-2xl border-2 border-green-400">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                              <Send className="w-6 h-6 text-white" />
+                            </div>
+                            <div className="text-white">
+                              <p className="font-bold text-lg">
+                                {language === "ar" ? "هل البيانات صحيحة؟" : "Is the data correct?"}
+                              </p>
+                              <p className="text-sm text-white/90">
+                                {language === "ar" ? "اضغط لإرسال الطلب الآن" : "Click to submit now"}
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            type="submit"
+                            size="lg"
+                            onClick={(e) => {
+                              console.log("[v0] Submit button clicked from top")
+                              handleSubmit(e)
+                            }}
+                            className="bg-white text-green-600 hover:bg-white/90 text-lg px-8 py-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 font-bold"
+                          >
+                            <Send className={`w-6 h-6 ${language === "ar" ? "ml-2" : "mr-2"}`} />
+                            {language === "ar" ? "إرسال الطلب" : "Submit Application"}
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-6">
+                        {/* Personal Information Summary */}
+                        <Card className="p-6 border-2 border-primary/20">
+                          <div className="flex items-center gap-3 mb-4">
+                            <User className="w-6 h-6 text-primary" />
+                            <h4 className="text-xl font-bold">
+                              {language === "ar" ? "المعلومات الشخصية" : "Personal Information"}
+                            </h4>
+                          </div>
+                          <div className="grid md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <span className="font-semibold text-muted-foreground">
+                                {language === "ar" ? "الاسم:" : "Name:"}
+                              </span>
+                              <p className="text-foreground font-medium">{formData.fullName}</p>
+                            </div>
+                            <div>
+                              <span className="font-semibold text-muted-foreground">
+                                {language === "ar" ? "مكان الولادة:" : "Birth Place:"}
+                              </span>
+                              <p className="text-foreground font-medium">{formData.birthPlace}</p>
+                            </div>
+                            <div>
+                              <span className="font-semibold text-muted-foreground">
+                                {language === "ar" ? "تاريخ الولادة:" : "Birth Date:"}
+                              </span>
+                              <p className="text-foreground font-medium">{formData.birthDate}</p>
+                            </div>
+                            <div>
+                              <span className="font-semibold text-muted-foreground">
+                                {language === "ar" ? "رقم الهوية:" : "ID Number:"}
+                              </span>
+                              <p className="text-foreground font-medium">{formData.nationalId}</p>
+                            </div>
+                            <div>
+                              <span className="font-semibold text-muted-foreground">
+                                {language === "ar" ? "الجنس:" : "Gender:"}
+                              </span>
+                              <p className="text-foreground font-medium">
+                                {formData.gender === "male"
+                                  ? language === "ar"
+                                    ? "ذكر"
+                                    : "Male"
+                                  : language === "ar"
+                                    ? "أنثى"
+                                    : "Female"}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="font-semibold text-muted-foreground">
+                                {language === "ar" ? "المبيت:" : "Overnight Stay:"}
+                              </span>
+                              <p className="text-foreground font-medium">
+                                {formData.canStayOvernight === "yes"
+                                  ? language === "ar"
+                                    ? "نعم"
+                                    : "Yes"
+                                  : language === "ar"
+                                    ? "لا"
+                                    : "No"}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="font-semibold text-muted-foreground">
+                                {language === "ar" ? "الهاتف:" : "Phone:"}
+                              </span>
+                              <p className="text-foreground font-medium">{formData.phone}</p>
+                            </div>
+                            <div>
+                              <span className="font-semibold text-muted-foreground">
+                                {language === "ar" ? "الوظيفة المطلوبة:" : "Position:"}
+                              </span>
+                              <p className="text-foreground font-medium">{formData.position}</p>
+                            </div>
+                          </div>
+                        </Card>
+
+                        {/* Education Summary */}
+                        <Card className="p-6 border-2 border-primary/20">
+                          <div className="flex items-center gap-3 mb-4">
+                            <GraduationCap className="w-6 h-6 text-primary" />
+                            <h4 className="text-xl font-bold">
+                              {language === "ar" ? "المؤهلات العلمية" : "Education"}
+                            </h4>
+                          </div>
+                          <div className="space-y-4">
+                            {formData.education.map((edu, index) => (
+                              <div key={index} className="p-4 bg-muted/30 rounded-xl">
+                                <p className="font-bold text-foreground">
+                                  {edu.degree} - {edu.major}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                  {edu.university} ({edu.graduationYear})
+                                </p>
+                                {edu.gpa && (
+                                  <p className="text-sm text-muted-foreground">
+                                    {language === "ar" ? "المعدل:" : "GPA:"} {edu.gpa}
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </Card>
+
+                        {/* Experience Summary */}
+                        <Card className="p-6 border-2 border-primary/20">
+                          <div className="flex items-center gap-3 mb-4">
+                            <Building className="w-6 h-6 text-primary" />
+                            <h4 className="text-xl font-bold">
+                              {language === "ar" ? "الخبرات العملية" : "Work Experience"}
+                            </h4>
+                          </div>
+                          <div className="space-y-4">
+                            {formData.experience.map((exp, index) => (
+                              <div key={index} className="p-4 bg-muted/30 rounded-xl">
+                                <p className="font-bold text-foreground">
+                                  {exp.jobTitle} - {exp.institution}
+                                </p>
+                                <p className="text-sm text-muted-foreground mb-2">{exp.duration}</p>
+                                <p className="text-sm text-foreground">{exp.responsibilities}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </Card>
+
+                        {cvFile && (
+                          <Card className="p-6 border-2 border-primary/20">
+                            <div className="flex items-center gap-3">
+                              <Upload className="w-6 h-6 text-primary" />
+                              <div>
+                                <h4 className="text-lg font-bold">
+                                  {language === "ar" ? "السيرة الذاتية" : "CV Attached"}
+                                </h4>
+                                <p className="text-sm text-muted-foreground">{cvFile.name}</p>
+                              </div>
+                            </div>
+                          </Card>
+                        )}
+
+                        <div className="p-6 bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 rounded-xl border-2 border-primary/20">
+                          <div className="flex items-start gap-4">
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0">
+                              <MessageCircle className="w-6 h-6 text-white" />
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-foreground mb-2">
+                                {language === "ar" ? "سيتم إرسال طلبك إلى:" : "Your application will be sent to:"}
+                              </h4>
+                              <ul className="space-y-2 text-sm text-muted-foreground">
+                                <li className="flex items-center gap-2">
+                                  <Mail className="w-4 h-4 text-primary" />
+                                  {language === "ar" ? "البريد الإلكتروني للمدرسة" : "School Email"}
+                                </li>
+                                <li className="flex items-center gap-2">
+                                  <MessageCircle className="w-4 h-4 text-primary" />
+                                  {language === "ar" ? "واتساب المدرسة" : "School WhatsApp"}
+                                </li>
+                                <li className="flex items-center gap-2">
+                                  <FileText className="w-4 h-4 text-primary" />
+                                  {language === "ar" ? "لوحة التحكم" : "Dashboard"}
+                                </li>
+                              </ul>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1075,7 +1346,7 @@ export default function EmploymentPage() {
                         onClick={nextStep}
                         disabled={!isStepValid()}
                         size="lg"
-                        className="bg-gradient-to-r from-primary via-accent to-primary hover:from-primary/90 hover:via-accent/90 hover:to-primary/90 text-lg px-8 py-6 rounded-xl ml-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="bg-gradient-to-r from-primary via-accent to-primary hover:from-primary/90 hover:via-accent/90 hover:to-primary/90 text-lg px-8 py-6 rounded-xl ml-auto disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
                       >
                         {language === "ar" ? "التالي" : "Next"}
                         {language === "ar" ? (
@@ -1088,20 +1359,15 @@ export default function EmploymentPage() {
                       <Button
                         type="submit"
                         size="lg"
-                        className="bg-gradient-to-r from-primary via-accent to-primary hover:from-primary/90 hover:via-accent/90 hover:to-primary/90 text-lg px-8 py-6 rounded-xl ml-auto"
+                        onClick={(e) => {
+                          console.log("[v0] Submit button clicked from bottom")
+                        }}
+                        className="bg-gradient-to-r from-green-500 via-green-600 to-green-500 hover:from-green-600 hover:via-green-700 hover:to-green-600 text-white text-xl px-12 py-7 rounded-xl ml-auto shadow-2xl hover:shadow-green-500/50 transition-all duration-300 font-bold animate-pulse hover:animate-none border-2 border-green-400"
                       >
-                        <Send className={`w-6 h-6 ${language === "ar" ? "ml-2" : "mr-2"}`} />
-                        {language === "ar" ? "إرسال الطلب" : "Submit Application"}
+                        <Send className={`w-7 h-7 ${language === "ar" ? "ml-3" : "mr-3"}`} />
+                        {language === "ar" ? "إرسال الطلب الآن" : "Submit Application Now"}
                       </Button>
                     )}
-                  </div>
-
-                  <div className="text-center p-6 bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 rounded-xl border border-primary/20">
-                    <p className="text-base text-muted-foreground font-medium">
-                      {language === "ar"
-                        ? "سيتم إرسال طلبك عبر البريد الإلكتروني والواتساب"
-                        : "Your application will be sent via email and WhatsApp"}
-                    </p>
                   </div>
                 </form>
               )}
