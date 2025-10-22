@@ -1,30 +1,206 @@
-# School website design
+# مدرسة نموذجية للتربية الخاصة
 
-*Automatically synced with your [v0.app](https://v0.app) deployments*
+موقع إلكتروني شامل لمدرسة نموذجية متخصصة في التربية الخاصة، مبني باستخدام Next.js 15 و React 19 و TypeScript.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/mmm460286gmailcoms-projects/v0-school-website-design)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/projects/81eRa6DgacR)
+## المميزات الرئيسية
 
-## Overview
+### 🎓 إدارة المحتوى
+- عرض الأقسام المختلفة (القسم الطبي، قلب المدرسة، السكن الداخلي، الأنشطة اللامنهجية)
+- معرض صور تفاعلي
+- قسم الآراء والتقييمات
+- نظام إدارة المحتوى الديناميكي
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
+### 💼 نظام التوظيف
+- نموذج طلب توظيف شامل مع 3 خطوات
+- إدارة طلبات التوظيف من لوحة التحكم
+- إشعارات تلقائية عبر WhatsApp والبريد الإلكتروني
+- تتبع حالة الطلبات (قيد المراجعة، مقبول، مرفوض)
 
-## Deployment
+### 🛠️ نظام طلبات الخدمة
+- نموذج طلب خدمة مخصص
+- إدارة الطلبات وتحديث الحالة
+- إشعارات فورية للإدارة
 
-Your project is live at:
+### 👥 نظام إدارة الموظفين
+- تسجيل دخول آمن للموظفين
+- لوحة تحكم مخصصة لكل موظف
+- 6 أدوار وظيفية مختلفة مع صلاحيات محددة:
+  - مدير توظيف
+  - مدير خدمات
+  - مدير محتوى
+  - موظف استقبال
+  - موظف عادي
+  - مشاهد
+- تتبع جميع نشاطات الموظفين
+- إشعارات فورية للمدير
 
-**[https://vercel.com/mmm460286gmailcoms-projects/v0-school-website-design](https://vercel.com/mmm460286gmailcoms-projects/v0-school-website-design)**
+### 📊 لوحة التحكم الرئيسية
+- إحصائيات شاملة
+- إدارة طلبات التوظيف والخدمة
+- إدارة الرسائل والآراء
+- إدارة الموظفين
+- سجل النشاطات
+- نظام إشعارات متقدم
 
-## Build your app
+### 🎨 التصميم
+- تصميم عصري وجذاب
+- دعم كامل للغة العربية (RTL)
+- responsive design لجميع الأجهزة
+- تأثيرات حركية سلسة
+- نظام ألوان احترافي
 
-Continue building your app on:
+## التقنيات المستخدمة
 
-**[https://v0.app/chat/projects/81eRa6DgacR](https://v0.app/chat/projects/81eRa6DgacR)**
+- **Framework**: Next.js 15 (App Router)
+- **UI Library**: React 19
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS v4
+- **UI Components**: shadcn/ui + Radix UI
+- **Icons**: Lucide React
+- **Forms**: React Hook Form + Zod
+- **Animations**: Framer Motion (via Tailwind)
+- **Storage**: localStorage (يمكن الترقية إلى Supabase)
+- **Notifications**: Sonner (Toast notifications)
 
-## How It Works
+## المتطلبات
 
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+- Node.js 18.17 أو أحدث
+- npm أو yarn أو pnpm
+
+## التثبيت
+
+1. **استنساخ المشروع:**
+\`\`\`bash
+git clone https://github.com/your-username/model-school.git
+cd model-school
+\`\`\`
+
+2. **تثبيت التبعيات:**
+\`\`\`bash
+npm install
+# أو
+yarn install
+# أو
+pnpm install
+\`\`\`
+
+3. **إعداد المتغيرات البيئية:**
+\`\`\`bash
+cp .env.example .env.local
+\`\`\`
+
+ثم قم بتعديل ملف `.env.local` وإضافة القيم المطلوبة (اختياري للتطوير المحلي).
+
+4. **تشغيل المشروع:**
+\`\`\`bash
+npm run dev
+# أو
+yarn dev
+# أو
+pnpm dev
+\`\`\`
+
+5. **فتح المتصفح:**
+افتح [http://localhost:3000](http://localhost:3000) لرؤية الموقع.
+
+## بنية المشروع
+
+\`\`\`
+model-school/
+├── app/                          # Next.js App Router
+│   ├── api/                      # API Routes
+│   ├── dashboard/                # لوحة التحكم الرئيسية
+│   ├── staff-dashboard/          # لوحة تحكم الموظفين
+│   ├── staff-login/              # تسجيل دخول الموظفين
+│   ├── departments/              # صفحات الأقسام
+│   ├── jobs/                     # صفحات التوظيف والخدمات
+│   └── ...
+├── components/                   # React Components
+│   ├── ui/                       # shadcn/ui components
+│   └── ...
+├── lib/                          # Utilities & Helpers
+│   ├── storage.ts                # نظام التخزين
+│   ├── auth-context.tsx          # نظام المصادقة
+│   ├── notifications.ts          # نظام الإشعارات
+│   └── ...
+├── public/                       # Static files (images, etc.)
+└── ...
+\`\`\`
+
+## الاستخدام
+
+### لوحة التحكم الرئيسية
+- الوصول: `/dashboard`
+- تسجيل الدخول: `/login`
+- البيانات الافتراضية:
+  - البريد الإلكتروني: `admin@namothajia.com`
+  - كلمة السر: `admin123`
+
+### لوحة تحكم الموظفين
+- الوصول: `/staff-dashboard`
+- تسجيل الدخول: `/staff-login`
+- يجب إضافة موظف من لوحة التحكم الرئيسية أولاً
+
+### إضافة موظف جديد
+1. سجل دخول إلى لوحة التحكم الرئيسية
+2. اذهب إلى قسم "الموظفون"
+3. اضغط "إضافة موظف جديد"
+4. املأ البيانات واختر الدور والصلاحيات
+5. احفظ البيانات وستحصل على البريد الإلكتروني وكلمة السر
+
+## النشر على Vercel
+
+1. **ادفع الكود إلى GitHub:**
+\`\`\`bash
+git add .
+git commit -m "Initial commit"
+git push origin main
+\`\`\`
+
+2. **اربط المشروع بـ Vercel:**
+   - اذهب إلى [vercel.com](https://vercel.com)
+   - اضغط "New Project"
+   - اختر المستودع من GitHub
+   - اضغط "Deploy"
+
+3. **إضافة المتغيرات البيئية:**
+   - في لوحة تحكم Vercel، اذهب إلى Settings > Environment Variables
+   - أضف المتغيرات من ملف `.env.example`
+
+## التكامل مع Supabase (اختياري)
+
+المشروع يدعم التكامل مع Supabase لقاعدة البيانات:
+
+1. أنشئ حساب على [supabase.com](https://supabase.com)
+2. أنشئ مشروع جديد
+3. أضف المتغيرات البيئية:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+
+## المساهمة
+
+نرحب بالمساهمات! يرجى:
+1. Fork المشروع
+2. إنشاء branch جديد (`git checkout -b feature/amazing-feature`)
+3. Commit التغييرات (`git commit -m 'Add amazing feature'`)
+4. Push إلى Branch (`git push origin feature/amazing-feature`)
+5. فتح Pull Request
+
+## الترخيص
+
+هذا المشروع مرخص تحت MIT License.
+
+## الدعم
+
+للدعم والاستفسارات:
+- البريد الإلكتروني: admin@namothajia.com
+- الموقع: [namothajia.com](https://namothajia.com)
+
+## الشكر والتقدير
+
+- [Next.js](https://nextjs.org/)
+- [shadcn/ui](https://ui.shadcn.com/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [Radix UI](https://www.radix-ui.com/)
+- [Lucide Icons](https://lucide.dev/)
