@@ -13,6 +13,7 @@ import {
   Sparkles,
   Heart,
   Award,
+  UserCog,
 } from "lucide-react"
 import { useLanguage } from "@/lib/language-context"
 
@@ -151,13 +152,22 @@ export function Footer() {
                 {[
                   { href: "/jobs/service-request", label: language === "ar" ? "طلب الخدمة" : "Service Request" },
                   { href: "/jobs/employment", label: language === "ar" ? "فرص التوظيف" : "Employment" },
+                  {
+                    href: "/staff-login",
+                    label: language === "ar" ? "تسجيل دخول الموظفين" : "Staff Login",
+                    icon: UserCog,
+                  },
                 ].map((link, index) => (
                   <li key={link.href} className="animate-fade-in-left" style={{ animationDelay: `${index * 0.1}s` }}>
                     <Link
                       href={link.href}
                       className="group/link flex items-center gap-3 text-base text-gray-300 hover:text-white transition-all duration-300 hover:translate-x-3"
                     >
-                      <ArrowRight className="w-5 h-5 text-pink-400 opacity-0 group-hover/link:opacity-100 -translate-x-3 group-hover/link:translate-x-0 transition-all duration-300" />
+                      {link.icon ? (
+                        <link.icon className="w-5 h-5 text-pink-400 opacity-100 transition-all duration-300" />
+                      ) : (
+                        <ArrowRight className="w-5 h-5 text-pink-400 opacity-0 group-hover/link:opacity-100 -translate-x-3 group-hover/link:translate-x-0 transition-all duration-300" />
+                      )}
                       <span className="group-hover/link:text-pink-300">{link.label}</span>
                     </Link>
                   </li>

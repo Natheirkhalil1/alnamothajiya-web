@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { saveContactMessage } from "@/lib/storage"
+import { sendNotifications } from "@/lib/notifications"
 import { useState } from "react"
 import { Phone, Mail, Clock, Send, MapPin, MessageCircle, CheckCircle2, ExternalLink } from "lucide-react"
 import { Card } from "@/components/ui/card"
@@ -31,6 +32,11 @@ export function ContactSection() {
       phone: formData.phone,
       email: formData.email,
       message: formData.message,
+    })
+
+    sendNotifications({
+      type: "contact",
+      data: formData,
     })
 
     toast({

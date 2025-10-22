@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
@@ -35,6 +37,16 @@ import {
   Save,
   Eye,
   Sparkles,
+  Building,
+  Users,
+  ActivityIcon,
+  Bell,
+  Check,
+  CheckCircle2,
+  Rocket,
+  AlertCircle,
+  Copy,
+  EyeOff,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -42,7 +54,14 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { isAuthenticated, logout, getUsername } from "@/lib/auth"
 import {
@@ -81,6 +100,16 @@ import {
   getServiceRequests,
   updateServiceRequestStatus,
   deleteServiceRequest,
+  // Added imports for Employees, Activities, Notifications
+  getEmployees,
+  saveEmployee,
+  updateEmployee,
+  deleteEmployee,
+  getActivities,
+  getNotifications,
+  getUnreadNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
   type EnhancedEmploymentApplication,
   type ServiceRequest,
   type EmploymentApplication,
@@ -94,11 +123,21 @@ import {
   type GalleryImage,
   type DepartmentContent,
   type ContactInfo,
+  // New types
+  type Employee,
+  type Activity,
+  type Notification,
 } from "@/lib/storage"
 import { useToast } from "@/hooks/use-toast"
 import { useLanguage } from "@/lib/language-context"
 import { translations } from "@/lib/translations"
 import { cn } from "@/lib/utils"
+import { logActivity } from "@/lib/storage" // Assuming you have a logger utility
+
+// Mock LayoutWrapper for now, assuming it's a layout component
+const LayoutWrapper = ({ children }: { children: React.ReactNode }) => (
+  <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background flex">{children}</div>
+)
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -127,6 +166,18 @@ export default function DashboardPage() {
   const [employmentApplications, setEmploymentApplications] = useState<EnhancedEmploymentApplication[]>([])
   const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([])
 
+  // Added state for selected application and dialog visibility
+  const [selectedApplication, setSelectedApplication] = useState<any>(null)
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false)
+
+  const [employees, setEmployees] = useState<Employee[]>([])
+  const [activities, setActivities] = useState<Activity[]>([])
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [isEmployeeDialogOpen, setIsEmployeeDialogOpen] = useState(false)
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null)
+  const [isNotificationsPanelOpen, setIsNotificationsPanelOpen] = useState(false)
+
   const [isHeroDialogOpen, setIsHeroDialogOpen] = useState(false)
   const [editingHeroSlide, setEditingHeroSlide] = useState<HeroSlide | null>(null)
   const [isGalleryDialogOpen, setIsGalleryDialogOpen] = useState(false)
@@ -135,6 +186,15 @@ export default function DashboardPage() {
   const [editingJob, setEditingJob] = useState<JobPosition | null>(null)
   const [isTestimonialDialogOpen, setIsTestimonialDialogOpen] = useState(false)
   const [editingTestimonial, setEditingTestimonial] = useState<Testimonial | null>(null)
+
+  // State for staff (employees) section
+  const [staff, setStaff] = useState<Employee[]>([])
+
+  // State for displaying new employee credentials
+  const [newEmployeeCredentials, setNewEmployeeCredentials] = useState<{
+    email: string
+    password: string
+  } | null>(null)
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -155,9 +215,26 @@ export default function DashboardPage() {
       if (e.detail.key === "serviceRequests") {
         setServiceRequests(e.detail.value)
       }
+      // الاستماع لتغييرات الموظفين
+      if (e.detail.key === "employees") {
+        setEmployees(e.detail.value)
+        setStaff(e.detail.value) // Update staff state as well
+      }
+      // الاستماع لتغييرات الإشعارات
+      if (e.detail.key === "notifications") {
+        setNotifications(e.detail.value)
+        setUnreadCount(getUnreadNotifications().length)
+      }
     }
 
     window.addEventListener("localStorageChange", handleStorageChange as EventListener)
+
+    setEmployees(getEmployees())
+    setStaff(getEmployees()) // Initialize staff state
+    setActivities(getActivities(50)) // آخر 50 نشاط
+    setNotifications(getNotifications())
+    setUnreadCount(getUnreadNotifications().length)
+
     return () => window.removeEventListener("localStorageChange", handleStorageChange as EventListener)
   }, [router])
 
@@ -394,6 +471,84 @@ export default function DashboardPage() {
     })
   }
 
+  const handleSaveEmployee = (data: Omit<Employee, "id" | "createdAt"> & { password?: string }) => {
+    if (editingEmployee) {
+      const updatedEmployee: Employee = {
+        ...editingEmployee,
+        ...data,
+        password: data.password || editingEmployee.password, // الاحتفاظ بكلمة السر القديمة إذا لم يتم تغييرها
+      }
+      updateEmployee(updatedEmployee)
+      logActivity({
+        employeeId: "admin", // Or the actual admin user ID
+        employeeName: "المدير", // Or the actual admin username
+        action: "update",
+        target: "employee",
+        details: `تم تحديث بيانات الموظف: ${data.fullName}`,
+      })
+    } else {
+      const newEmployee: Employee = {
+        ...data,
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        createdAt: new Date().toISOString(),
+        password: data.password || "123456", // كلمة سر افتراضية إذا لم يتم إدخالها
+      }
+      saveEmployee(newEmployee)
+
+      setNewEmployeeCredentials({
+        email: newEmployee.email,
+        password: data.password || "123456",
+      })
+
+      logActivity({
+        employeeId: "admin", // Or the actual admin user ID
+        employeeName: "المدير", // Or the actual admin username
+        action: "create",
+        target: "employee",
+        details: `تم إضافة موظف جديد: ${data.fullName}`,
+      })
+    }
+    setIsEmployeeDialogOpen(false)
+    setEditingEmployee(null)
+  }
+
+  const handleDeleteEmployee = (id: string) => {
+    if (
+      confirm(language === "ar" ? "هل أنت متأكد من حذف هذا الموظف؟" : "Are you sure you want to delete this employee?")
+    ) {
+      deleteEmployee(id)
+      setEmployees(getEmployees())
+      setStaff(getEmployees()) // Update staff state
+      toast({
+        title: language === "ar" ? "تم الحذف" : "Deleted",
+        description: language === "ar" ? "تم حذف الموظف بنجاح" : "Employee deleted successfully",
+      })
+      logActivity({
+        employeeId: "admin", // Or the actual admin user ID
+        employeeName: "المدير", // Or the actual admin username
+        action: "delete",
+        target: "employee",
+        details: `تم حذف الموظف بالمعرف: ${id}`,
+      })
+    }
+  }
+
+  const handleMarkNotificationAsRead = (id: string) => {
+    markNotificationAsRead(id)
+    setNotifications(getNotifications())
+    setUnreadCount(getUnreadNotifications().length)
+  }
+
+  const handleMarkAllAsRead = () => {
+    markAllNotificationsAsRead()
+    setNotifications(getNotifications())
+    setUnreadCount(0)
+    toast({
+      title: language === "ar" ? "تم التحديث" : "Updated",
+      description: language === "ar" ? "تم تحديد جميع الإشعارات كمقروءة" : "All notifications marked as read",
+    })
+  }
+
   const navigationItems = [
     {
       id: "overview",
@@ -462,6 +617,21 @@ export default function DashboardPage() {
       color: "from-amber-500 to-amber-600",
       badge: pendingReviews.length,
     },
+    // إضافة قسم الموظفين
+    {
+      id: "employees",
+      label: language === "ar" ? "الموظفون" : "Employees",
+      icon: Users,
+      color: "from-indigo-500 to-indigo-600",
+      badge: employees.filter((emp) => emp.isActive).length,
+    },
+    // إضافة قسم سجل النشاطات
+    {
+      id: "activities",
+      label: language === "ar" ? "سجل النشاطات" : "Activity Log",
+      icon: ActivityIcon,
+      color: "from-teal-500 to-teal-600",
+    },
   ]
 
   const stats = [
@@ -492,7 +662,7 @@ export default function DashboardPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background flex">
+    <LayoutWrapper>
       <aside
         className={cn(
           "fixed inset-y-0 right-0 z-50 w-72 bg-gradient-to-b from-card to-card/95 border-l border-border shadow-2xl transition-transform duration-300 ease-in-out",
@@ -530,7 +700,15 @@ export default function DashboardPage() {
                 key={item.id}
                 onClick={() => {
                   setActiveSection(item.id)
-                  setActiveTab(item.id) // Set active tab to match active section
+                  // Only update activeTab if it's a relevant tab
+                  if (
+                    item.id === "applications" ||
+                    item.id === "service-requests" ||
+                    item.id === "messages" ||
+                    item.id === "overview"
+                  ) {
+                    setActiveTab(item.id)
+                  }
                 }}
                 className={cn(
                   "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative overflow-hidden",
@@ -618,7 +796,7 @@ export default function DashboardPage() {
                 variant={activeTab === "service-requests" ? "default" : "ghost"}
                 onClick={() => {
                   setActiveTab("service-requests")
-                  setActiveSection("messages") // Map 'service-requests' tab to 'messages' section for consistency if needed, or create a new section ID
+                  setActiveSection("service-requests") // Changed to 'service-requests'
                 }}
                 className="flex items-center gap-2"
               >
@@ -630,8 +808,83 @@ export default function DashboardPage() {
                   </span>
                 )}
               </Button>
+
+              <Button
+                variant={activeSection === "employees" ? "default" : "ghost"} // Changed to 'employees'
+                onClick={() => {
+                  setActiveSection("employees")
+                  setActiveTab("employees") // Also set activeTab for consistency
+                }}
+                className="flex items-center gap-2"
+              >
+                <Users className="w-5 h-5" />
+                {language === "ar" ? "الموظفون" : "Staff"}
+                {staff.length > 0 && (
+                  <span className="bg-primary/20 text-primary rounded-full px-2 py-0.5 text-xs font-bold">
+                    {staff.length}
+                  </span>
+                )}
+              </Button>
+
+              {/* زر الإشعارات */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative"
+                onClick={() => setIsNotificationsPanelOpen(!isNotificationsPanelOpen)}
+              >
+                <Bell className="w-5 h-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full w-5 h-5 text-xs flex items-center justify-center font-bold">
+                    {unreadCount}
+                  </span>
+                )}
+              </Button>
             </div>
           </div>
+
+          {isNotificationsPanelOpen && (
+            <div className="absolute left-6 top-full mt-2 w-96 bg-card border border-border rounded-lg shadow-lg z-50 max-h-[500px] overflow-y-auto">
+              <div className="p-4 border-b border-border flex items-center justify-between">
+                <h3 className="font-bold text-lg">{language === "ar" ? "الإشعارات" : "Notifications"}</h3>
+                {unreadCount > 0 && (
+                  <Button variant="ghost" size="sm" onClick={handleMarkAllAsRead} className="text-xs">
+                    {language === "ar" ? "تحديد الكل كمقروء" : "Mark all as read"}
+                  </Button>
+                )}
+              </div>
+
+              <div className="divide-y divide-border">
+                {notifications.length === 0 ? (
+                  <div className="p-8 text-center text-muted-foreground">
+                    {language === "ar" ? "لا توجد إشعارات" : "No notifications"}
+                  </div>
+                ) : (
+                  notifications.map((notification) => (
+                    <div
+                      key={notification.id}
+                      className={cn(
+                        "p-4 hover:bg-muted/50 cursor-pointer transition-colors",
+                        !notification.isRead && "bg-primary/5",
+                      )}
+                      onClick={() => handleMarkNotificationAsRead(notification.id)}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={cn("w-2 h-2 rounded-full mt-2", !notification.isRead && "bg-primary")} />
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-sm">{notification.title}</h4>
+                          <p className="text-sm text-muted-foreground mt-1">{notification.message}</p>
+                          <p className="text-xs text-muted-foreground mt-2">
+                            {new Date(notification.createdAt).toLocaleString("ar-EG")}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
         </header>
 
         {/* Content Sections */}
@@ -1444,7 +1697,7 @@ export default function DashboardPage() {
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex items-center gap-3">
                             <img
-                              src={testimonial.image || "/placeholder.svg"}
+                              src={testimonial.image || "/diverse-user-avatars.png"}
                               alt={testimonial.name}
                               className="w-14 h-14 rounded-full object-cover shadow-lg"
                             />
@@ -1936,7 +2189,7 @@ export default function DashboardPage() {
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex items-center gap-3">
                             <img
-                              src={review.image || "/placeholder.svg"}
+                              src={review.image || "/diverse-user-avatars.png"}
                               alt={review.name}
                               className="w-14 h-14 rounded-full object-cover shadow-lg"
                             />
@@ -1987,6 +2240,7 @@ export default function DashboardPage() {
             </div>
           )}
 
+          {/* Applications Section (Enhanced) */}
           {activeTab === "applications" && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
@@ -2080,6 +2334,250 @@ export default function DashboardPage() {
                         </div>
 
                         <div className="flex flex-col md:flex-col gap-2 mt-4 md:mt-0 w-full md:w-auto">
+                          {/* Added Dialog and DialogTrigger for View Details button */}
+                          <Dialog
+                            open={detailsDialogOpen && selectedApplication?.id === app.id}
+                            onOpenChange={(open) => {
+                              setDetailsDialogOpen(open)
+                              if (!open) setSelectedApplication(null)
+                            }}
+                          >
+                            <DialogTrigger asChild>
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedApplication(app)
+                                  setDetailsDialogOpen(true)
+                                }}
+                                className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                              >
+                                <Eye className="w-4 h-4 mr-2" />
+                                {language === "ar" ? "عرض التفاصيل" : "View Details"}
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                              <DialogHeader>
+                                <DialogTitle className="text-2xl font-bold flex items-center gap-3">
+                                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                                    <User className="w-6 h-6 text-white" />
+                                  </div>
+                                  {app.fullName}
+                                </DialogTitle>
+                                <DialogDescription className="text-lg">{app.position}</DialogDescription>
+                              </DialogHeader>
+
+                              <div className="space-y-6 mt-6">
+                                {/* Personal Information */}
+                                <div className="space-y-4">
+                                  <h3 className="text-xl font-bold flex items-center gap-2 border-b-2 border-primary/20 pb-2">
+                                    <User className="w-5 h-5 text-primary" />
+                                    {language === "ar" ? "المعلومات الشخصية" : "Personal Information"}
+                                  </h3>
+                                  <div className="grid md:grid-cols-2 gap-4">
+                                    <div className="p-4 bg-muted/30 rounded-lg">
+                                      <p className="text-sm text-muted-foreground mb-1">
+                                        {language === "ar" ? "الاسم الكامل" : "Full Name"}
+                                      </p>
+                                      <p className="font-semibold">{app.fullName}</p>
+                                    </div>
+                                    <div className="p-4 bg-muted/30 rounded-lg">
+                                      <p className="text-sm text-muted-foreground mb-1">
+                                        {language === "ar" ? "رقم الهاتف" : "Phone"}
+                                      </p>
+                                      <p className="font-semibold">{app.phone}</p>
+                                    </div>
+                                    {app.birthPlace && (
+                                      <div className="p-4 bg-muted/30 rounded-lg">
+                                        <p className="text-sm text-muted-foreground mb-1">
+                                          {language === "ar" ? "مكان الولادة" : "Birth Place"}
+                                        </p>
+                                        <p className="font-semibold">{app.birthPlace}</p>
+                                      </div>
+                                    )}
+                                    {app.birthDate && (
+                                      <div className="p-4 bg-muted/30 rounded-lg">
+                                        <p className="text-sm text-muted-foreground mb-1">
+                                          {language === "ar" ? "تاريخ الولادة" : "Birth Date"}
+                                        </p>
+                                        <p className="font-semibold">
+                                          {new Date(app.birthDate).toLocaleDateString("ar-EG")}
+                                        </p>
+                                      </div>
+                                    )}
+                                    {app.nationalId && (
+                                      <div className="p-4 bg-muted/30 rounded-lg">
+                                        <p className="text-sm text-muted-foreground mb-1">
+                                          {language === "ar" ? "رقم الهوية" : "National ID"}
+                                        </p>
+                                        <p className="font-semibold">{app.nationalId}</p>
+                                      </div>
+                                    )}
+                                    {app.maritalStatus && (
+                                      <div className="p-4 bg-muted/30 rounded-lg">
+                                        <p className="text-sm text-muted-foreground mb-1">
+                                          {language === "ar" ? "الحالة الاجتماعية" : "Marital Status"}
+                                        </p>
+                                        <p className="font-semibold">
+                                          {app.maritalStatus === "single" &&
+                                            (language === "ar" ? "أعزب/عزباء" : "Single")}
+                                          {app.maritalStatus === "married" &&
+                                            (language === "ar" ? "متزوج/متزوجة" : "Married")}
+                                          {app.maritalStatus === "divorced" &&
+                                            (language === "ar" ? "مطلق/مطلقة" : "Divorced")}
+                                          {app.maritalStatus === "widowed" &&
+                                            (language === "ar" ? "أرمل/أرملة" : "Widowed")}
+                                        </p>
+                                      </div>
+                                    )}
+                                    {app.address && (
+                                      <div className="p-4 bg-muted/30 rounded-lg md:col-span-2">
+                                        <p className="text-sm text-muted-foreground mb-1">
+                                          {language === "ar" ? "العنوان" : "Address"}
+                                        </p>
+                                        <p className="font-semibold">{app.address}</p>
+                                      </div>
+                                    )}
+                                    <div className="p-4 bg-muted/30 rounded-lg">
+                                      <p className="text-sm text-muted-foreground mb-1">
+                                        {language === "ar" ? "الوظيفة المطلوبة" : "Position"}
+                                      </p>
+                                      <p className="font-semibold">{app.position}</p>
+                                    </div>
+                                    <div className="p-4 bg-muted/30 rounded-lg">
+                                      <p className="text-sm text-muted-foreground mb-1">
+                                        {language === "ar" ? "الراتب المتوقع" : "Expected Salary"}
+                                      </p>
+                                      <p className="font-semibold">{app.expectedSalary}</p>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Education */}
+                                {app.education && app.education.length > 0 && (
+                                  <div className="space-y-4">
+                                    <h3 className="text-xl font-bold flex items-center gap-2 border-b-2 border-primary/20 pb-2">
+                                      <GraduationCap className="w-5 h-5 text-primary" />
+                                      {language === "ar" ? "المؤهلات العلمية" : "Education"}
+                                    </h3>
+                                    <div className="space-y-4">
+                                      {app.education.map((edu: any, index: number) => (
+                                        <Card key={index} className="p-4 border-2 border-primary/10">
+                                          <div className="grid md:grid-cols-2 gap-3">
+                                            <div>
+                                              <p className="text-sm text-muted-foreground">
+                                                {language === "ar" ? "الدرجة العلمية" : "Degree"}
+                                              </p>
+                                              <p className="font-semibold">{edu.degree}</p>
+                                            </div>
+                                            <div>
+                                              <p className="text-sm text-muted-foreground">
+                                                {language === "ar" ? "التخصص" : "Major"}
+                                              </p>
+                                              <p className="font-semibold">{edu.major}</p>
+                                            </div>
+                                            <div>
+                                              <p className="text-sm text-muted-foreground">
+                                                {language === "ar" ? "الجامعة" : "University"}
+                                              </p>
+                                              <p className="font-semibold">{edu.university}</p>
+                                            </div>
+                                            <div>
+                                              <p className="text-sm text-muted-foreground">
+                                                {language === "ar" ? "سنة التخرج" : "Graduation Year"}
+                                              </p>
+                                              <p className="font-semibold">{edu.graduationYear}</p>
+                                            </div>
+                                            {edu.gpa && (
+                                              <div>
+                                                <p className="text-sm text-muted-foreground">
+                                                  {language === "ar" ? "المعدل" : "GPA"}
+                                                </p>
+                                                <p className="font-semibold">{edu.gpa}</p>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </Card>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Experience */}
+                                {app.experience && app.experience.length > 0 && (
+                                  <div className="space-y-4">
+                                    <h3 className="text-xl font-bold flex items-center gap-2 border-b-2 border-primary/20 pb-2">
+                                      <Building className="w-5 h-5 text-primary" />
+                                      {language === "ar" ? "الخبرات العملية" : "Work Experience"}
+                                    </h3>
+                                    <div className="space-y-4">
+                                      {app.experience.map((exp: any, index: number) => (
+                                        <Card key={index} className="p-4 border-2 border-primary/10">
+                                          <div className="space-y-3">
+                                            <div className="flex items-start justify-between">
+                                              <div>
+                                                <h4 className="font-bold text-lg">{exp.position}</h4>
+                                                <p className="text-muted-foreground">{exp.company}</p>
+                                              </div>
+                                              {exp.currentlyWorking && (
+                                                <span className="px-3 py-1 bg-green-100 text-green-800 text-sm font-semibold rounded-full">
+                                                  {language === "ar" ? "حالياً" : "Current"}
+                                                </span>
+                                              )}
+                                            </div>
+                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                              <Calendar className="w-4 h-4" />
+                                              <span>
+                                                {exp.startDate && new Date(exp.startDate).toLocaleDateString("ar-EG")}
+                                                {" - "}
+                                                {exp.currentlyWorking
+                                                  ? language === "ar"
+                                                    ? "حتى الآن"
+                                                    : "Present"
+                                                  : exp.endDate && new Date(exp.endDate).toLocaleDateString("ar-EG")}
+                                              </span>
+                                            </div>
+                                            {exp.description && (
+                                              <div className="p-3 bg-muted/30 rounded-lg">
+                                                <p className="text-sm text-muted-foreground mb-1">
+                                                  {language === "ar" ? "الوصف" : "Description"}
+                                                </p>
+                                                <p className="text-sm leading-relaxed">{exp.description}</p>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </Card>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* CV File */}
+                                {app.cvFileName && (
+                                  <div className="p-4 bg-gradient-to-r from-primary/5 to-accent/5 rounded-lg border border-primary/20">
+                                    <div className="flex items-center gap-3">
+                                      <FileText className="w-6 h-6 text-primary" />
+                                      <div>
+                                        <p className="text-sm text-muted-foreground">
+                                          {language === "ar" ? "السيرة الذاتية" : "CV File"}
+                                        </p>
+                                        <p className="font-semibold">{app.cvFileName}</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Submission Date */}
+                                <div className="p-4 bg-muted/30 rounded-lg">
+                                  <p className="text-sm text-muted-foreground mb-1">
+                                    {language === "ar" ? "تاريخ التقديم" : "Submission Date"}
+                                  </p>
+                                  <p className="font-semibold">{new Date(app.submittedAt).toLocaleString("ar-EG")}</p>
+                                </div>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+
                           <Select
                             value={app.status}
                             onValueChange={(value) => {
@@ -2135,6 +2633,7 @@ export default function DashboardPage() {
             </div>
           )}
 
+          {/* Tab for Service Requests */}
           {activeTab === "service-requests" && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
@@ -2245,6 +2744,334 @@ export default function DashboardPage() {
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Employee Section */}
+          {activeSection === "employees" && (
+            <div className="space-y-6 animate-in fade-in duration-500">
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-6 md:p-8 text-white">
+                <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,transparent,black)]" />
+                <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                  <div className="flex-1">
+                    <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-2">
+                      {language === "ar" ? "إدارة الموظفين" : "Employee Management"}
+                    </h2>
+                    <p className="text-white/90 text-sm md:text-base lg:text-lg max-w-2xl">
+                      {language === "ar"
+                        ? "إدارة فريق العمل ومتابعة أدائهم وصلاحياتهم"
+                        : "Manage your team, track performance and permissions"}
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      setEditingEmployee(null)
+                      setIsEmployeeDialogOpen(true)
+                    }}
+                    size="lg"
+                    className="gap-2 bg-white text-indigo-600 hover:bg-white/90 shadow-xl whitespace-nowrap shrink-0"
+                  >
+                    <Plus className="w-5 h-5" />
+                    <span className="hidden sm:inline">
+                      {language === "ar" ? "إضافة موظف جديد" : "Add New Employee"}
+                    </span>
+                    <span className="sm:hidden">{language === "ar" ? "إضافة" : "Add"}</span>
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card className="p-4 md:p-6 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs md:text-sm font-medium text-blue-600 dark:text-blue-400 mb-1 truncate">
+                        {language === "ar" ? "إجمالي الموظفين" : "Total Employees"}
+                      </p>
+                      <p className="text-2xl md:text-3xl font-bold text-blue-900 dark:text-blue-100">
+                        {employees.length}
+                      </p>
+                    </div>
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-blue-500 flex items-center justify-center shrink-0">
+                      <Users className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                    </div>
+                  </div>
+                </Card>
+
+                <Card className="p-4 md:p-6 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200 dark:border-green-800">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs md:text-sm font-medium text-green-600 dark:text-green-400 mb-1 truncate">
+                        {language === "ar" ? "الموظفون النشطون" : "Active Employees"}
+                      </p>
+                      <p className="text-2xl md:text-3xl font-bold text-green-900 dark:text-green-100">
+                        {employees.filter((e) => e.isActive).length}
+                      </p>
+                    </div>
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-green-500 flex items-center justify-center shrink-0">
+                      <CheckCircle2 className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                    </div>
+                  </div>
+                </Card>
+
+                <Card className="p-4 md:p-6 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 border-purple-200 dark:border-purple-800">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs md:text-sm font-medium text-purple-600 dark:text-purple-400 mb-1 truncate">
+                        {language === "ar" ? "الأقسام" : "Departments"}
+                      </p>
+                      <p className="text-2xl md:text-3xl font-bold text-purple-900 dark:text-blue-100">
+                        {new Set(employees.map((e) => e.department)).size}
+                      </p>
+                    </div>
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-purple-500 flex items-center justify-center shrink-0">
+                      <Building2 className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                    </div>
+                  </div>
+                </Card>
+
+                <Card className="p-4 md:p-6 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900 border-orange-200 dark:border-orange-800">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs md:text-sm font-medium text-orange-600 dark:text-orange-400 mb-1 truncate">
+                        {language === "ar" ? "النشاطات اليوم" : "Today's Activities"}
+                      </p>
+                      <p className="text-2xl md:text-3xl font-bold text-orange-900 dark:text-orange-100">
+                        {
+                          activities.filter((a) => new Date(a.timestamp).toDateString() === new Date().toDateString())
+                            .length
+                        }
+                      </p>
+                    </div>
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-orange-500 flex items-center justify-center shrink-0">
+                      <ActivityIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                    </div>
+                  </div>
+                </Card>
+              </div>
+
+              <div className="grid gap-4">
+                {employees.length === 0 ? (
+                  <div className="space-y-6">
+                    <Card className="p-12 text-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 border-2 border-dashed">
+                      <div className="max-w-md mx-auto space-y-6">
+                        <div className="relative">
+                          <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center animate-pulse">
+                            <Users className="w-12 h-12 text-white" />
+                          </div>
+                          <div className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center animate-bounce">
+                            <Sparkles className="w-4 h-4 text-yellow-900" />
+                          </div>
+                        </div>
+                        <div>
+                          <h3 className="text-2xl font-bold mb-2">
+                            {language === "ar" ? "ابدأ ببناء فريقك!" : "Start Building Your Team!"}
+                          </h3>
+                          <p className="text-muted-foreground text-lg">
+                            {language === "ar"
+                              ? "لم تقم بإضافة أي موظفين بعد. أضف أول موظف لبدء إدارة فريق العمل بكفاءة."
+                              : "You haven't added any employees yet. Add your first employee to start managing your team efficiently."}
+                          </p>
+                        </div>
+                        <Button
+                          onClick={() => {
+                            setEditingEmployee(null)
+                            setIsEmployeeDialogOpen(true)
+                          }}
+                          size="lg"
+                          className="gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
+                        >
+                          <Plus className="w-5 h-5" />
+                          {language === "ar" ? "إضافة أول موظف" : "Add First Employee"}
+                        </Button>
+                      </div>
+                    </Card>
+
+                    <Card className="p-6">
+                      <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                        <Rocket className="w-5 h-5 text-indigo-600" />
+                        {language === "ar" ? "دليل البدء السريع" : "Quick Start Guide"}
+                      </h3>
+                      <div className="grid md:grid-cols-3 gap-4">
+                        <div className="flex gap-3">
+                          <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center flex-shrink-0">
+                            <span className="text-indigo-600 dark:text-indigo-400 font-bold">1</span>
+                          </div>
+                          <div>
+                            <h4 className="font-semibold mb-1">{language === "ar" ? "إضافة موظف" : "Add Employee"}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              {language === "ar" ? "أدخل معلومات الموظف الأساسية" : "Enter basic employee information"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex gap-3">
+                          <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center flex-shrink-0">
+                            <span className="text-purple-600 dark:text-purple-400 font-bold">2</span>
+                          </div>
+                          <div>
+                            <h4 className="font-semibold mb-1">
+                              {language === "ar" ? "تحديد الصلاحيات" : "Set Permissions"}
+                            </h4>
+                            <p className="text-sm text-muted-foreground">
+                              {language === "ar" ? "اختر الصلاحيات المناسبة" : "Choose appropriate permissions"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex gap-3">
+                          <div className="w-8 h-8 rounded-full bg-pink-100 dark:bg-pink-900 flex items-center justify-center flex-shrink-0">
+                            <span className="text-pink-600 dark:text-pink-400 font-bold">3</span>
+                          </div>
+                          <div>
+                            <h4 className="font-semibold mb-1">
+                              {language === "ar" ? "تتبع النشاطات" : "Track Activities"}
+                            </h4>
+                            <p className="text-sm text-muted-foreground">
+                              {language === "ar" ? "راقب أداء الفريق" : "Monitor team performance"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  </div>
+                ) : (
+                  employees.map((employee) => (
+                    <Card key={employee.id} className="p-6 hover:shadow-lg transition-shadow">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start gap-4">
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
+                            {employee.fullName.charAt(0)}
+                          </div>
+                          <div className="space-y-2">
+                            <div>
+                              <h3 className="font-bold text-xl">{employee.fullName}</h3>
+                              <p className="text-muted-foreground">{employee.position}</p>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <span className="text-muted-foreground">
+                                  {language === "ar" ? "القسم:" : "Department:"}
+                                </span>
+                                <span className="mr-2 font-medium">{employee.department}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">{language === "ar" ? "الدور:" : "Role:"}</span>
+                                <span className="mr-2 font-medium">
+                                  {employee.role === "admin" ? "مدير" : employee.role === "employee" ? "موظف" : "مشاهد"}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">
+                                  {language === "ar" ? "البريد:" : "Email:"}
+                                </span>
+                                <span className="mr-2 font-medium">{employee.email}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">
+                                  {language === "ar" ? "الهاتف:" : "Phone:"}
+                                </span>
+                                <span className="mr-2 font-medium">{employee.phone}</span>
+                              </div>
+                            </div>
+                            <div className="flex gap-2 mt-2">
+                              <Badge variant={employee.isActive ? "default" : "secondary"}>
+                                {employee.isActive
+                                  ? language === "ar"
+                                    ? "نشط"
+                                    : "Active"
+                                  : language === "ar"
+                                    ? "غير نشط"
+                                    : "Inactive"}
+                              </Badge>
+                              {employee.permissions.canEdit && (
+                                <Badge variant="outline">{language === "ar" ? "تعديل" : "Edit"}</Badge>
+                              )}
+                              {employee.permissions.canDelete && (
+                                <Badge variant="outline">{language === "ar" ? "حذف" : "Delete"}</Badge>
+                              )}
+                              {employee.permissions.canApprove && (
+                                <Badge variant="outline">{language === "ar" ? "موافقة" : "Approve"}</Badge>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setEditingEmployee(employee)
+                              setIsEmployeeDialogOpen(true)
+                            }}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteEmployee(employee.id)}
+                            className="text-destructive hover:bg-destructive/10"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeSection === "activities" && (
+            <div className="space-y-6 animate-in fade-in duration-500">
+              <div className="flex items-center justify-between">
+                <h2 className="text-3xl font-bold">{language === "ar" ? "سجل النشاطات" : "Activity Log"}</h2>
+              </div>
+
+              <div className="space-y-4">
+                {activities.length === 0 ? (
+                  <Card className="p-12 text-center">
+                    <ActivityIcon className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground text-lg">
+                      {language === "ar" ? "لا توجد نشاطات" : "No activities yet"}
+                    </p>
+                  </Card>
+                ) : (
+                  activities.map((activity) => (
+                    <Card key={activity.id} className="p-4">
+                      <div className="flex items-start gap-4">
+                        <div
+                          className={cn(
+                            "w-10 h-10 rounded-full flex items-center justify-center",
+                            activity.actionType === "create" && "bg-green-500/10 text-green-500",
+                            activity.actionType === "update" && "bg-blue-500/10 text-blue-500",
+                            activity.actionType === "delete" && "bg-red-500/10 text-red-500",
+                            activity.actionType === "approve" && "bg-purple-500/10 text-purple-500",
+                            activity.actionType === "reject" && "bg-orange-500/10 text-orange-500",
+                            activity.actionType === "view" && "bg-gray-500/10 text-gray-500",
+                          )}
+                        >
+                          {activity.actionType === "create" && <Plus className="w-5 h-5" />}
+                          {activity.actionType === "update" && <Edit className="w-5 h-5" />}
+                          {activity.actionType === "delete" && <Trash2 className="w-5 h-5" />}
+                          {activity.actionType === "approve" && <Check className="w-5 h-5" />}
+                          {activity.actionType === "reject" && <X className="w-5 h-5" />}
+                          {activity.actionType === "view" && <Eye className="w-5 h-5" />}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-semibold">{activity.employeeName}</h4>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(activity.timestamp).toLocaleString("ar-EG")}
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-1">{activity.action}</p>
+                          {activity.details && <p className="text-xs text-muted-foreground mt-1">{activity.details}</p>}
                         </div>
                       </div>
                     </Card>
@@ -2763,6 +3590,376 @@ export default function DashboardPage() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+
+      <Dialog open={isEmployeeDialogOpen} onOpenChange={setIsEmployeeDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingEmployee
+                ? language === "ar"
+                  ? "تعديل موظف"
+                  : "Edit Employee"
+                : language === "ar"
+                  ? "إضافة موظف جديد"
+                  : "Add New Employee"}
+            </DialogTitle>
+          </DialogHeader>
+          <EmployeeForm
+            employee={editingEmployee}
+            onSave={handleSaveEmployee}
+            onCancel={() => {
+              setIsEmployeeDialogOpen(false)
+              setEditingEmployee(null)
+            }}
+            language={language}
+            toast={toast}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!newEmployeeCredentials} onOpenChange={() => setNewEmployeeCredentials(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-green-500" />
+              {language === "ar" ? "تم إضافة الموظف بنجاح" : "Employee Added Successfully"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg space-y-3">
+              <p className="text-sm text-muted-foreground">
+                {language === "ar"
+                  ? "يرجى حفظ بيانات تسجيل الدخول التالية وإرسالها للموظف:"
+                  : "Please save the following login credentials and send them to the employee:"}
+              </p>
+              <div className="space-y-2">
+                <div>
+                  <Label className="text-xs text-muted-foreground">
+                    {language === "ar" ? "البريد الإلكتروني" : "Email"}
+                  </Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Input value={newEmployeeCredentials?.email || ""} readOnly className="bg-white dark:bg-gray-900" />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        navigator.clipboard.writeText(newEmployeeCredentials?.email || "")
+                        toast({ title: language === "ar" ? "تم النسخ" : "Copied" })
+                      }}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">
+                    {language === "ar" ? "كلمة السر" : "Password"}
+                  </Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Input
+                      value={newEmployeeCredentials?.password || ""}
+                      readOnly
+                      className="bg-white dark:bg-gray-900"
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        navigator.clipboard.writeText(newEmployeeCredentials?.password || "")
+                        toast({ title: language === "ar" ? "تم النسخ" : "Copied" })
+                      }}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-start gap-2 text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950 p-3 rounded">
+                <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                <p>
+                  {language === "ar"
+                    ? "تأكد من إرسال هذه البيانات للموظف بشكل آمن. لن تتمكن من رؤية كلمة السر مرة أخرى."
+                    : "Make sure to send these credentials to the employee securely. You won't be able to see the password again."}
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1 bg-transparent"
+                onClick={() => {
+                  const message = `مرحباً، تم إنشاء حساب لك في نظام إدارة المدرسة.\n\nالبريد الإلكتروني: ${newEmployeeCredentials?.email}\nكلمة السر: ${newEmployeeCredentials?.password}\n\nرابط تسجيل الدخول: ${window.location.origin}/staff-login`
+                  window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank")
+                }}
+              >
+                <MessageSquare className="h-4 w-4 mr-2" />
+                {language === "ar" ? "إرسال عبر واتساب" : "Send via WhatsApp"}
+              </Button>
+              <Button onClick={() => setNewEmployeeCredentials(null)}>{language === "ar" ? "تم" : "Done"}</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </LayoutWrapper>
+  )
+}
+
+function EmployeeForm({
+  employee,
+  onSave,
+  onCancel,
+  language,
+  toast, // إضافة toast كـ prop
+}: {
+  employee: Employee | null
+  onSave: (data: Omit<Employee, "id" | "createdAt"> & { password?: string }) => void
+  onCancel: () => void
+  language: string
+  toast: any // إضافة نوع toast
+}) {
+  const [formData, setFormData] = useState<Omit<Employee, "id" | "createdAt"> & { password?: string }>({
+    fullName: employee?.fullName || "",
+    email: employee?.email || "",
+    phone: employee?.phone || "",
+    position: employee?.position || "",
+    department: employee?.department || "",
+    role: employee?.role || "employee",
+    permissions: employee?.permissions || {
+      canEdit: false,
+      canDelete: false,
+      canApprove: false,
+      canViewReports: false,
+    },
+    isActive: employee?.isActive ?? true,
+    lastLogin: employee?.lastLogin,
+    password: "", // إضافة حقل كلمة السر
+  })
+
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!employee && formData.password && formData.password !== confirmPassword) {
+      toast({
+        title: "خطأ",
+        description: language === "ar" ? "كلمات السر غير متطابقة" : "Passwords do not match",
+        variant: "destructive",
+      })
+      return
+    }
+
+    onSave(formData)
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>{language === "ar" ? "الاسم الكامل" : "Full Name"}</Label>
+          <Input
+            value={formData.fullName}
+            onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>{language === "ar" ? "البريد الإلكتروني" : "Email"}</Label>
+          <Input
+            type="email"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>{language === "ar" ? "الهاتف" : "Phone"}</Label>
+          <Input
+            value={formData.phone}
+            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>{language === "ar" ? "الوظيفة" : "Position"}</Label>
+          <Input
+            value={formData.position}
+            onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>{language === "ar" ? "القسم" : "Department"}</Label>
+          <select
+            value={formData.department}
+            onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+            className="w-full px-3 py-2 border border-border rounded-md"
+            required
+          >
+            <option value="">{language === "ar" ? "اختر القسم" : "Select Department"}</option>
+            <option value="medical">{language === "ar" ? "القسم الطبي" : "Medical"}</option>
+            <option value="heart">{language === "ar" ? "قلب المدرسة" : "Heart of School"}</option>
+            <option value="housing">{language === "ar" ? "السكن الداخلي" : "Housing"}</option>
+            <option value="activities">{language === "ar" ? "الأنشطة" : "Activities"}</option>
+            <option value="admin">{language === "ar" ? "الإدارة" : "Administration"}</option>
+          </select>
+        </div>
+        <div className="space-y-2">
+          <Label>{language === "ar" ? "الدور" : "Role"}</Label>
+          <select
+            value={formData.role}
+            onChange={(e) => setFormData({ ...formData, role: e.target.value as Employee["role"] })}
+            className="w-full px-3 py-2 border border-border rounded-md"
+            required
+          >
+            <option value="viewer">{language === "ar" ? "مشاهد" : "Viewer"}</option>
+            <option value="employee">{language === "ar" ? "موظف" : "Employee"}</option>
+            <option value="admin">{language === "ar" ? "مدير" : "Admin"}</option>
+          </select>
+        </div>
+      </div>
+
+      {!employee && (
+        <>
+          <div className="space-y-2">
+            <Label>{language === "ar" ? "كلمة السر" : "Password"}</Label>
+            <div className="relative">
+              <Input
+                type={showPassword ? "text" : "password"}
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                placeholder={language === "ar" ? "أدخل كلمة السر" : "Enter password"}
+                required
+                minLength={6}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute left-2 top-1/2 -translate-y-1/2"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {language === "ar" ? "يجب أن تكون 6 أحرف على الأقل" : "Must be at least 6 characters"}
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label>{language === "ar" ? "تأكيد كلمة السر" : "Confirm Password"}</Label>
+            <Input
+              type={showPassword ? "text" : "password"}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder={language === "ar" ? "أعد إدخال كلمة السر" : "Re-enter password"}
+              required
+              minLength={6}
+            />
+          </div>
+        </>
+      )}
+
+      {employee && (
+        <div className="col-span-2 space-y-2">
+          <Label>{language === "ar" ? "تغيير كلمة السر (اختياري)" : "Change Password (Optional)"}</Label>
+          <div className="relative">
+            <Input
+              type={showPassword ? "text" : "password"}
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              placeholder={
+                language === "ar" ? "اترك فارغاً للاحتفاظ بكلمة السر الحالية" : "Leave empty to keep current password"
+              }
+              minLength={6}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="absolute left-2 top-1/2 -translate-y-1/2"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-2">
+        <Label>{language === "ar" ? "الصلاحيات" : "Permissions"}</Label>
+        <div className="grid grid-cols-2 gap-2">
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={formData.permissions.canEdit}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  permissions: { ...formData.permissions, canEdit: e.target.checked },
+                })
+              }
+            />
+            <span className="text-sm">{language === "ar" ? "التعديل" : "Edit"}</span>
+          </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={formData.permissions.canDelete}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  permissions: { ...formData.permissions, canDelete: e.target.checked },
+                })
+              }
+            />
+            <span className="text-sm">{language === "ar" ? "الحذف" : "Delete"}</span>
+          </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={formData.permissions.canApprove}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  permissions: { ...formData.permissions, canApprove: e.target.checked },
+                })
+              }
+            />
+            <span className="text-sm">{language === "ar" ? "الموافقة" : "Approve"}</span>
+          </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={formData.permissions.canViewReports}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  permissions: { ...formData.permissions, canViewReports: e.target.checked },
+                })
+              }
+            />
+            <span className="text-sm">{language === "ar" ? "عرض التقارير" : "View Reports"}</span>
+          </label>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          checked={formData.isActive}
+          onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+        />
+        <Label>{language === "ar" ? "الحساب نشط" : "Account Active"}</Label>
+      </div>
+
+      <div className="flex gap-2 justify-end">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          {language === "ar" ? "إلغاء" : "Cancel"}
+        </Button>
+        <Button type="submit">{language === "ar" ? "حفظ" : "Save"}</Button>
+      </div>
+    </form>
   )
 }

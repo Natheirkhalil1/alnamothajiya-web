@@ -4,6 +4,7 @@ import { Cairo } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
 import { LanguageProvider } from "@/lib/language-context"
+import { AuthProvider } from "@/lib/auth-context"
 import { FloatingElements } from "@/components/floating-elements"
 import { ScrollProgress } from "@/components/scroll-progress"
 import { PageTransition } from "@/components/page-transition"
@@ -31,11 +32,13 @@ export default function RootLayout({
       <body className={`${cairo.variable} font-sans antialiased`}>
         <ScrollProgress />
         <FloatingElements />
-        <LanguageProvider>
-          <PageTransition>
-            <Suspense fallback={null}>{children}</Suspense>
-          </PageTransition>
-        </LanguageProvider>
+        <AuthProvider>
+          <LanguageProvider>
+            <PageTransition>
+              <Suspense fallback={null}>{children}</Suspense>
+            </PageTransition>
+          </LanguageProvider>
+        </AuthProvider>
         <Analytics />
       </body>
     </html>

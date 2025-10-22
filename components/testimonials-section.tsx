@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import { getTestimonials, savePendingReview } from "@/lib/storage"
-import { Star, MessageSquarePlus, Sparkles, Upload, LinkIcon, Quote } from "lucide-react"
+import { Star, MessageSquarePlus, Sparkles, Upload, LinkIcon, Quote, CheckCircle2 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -22,6 +22,52 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 
+function compressImage(file: File, maxSizeMB = 0.5): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = (event) => {
+      const img = new Image()
+      img.src = event.target?.result as string
+      img.onload = () => {
+        const canvas = document.createElement("canvas")
+        let width = img.width
+        let height = img.height
+
+        // تقليل الحجم إذا كان كبيراً جداً
+        const maxDimension = 800
+        if (width > height && width > maxDimension) {
+          height = (height * maxDimension) / width
+          width = maxDimension
+        } else if (height > maxDimension) {
+          width = (width * maxDimension) / height
+          height = maxDimension
+        }
+
+        canvas.width = width
+        canvas.height = height
+
+        const ctx = canvas.getContext("2d")
+        ctx?.drawImage(img, 0, 0, width, height)
+
+        // ضغط الصورة
+        let quality = 0.7
+        let compressedDataUrl = canvas.toDataURL("image/jpeg", quality)
+
+        // تقليل الجودة إذا كان الحجم لا يزال كبيراً
+        while (compressedDataUrl.length > maxSizeMB * 1024 * 1024 && quality > 0.1) {
+          quality -= 0.1
+          compressedDataUrl = canvas.toDataURL("image/jpeg", quality)
+        }
+
+        resolve(compressedDataUrl)
+      }
+      img.onerror = reject
+    }
+    reader.onerror = reject
+  })
+}
+
 export function TestimonialsSection() {
   const { toast } = useToast()
   const { language } = useLanguage()
@@ -35,22 +81,59 @@ export function TestimonialsSection() {
   })
   const [showThankYou, setShowThankYou] = useState(false)
   const [imagePreview, setImagePreview] = useState<string>("")
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
 
   useEffect(() => {
     const loadedTestimonials = getTestimonials()
     setTestimonials(loadedTestimonials)
   }, [])
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        const result = reader.result as string
-        setImagePreview(result)
-        setReviewFormData({ ...reviewFormData, image: result })
-      }
-      reader.readAsDataURL(file)
+    if (!file) return
+
+    // التحقق من نوع الملف
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: language === "ar" ? "خطأ" : "Error",
+        description: language === "ar" ? "يرجى اختيار ملف صورة" : "Please select an image file",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // التحقق من حجم الملف (5 MB كحد أقصى)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: language === "ar" ? "خطأ" : "Error",
+        description:
+          language === "ar" ? "حجم الصورة كبير جداً (الحد الأقصى 5 MB)" : "Image size is too large (max 5 MB)",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsUploadingImage(true)
+
+    try {
+      // ضغط الصورة
+      const compressedImage = await compressImage(file, 0.5)
+      setImagePreview(compressedImage)
+      setReviewFormData({ ...reviewFormData, image: compressedImage })
+
+      toast({
+        title: language === "ar" ? "تم رفع الصورة" : "Image Uploaded",
+        description: language === "ar" ? "تم رفع الصورة بنجاح" : "Image uploaded successfully",
+      })
+    } catch (error) {
+      console.error("Error compressing image:", error)
+      toast({
+        title: language === "ar" ? "خطأ" : "Error",
+        description: language === "ar" ? "فشل رفع الصورة" : "Failed to upload image",
+        variant: "destructive",
+      })
+    } finally {
+      setIsUploadingImage(false)
     }
   }
 
@@ -65,21 +148,31 @@ export function TestimonialsSection() {
       return
     }
 
-    savePendingReview({
-      name: reviewFormData.name,
-      image: reviewFormData.image || "/placeholder.svg?height=100&width=100",
-      rating: reviewRating,
-      comment: reviewFormData.comment,
-    })
+    try {
+      savePendingReview({
+        name: reviewFormData.name,
+        image: reviewFormData.image || "/placeholder.svg?height=100&width=100",
+        rating: reviewRating,
+        comment: reviewFormData.comment,
+      })
 
-    setShowThankYou(true)
-    setTimeout(() => {
-      setShowThankYou(false)
-      setIsReviewDialogOpen(false)
-      setReviewFormData({ name: "", image: "", comment: "" })
-      setReviewRating(0)
-      setImagePreview("")
-    }, 3000)
+      setShowThankYou(true)
+      setTimeout(() => {
+        setShowThankYou(false)
+        setIsReviewDialogOpen(false)
+        setReviewFormData({ name: "", image: "", comment: "" })
+        setReviewRating(0)
+        setImagePreview("")
+      }, 3000)
+    } catch (error) {
+      console.error("Error saving review:", error)
+      toast({
+        title: language === "ar" ? "خطأ" : "Error",
+        description:
+          language === "ar" ? "فشل إرسال الرأي. يرجى المحاولة مرة أخرى" : "Failed to submit review. Please try again",
+        variant: "destructive",
+      })
+    }
   }
 
   return (
@@ -123,10 +216,10 @@ export function TestimonialsSection() {
                 <Sparkles className="w-4 h-4 group-hover:animate-spin" />
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
+            <DialogContent className="sm:max-w-[700px] max-h-[85vh] overflow-y-auto">
               {!showThankYou ? (
                 <>
-                  <DialogHeader>
+                  <DialogHeader className="sticky top-0 bg-background z-10 pb-4">
                     <DialogTitle className="text-2xl font-bold text-center bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
                       {language === "ar" ? "شاركنا رأيك" : "Share Your Opinion"}
                     </DialogTitle>
@@ -136,7 +229,8 @@ export function TestimonialsSection() {
                         : "We're happy to hear your opinions and experiences"}
                     </DialogDescription>
                   </DialogHeader>
-                  <form onSubmit={handleReviewSubmit} className="space-y-6 mt-4">
+                  {/* padding and improved spacing for scrollable content */}
+                  <form onSubmit={handleReviewSubmit} className="space-y-6 mt-4 px-1">
                     <div className="space-y-2">
                       <Label htmlFor="review-name">{language === "ar" ? "الاسم" : "Name"}</Label>
                       <Input
@@ -150,7 +244,7 @@ export function TestimonialsSection() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>{language === "ar" ? "الصورة الشخصية" : "Profile Picture"}</Label>
+                      <Label>{language === "ar" ? "الصورة الشخصية (اختياري)" : "Profile Picture (Optional)"}</Label>
                       <Tabs defaultValue="upload" className="w-full">
                         <TabsList className="grid w-full grid-cols-2">
                           <TabsTrigger value="upload">
@@ -162,7 +256,7 @@ export function TestimonialsSection() {
                             {language === "ar" ? "رابط" : "URL"}
                           </TabsTrigger>
                         </TabsList>
-                        <TabsContent value="upload" className="space-y-4">
+                        <TabsContent value="upload" className="space-y-4 mt-4">
                           <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary transition-all hover:scale-[1.02]">
                             <input
                               type="file"
@@ -170,15 +264,28 @@ export function TestimonialsSection() {
                               accept="image/*"
                               onChange={handleImageUpload}
                               className="hidden"
+                              disabled={isUploadingImage}
                             />
                             <label htmlFor="image-upload" className="cursor-pointer">
-                              {imagePreview ? (
+                              {isUploadingImage ? (
                                 <div className="space-y-2">
-                                  <img
-                                    src={imagePreview || "/placeholder.svg"}
-                                    alt="Preview"
-                                    className="w-24 h-24 rounded-full mx-auto object-cover ring-4 ring-primary/20"
-                                  />
+                                  <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+                                  <p className="text-sm text-muted-foreground">
+                                    {language === "ar" ? "جاري رفع الصورة..." : "Uploading image..."}
+                                  </p>
+                                </div>
+                              ) : imagePreview ? (
+                                <div className="space-y-2">
+                                  <div className="relative inline-block">
+                                    <img
+                                      src={imagePreview || "/placeholder.svg"}
+                                      alt="Preview"
+                                      className="w-24 h-24 rounded-full mx-auto object-cover ring-4 ring-primary/20"
+                                    />
+                                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                                      <CheckCircle2 className="w-4 h-4 text-white" />
+                                    </div>
+                                  </div>
                                   <p className="text-sm text-muted-foreground">
                                     {language === "ar" ? "انقر لتغيير الصورة" : "Click to change image"}
                                   </p>
@@ -197,7 +304,7 @@ export function TestimonialsSection() {
                             </label>
                           </div>
                         </TabsContent>
-                        <TabsContent value="url">
+                        <TabsContent value="url" className="mt-4">
                           <Input
                             value={reviewFormData.image}
                             onChange={(e) => {
@@ -221,9 +328,9 @@ export function TestimonialsSection() {
                       </Tabs>
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <Label>{language === "ar" ? "التقييم" : "Rating"}</Label>
-                      <div className="flex gap-2 justify-center">
+                      <div className="flex gap-2 justify-center py-2">
                         {[1, 2, 3, 4, 5].map((star) => (
                           <button
                             key={star}
@@ -251,18 +358,27 @@ export function TestimonialsSection() {
                         onChange={(e) => setReviewFormData({ ...reviewFormData, comment: e.target.value })}
                         required
                         placeholder={language === "ar" ? "شاركنا تجربتك..." : "Share your experience..."}
-                        rows={4}
-                        className="transition-all focus:scale-[1.02]"
+                        rows={5}
+                        className="transition-all focus:scale-[1.02] resize-none"
                       />
+                      <p className="text-xs text-muted-foreground">
+                        {language === "ar"
+                          ? `${reviewFormData.comment.length} حرف`
+                          : `${reviewFormData.comment.length} characters`}
+                      </p>
                     </div>
 
-                    <Button
-                      type="submit"
-                      className="w-full bg-gradient-to-r from-primary via-accent to-secondary hover:shadow-xl transition-all"
-                      size="lg"
-                    >
-                      {language === "ar" ? "إرسال الرأي" : "Submit Review"}
-                    </Button>
+                    {/* sticky footer for the button */}
+                    <div className="sticky bottom-0 bg-background pt-4 pb-2">
+                      <Button
+                        type="submit"
+                        className="w-full bg-gradient-to-r from-primary via-accent to-secondary hover:shadow-xl transition-all"
+                        size="lg"
+                        disabled={isUploadingImage}
+                      >
+                        {language === "ar" ? "إرسال الرأي" : "Submit Review"}
+                      </Button>
+                    </div>
                   </form>
                 </>
               ) : (

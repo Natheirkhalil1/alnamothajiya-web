@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { useState, useEffect } from "react"
 import { getAvailableJobs, saveEnhancedEmploymentApplication } from "@/lib/storage"
+import { sendNotifications } from "@/lib/notifications"
 import {
   Send,
   CheckCircle,
@@ -187,23 +188,11 @@ export default function EmploymentPage() {
     const savedApplication = saveEnhancedEmploymentApplication(applicationData)
     console.log("[v0] Application saved:", savedApplication)
 
-    try {
-      console.log("[v0] Sending application to API...")
-      const response = await fetch("/api/send-application", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(applicationData),
-      })
-
-      const result = await response.json()
-      console.log("[v0] API response:", result)
-
-      if (result.success) {
-        console.log("[v0] Application sent successfully")
-      }
-    } catch (error) {
-      console.error("[v0] Error sending application:", error)
-    }
+    console.log("[v0] Sending notifications...")
+    sendNotifications({
+      type: "employment",
+      data: applicationData,
+    })
 
     console.log("[v0] Showing thank you message...")
     setSubmitted(true)

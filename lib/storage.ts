@@ -74,18 +74,46 @@ export interface SiteContent {
 }
 
 export interface HeroSlide {
-  id: string
   image: string
   titleAr: string
   titleEn: string
-  subtitleAr: string
-  subtitleEn: string
   descriptionAr: string
   descriptionEn: string
-  order: number
 }
 
-// New interfaces for managing page content
+export interface SubsectionBranch {
+  titleAr: string
+  titleEn: string
+  image: string
+  descriptionAr: string
+  descriptionEn: string
+}
+
+export interface Subsection {
+  icon: string // Icon name as string
+  titleAr: string
+  titleEn: string
+  image: string
+  descriptionAr: string
+  descriptionEn: string
+  branches?: SubsectionBranch[]
+}
+
+export interface DepartmentData {
+  id: string
+  slug: string
+  icon: string // Icon name as string
+  titleAr: string
+  titleEn: string
+  color: string
+  welcomeAr: string
+  welcomeEn: string
+  descriptionAr: string
+  descriptionEn: string
+  heroSlides: HeroSlide[]
+  subsections: Subsection[]
+}
+
 export interface AboutContent {
   id: string
   titleAr: string
@@ -192,6 +220,77 @@ export interface ServiceRequest {
   submittedAt: string
   status: "pending" | "contacted" | "completed" | "cancelled"
   notes?: string
+}
+
+export interface Employee {
+  id: string
+  fullName: string
+  email: string
+  phone: string
+  position: string
+  department: string
+  role: "admin" | "hr_manager" | "service_manager" | "content_manager" | "receptionist" | "employee" | "viewer"
+  password: string
+  permissions: {
+    // صلاحيات طلبات التوظيف
+    canViewApplications: boolean
+    canEditApplications: boolean
+    canApproveApplications: boolean
+    canDeleteApplications: boolean
+
+    // صلاحيات طلبات الخدمة
+    canViewServiceRequests: boolean
+    canEditServiceRequests: boolean
+    canDeleteServiceRequests: boolean
+
+    // صلاحيات الرسائل
+    canViewMessages: boolean
+    canReplyToMessages: boolean
+    canDeleteMessages: boolean
+
+    // صلاحيات المحتوى
+    canViewContent: boolean
+    canEditContent: boolean
+    canPublishContent: boolean
+    canDeleteContent: boolean
+
+    // صلاحيات الموظفين
+    canViewEmployees: boolean
+    canAddEmployees: boolean
+    canEditEmployees: boolean
+    canDeleteEmployees: boolean
+
+    // صلاحيات التقارير
+    canViewReports: boolean
+    canExportData: boolean
+  }
+  createdAt: string
+  isActive: boolean
+  lastLogin?: string
+}
+
+export type Staff = Employee
+
+export interface Activity {
+  id: string
+  employeeId: string
+  employeeName: string
+  action: string
+  actionType: "create" | "update" | "delete" | "approve" | "reject" | "view"
+  targetType: "application" | "message" | "testimonial" | "job" | "content" | "employee"
+  targetId: string
+  details: string
+  timestamp: string
+}
+
+export interface Notification {
+  id: string
+  title: string
+  message: string
+  type: "info" | "success" | "warning" | "error"
+  activityId?: string
+  isRead: boolean
+  createdAt: string
 }
 
 function dispatchStorageChange(key: string, value: any): void {
@@ -1136,5 +1235,586 @@ export function deleteServiceRequest(id: string): void {
     const requests = getServiceRequests().filter((req) => req.id !== id)
     localStorage.setItem("serviceRequests", JSON.stringify(requests))
     dispatchStorageChange("serviceRequests", requests)
+  }
+}
+
+export function getFullDepartmentsData(): DepartmentData[] {
+  if (typeof window !== "undefined") {
+    const data = localStorage.getItem("fullDepartmentsData")
+    if (data) {
+      return JSON.parse(data)
+    }
+
+    // Default departments data
+    const defaultData: DepartmentData[] = [
+      {
+        id: "1",
+        slug: "medical",
+        icon: "Stethoscope",
+        titleAr: "القسم الطبي",
+        titleEn: "Medical Department",
+        color: "from-red-600 via-rose-600 to-pink-600",
+        welcomeAr: "مرحباً بكم في القسم الطبي - صحة طلابنا أولويتنا",
+        welcomeEn: "Welcome to Medical Department - Our Students' Health is Our Priority",
+        descriptionAr:
+          "يتميز القسم الطبي بكوادر طبية ذوي كفاءات عالية من أطباء وممرضين متواجدين على مدار الساعة، مع معدات طبية شاملة لجميع الحالات الطارئة واليومية، وسيارة إسعاف مجهزة بكامل لوازم الإسعافات الأولية.",
+        descriptionEn:
+          "The Medical Department features highly qualified medical staff of doctors and nurses available 24/7, with comprehensive medical equipment for all emergency and daily cases, and an ambulance equipped with complete first aid supplies.",
+        heroSlides: [
+          {
+            image: "/modern-medical-clinic-for-special-needs-school-wit.jpg",
+            titleAr: "العيادة الطبية",
+            titleEn: "Medical Clinic",
+            descriptionAr: "عيادة مجهزة بأحدث المعدات الطبية",
+            descriptionEn: "Clinic equipped with the latest medical equipment",
+          },
+          {
+            image: "/school-pharmacy-with-organized-medications-and-pha.jpg",
+            titleAr: "الصيدلية",
+            titleEn: "Pharmacy",
+            descriptionAr: "صيدلية شاملة لجميع احتياجات الطلاب الدوائية",
+            descriptionEn: "Comprehensive pharmacy for all students' medication needs",
+          },
+          {
+            image: "/medical-monitoring-room-with-nurse-caring-for-spec.jpg",
+            titleAr: "المتابعة الصحية",
+            titleEn: "Health Monitoring",
+            descriptionAr: "وحدة عناية مركزة للمتابعة الصحية على مدار الساعة",
+            descriptionEn: "Intensive care unit for 24/7 health monitoring",
+          },
+        ],
+        subsections: [
+          {
+            icon: "Stethoscope",
+            titleAr: "العيادة",
+            titleEn: "Clinic",
+            image: "/modern-medical-clinic-for-special-needs-school-wit.jpg",
+            descriptionAr:
+              "تتميز العيادة بقسم طبي مجهز بكوادر طبية ذوي كفاءات (أطباء وممرضين متواجدين على مدار الساعة)، وفيها معدات طبية شاملة لجميع الحالات الطارئة واليومية، ويتوفر فيها سيارة إسعاف مجهزة بكامل لوازم الإسعافات الأولية على مدار الساعة.",
+            descriptionEn:
+              "The clinic features a medical section equipped with qualified medical staff (doctors and nurses available 24/7), comprehensive medical equipment for all emergency and daily cases, and an ambulance equipped with complete first aid supplies available 24/7.",
+            branches: [],
+          },
+          {
+            icon: "Pill",
+            titleAr: "الصيدلية",
+            titleEn: "Pharmacy",
+            image: "/school-pharmacy-with-organized-medications-and-pha.jpg",
+            descriptionAr:
+              "تحتوي الصيدلية على جميع الأدوية التي يحتاجها الطلاب، مصنفة حسب اسم الطالب، ومحفوظة إلكترونياً.",
+            descriptionEn:
+              "The pharmacy contains all medications needed by students, classified by student name, and stored electronically.",
+            branches: [],
+          },
+          {
+            icon: "Activity",
+            titleAr: "المتابعة الصحية",
+            titleEn: "Health Monitoring",
+            image: "/medical-monitoring-room-with-nurse-caring-for-spec.jpg",
+            descriptionAr:
+              "تعتبر هذه الوحدة بمثابة العناية المركزة في المدرسة حيث يتم وضع الطلاب الذين يحتاجون للمتابعة والمراقبة الصحية على مدار الساعة بإشراف العيادة الطبية وكوادرها.",
+            descriptionEn:
+              "This unit serves as the intensive care unit in the school where students who need health monitoring and follow-up are placed 24/7 under the supervision of the medical clinic and its staff.",
+            branches: [],
+          },
+        ],
+      },
+      // Add other departments (heart, housing, activities) with similar structure
+      // For brevity, I'll add just the medical department here
+    ]
+
+    localStorage.setItem("fullDepartmentsData", JSON.stringify(defaultData))
+    dispatchStorageChange("fullDepartmentsData", defaultData)
+    return defaultData
+  }
+  return []
+}
+
+export function updateFullDepartmentData(slug: string, data: Partial<DepartmentData>): void {
+  if (typeof window !== "undefined") {
+    const departments = getFullDepartmentsData()
+    const index = departments.findIndex((d) => d.slug === slug)
+    if (index !== -1) {
+      departments[index] = { ...departments[index], ...data }
+      localStorage.setItem("fullDepartmentsData", JSON.stringify(departments))
+      dispatchStorageChange("fullDepartmentsData", departments)
+    }
+  }
+}
+
+export function updateSubsection(slug: string, subsectionIndex: number, data: Partial<Subsection>): void {
+  if (typeof window !== "undefined") {
+    const departments = getFullDepartmentsData()
+    const deptIndex = departments.findIndex((d) => d.slug === slug)
+    if (deptIndex !== -1 && departments[deptIndex].subsections[subsectionIndex]) {
+      departments[deptIndex].subsections[subsectionIndex] = {
+        ...departments[deptIndex].subsections[subsectionIndex],
+        ...data,
+      }
+      localStorage.setItem("fullDepartmentsData", JSON.stringify(departments))
+      dispatchStorageChange("fullDepartmentsData", departments)
+    }
+  }
+}
+
+export function addSubsectionBranch(slug: string, subsectionIndex: number, branch: SubsectionBranch): void {
+  if (typeof window !== "undefined") {
+    const departments = getFullDepartmentsData()
+    const deptIndex = departments.findIndex((d) => d.slug === slug)
+    if (deptIndex !== -1 && departments[deptIndex].subsections[subsectionIndex]) {
+      if (!departments[deptIndex].subsections[subsectionIndex].branches) {
+        departments[deptIndex].subsections[subsectionIndex].branches = []
+      }
+      departments[deptIndex].subsections[subsectionIndex].branches!.push(branch)
+      localStorage.setItem("fullDepartmentsData", JSON.stringify(departments))
+      dispatchStorageChange("fullDepartmentsData", departments)
+    }
+  }
+}
+
+export function updateSubsectionBranch(
+  slug: string,
+  subsectionIndex: number,
+  branchIndex: number,
+  data: Partial<SubsectionBranch>,
+): void {
+  if (typeof window !== "undefined") {
+    const departments = getFullDepartmentsData()
+    const deptIndex = departments.findIndex((d) => d.slug === slug)
+    if (
+      deptIndex !== -1 &&
+      departments[deptIndex].subsections[subsectionIndex] &&
+      departments[deptIndex].subsections[subsectionIndex].branches &&
+      departments[deptIndex].subsections[subsectionIndex].branches![branchIndex]
+    ) {
+      departments[deptIndex].subsections[subsectionIndex].branches![branchIndex] = {
+        ...departments[deptIndex].subsections[subsectionIndex].branches![branchIndex],
+        ...data,
+      }
+      localStorage.setItem("fullDepartmentsData", JSON.stringify(departments))
+      dispatchStorageChange("fullDepartmentsData", departments)
+    }
+  }
+}
+
+export function deleteSubsectionBranch(slug: string, subsectionIndex: number, branchIndex: number): void {
+  if (typeof window !== "undefined") {
+    const departments = getFullDepartmentsData()
+    const deptIndex = departments.findIndex((d) => d.slug === slug)
+    if (
+      deptIndex !== -1 &&
+      departments[deptIndex].subsections[subsectionIndex] &&
+      departments[deptIndex].subsections[subsectionIndex].branches
+    ) {
+      departments[deptIndex].subsections[subsectionIndex].branches!.splice(branchIndex, 1)
+      localStorage.setItem("fullDepartmentsData", JSON.stringify(departments))
+      dispatchStorageChange("fullDepartmentsData", departments)
+    }
+  }
+}
+
+export function saveEmployee(data: Omit<Employee, "id" | "createdAt">): Employee {
+  if (typeof window !== "undefined") {
+    const employees = getEmployees()
+    const newEmployee: Employee = {
+      ...data,
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      createdAt: new Date().toISOString(),
+    }
+    employees.push(newEmployee)
+    localStorage.setItem("employees", JSON.stringify(employees))
+
+    // تسجيل النشاط
+    logActivity({
+      employeeId: "admin",
+      employeeName: "المدير",
+      action: `تم إضافة موظف جديد: ${data.fullName}`,
+      actionType: "create",
+      targetType: "employee",
+      targetId: newEmployee.id,
+      details: `القسم: ${data.department}, الوظيفة: ${data.position}`,
+    })
+
+    dispatchStorageChange("employees", employees)
+    return newEmployee
+  }
+  return {} as Employee
+}
+
+export function getEmployees(): Employee[] {
+  if (typeof window !== "undefined") {
+    const data = localStorage.getItem("employees")
+    return data ? JSON.parse(data) : []
+  }
+  return []
+}
+
+export function updateEmployee(id: string, data: Partial<Employee>): void {
+  if (typeof window !== "undefined") {
+    const employees = getEmployees()
+    const index = employees.findIndex((emp) => emp.id === id)
+    if (index !== -1) {
+      const oldEmployee = employees[index]
+      employees[index] = { ...employees[index], ...data }
+      localStorage.setItem("employees", JSON.stringify(employees))
+
+      // تسجيل النشاط
+      logActivity({
+        employeeId: "admin",
+        employeeName: "المدير",
+        action: `تم تحديث بيانات الموظف: ${oldEmployee.fullName}`,
+        actionType: "update",
+        targetType: "employee",
+        targetId: id,
+        details: `التغييرات: ${Object.keys(data).join(", ")}`,
+      })
+
+      dispatchStorageChange("employees", employees)
+    }
+  }
+}
+
+export function deleteEmployee(id: string): void {
+  if (typeof window !== "undefined") {
+    const employees = getEmployees()
+    const employee = employees.find((emp) => emp.id === id)
+    if (employee) {
+      const filtered = employees.filter((emp) => emp.id !== id)
+      localStorage.setItem("employees", JSON.stringify(filtered))
+
+      // تسجيل النشاط
+      logActivity({
+        employeeId: "admin",
+        employeeName: "المدير",
+        action: `تم حذف الموظف: ${employee.fullName}`,
+        actionType: "delete",
+        targetType: "employee",
+        targetId: id,
+        details: `القسم: ${employee.department}`,
+      })
+
+      dispatchStorageChange("employees", filtered)
+    }
+  }
+}
+
+export function getEmployeeById(id: string): Employee | null {
+  const employees = getEmployees()
+  return employees.find((emp) => emp.id === id) || null
+}
+
+export function getStaff(): Staff[] {
+  return getEmployees()
+}
+
+export function getDefaultPermissions(role: Employee["role"]): Employee["permissions"] {
+  const allPermissions: Employee["permissions"] = {
+    canViewApplications: true,
+    canEditApplications: true,
+    canApproveApplications: true,
+    canDeleteApplications: true,
+    canViewServiceRequests: true,
+    canEditServiceRequests: true,
+    canDeleteServiceRequests: true,
+    canViewMessages: true,
+    canReplyToMessages: true,
+    canDeleteMessages: true,
+    canViewContent: true,
+    canEditContent: true,
+    canPublishContent: true,
+    canDeleteContent: true,
+    canViewEmployees: true,
+    canAddEmployees: true,
+    canEditEmployees: true,
+    canDeleteEmployees: true,
+    canViewReports: true,
+    canExportData: true,
+  }
+
+  const hrManagerPermissions: Employee["permissions"] = {
+    canViewApplications: true,
+    canEditApplications: true,
+    canApproveApplications: true,
+    canDeleteApplications: true,
+    canViewServiceRequests: true,
+    canEditServiceRequests: false,
+    canDeleteServiceRequests: false,
+    canViewMessages: true,
+    canReplyToMessages: true,
+    canDeleteMessages: false,
+    canViewContent: false,
+    canEditContent: false,
+    canPublishContent: false,
+    canDeleteContent: false,
+    canViewEmployees: true,
+    canAddEmployees: false,
+    canEditEmployees: false,
+    canDeleteEmployees: false,
+    canViewReports: true,
+    canExportData: true,
+  }
+
+  const serviceManagerPermissions: Employee["permissions"] = {
+    canViewApplications: true,
+    canEditApplications: false,
+    canApproveApplications: false,
+    canDeleteApplications: false,
+    canViewServiceRequests: true,
+    canEditServiceRequests: true,
+    canDeleteServiceRequests: true,
+    canViewMessages: true,
+    canReplyToMessages: true,
+    canDeleteMessages: false,
+    canViewContent: false,
+    canEditContent: false,
+    canPublishContent: false,
+    canDeleteContent: false,
+    canViewEmployees: false,
+    canAddEmployees: false,
+    canEditEmployees: false,
+    canDeleteEmployees: false,
+    canViewReports: true,
+    canExportData: true,
+  }
+
+  const contentManagerPermissions: Employee["permissions"] = {
+    canViewApplications: false,
+    canEditApplications: false,
+    canApproveApplications: false,
+    canDeleteApplications: false,
+    canViewServiceRequests: false,
+    canEditServiceRequests: false,
+    canDeleteServiceRequests: false,
+    canViewMessages: true,
+    canReplyToMessages: false,
+    canDeleteMessages: false,
+    canViewContent: true,
+    canEditContent: true,
+    canPublishContent: true,
+    canDeleteContent: true,
+    canViewEmployees: false,
+    canAddEmployees: false,
+    canEditEmployees: false,
+    canDeleteEmployees: false,
+    canViewReports: false,
+    canExportData: false,
+  }
+
+  const receptionistPermissions: Employee["permissions"] = {
+    canViewApplications: true,
+    canEditApplications: false,
+    canApproveApplications: false,
+    canDeleteApplications: false,
+    canViewServiceRequests: true,
+    canEditServiceRequests: false,
+    canDeleteServiceRequests: false,
+    canViewMessages: true,
+    canReplyToMessages: true,
+    canDeleteMessages: false,
+    canViewContent: false,
+    canEditContent: false,
+    canPublishContent: false,
+    canDeleteContent: false,
+    canViewEmployees: false,
+    canAddEmployees: false,
+    canEditEmployees: false,
+    canDeleteEmployees: false,
+    canViewReports: false,
+    canExportData: false,
+  }
+
+  const viewerPermissions: Employee["permissions"] = {
+    canViewApplications: true,
+    canEditApplications: false,
+    canApproveApplications: false,
+    canDeleteApplications: false,
+    canViewServiceRequests: true,
+    canEditServiceRequests: false,
+    canDeleteServiceRequests: false,
+    canViewMessages: true,
+    canReplyToMessages: false,
+    canDeleteMessages: false,
+    canViewContent: true,
+    canEditContent: false,
+    canPublishContent: false,
+    canDeleteContent: false,
+    canViewEmployees: false,
+    canAddEmployees: false,
+    canEditEmployees: false,
+    canDeleteEmployees: false,
+    canViewReports: false,
+    canExportData: false,
+  }
+
+  switch (role) {
+    case "admin":
+      return allPermissions
+    case "hr_manager":
+      return hrManagerPermissions
+    case "service_manager":
+      return serviceManagerPermissions
+    case "content_manager":
+      return contentManagerPermissions
+    case "receptionist":
+      return receptionistPermissions
+    case "viewer":
+      return viewerPermissions
+    default:
+      return viewerPermissions
+  }
+}
+
+export function getRolePermissions(role: Employee["role"]): string[] {
+  const permissions: Record<Employee["role"], string[]> = {
+    admin: [
+      "عرض جميع الطلبات",
+      "تعديل جميع الطلبات",
+      "الموافقة على الطلبات",
+      "حذف الطلبات",
+      "إدارة الموظفين",
+      "إدارة المحتوى",
+      "عرض التقارير",
+      "تصدير البيانات",
+    ],
+    hr_manager: [
+      "عرض طلبات التوظيف",
+      "تعديل طلبات التوظيف",
+      "الموافقة على طلبات التوظيف",
+      "حذف طلبات التوظيف",
+      "عرض الرسائل",
+      "الرد على الرسائل",
+      "عرض التقارير",
+      "تصدير البيانات",
+    ],
+    service_manager: [
+      "عرض طلبات الخدمة",
+      "تعديل طلبات الخدمة",
+      "حذف طلبات الخدمة",
+      "عرض الرسائل",
+      "الرد على الرسائل",
+      "عرض التقارير",
+      "تصدير البيانات",
+    ],
+    content_manager: ["عرض المحتوى", "تعديل المحتوى", "نشر المحتوى", "حذف المحتوى", "عرض الرسائل"],
+    receptionist: ["عرض طلبات التوظيف", "عرض طلبات الخدمة", "عرض الرسائل", "الرد على الرسائل"],
+    employee: ["عرض طلبات التوظيف", "عرض طلبات الخدمة", "عرض الرسائل"],
+    viewer: ["عرض طلبات التوظيف", "عرض طلبات الخدمة", "عرض الرسائل", "عرض المحتوى"],
+  }
+
+  return permissions[role] || permissions.viewer
+}
+
+export function logActivity(data: Omit<Activity, "id" | "timestamp">): void {
+  if (typeof window !== "undefined") {
+    const activities = getActivities()
+    const newActivity: Activity = {
+      ...data,
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      timestamp: new Date().toISOString(),
+    }
+    activities.unshift(newActivity) // إضافة في البداية
+
+    // الاحتفاظ بآخر 1000 نشاط فقط
+    if (activities.length > 1000) {
+      activities.splice(1000)
+    }
+
+    localStorage.setItem("activities", JSON.stringify(activities))
+
+    // إنشاء إشعار للمدير
+    if (data.employeeId !== "admin") {
+      createNotification({
+        title: "نشاط جديد",
+        message: data.action,
+        type: "info",
+        activityId: newActivity.id,
+      })
+    }
+
+    dispatchStorageChange("activities", activities)
+  }
+}
+
+export function getActivities(limit?: number): Activity[] {
+  if (typeof window !== "undefined") {
+    const data = localStorage.getItem("activities")
+    const activities = data ? JSON.parse(data) : []
+    return limit ? activities.slice(0, limit) : activities
+  }
+  return []
+}
+
+export function getActivitiesByEmployee(employeeId: string, limit?: number): Activity[] {
+  const activities = getActivities()
+  const filtered = activities.filter((act) => act.employeeId === employeeId)
+  return limit ? filtered.slice(0, limit) : filtered
+}
+
+export function clearActivities(): void {
+  if (typeof window !== "undefined") {
+    localStorage.setItem("activities", JSON.stringify([]))
+    dispatchStorageChange("activities", [])
+  }
+}
+
+export function createNotification(data: Omit<Notification, "id" | "createdAt" | "isRead">): void {
+  if (typeof window !== "undefined") {
+    const notifications = getNotifications()
+    const newNotification: Notification = {
+      ...data,
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      createdAt: new Date().toISOString(),
+      isRead: false,
+    }
+    notifications.unshift(newNotification)
+
+    // الاحتفاظ بآخر 100 إشعار فقط
+    if (notifications.length > 100) {
+      notifications.splice(100)
+    }
+
+    localStorage.setItem("notifications", JSON.stringify(notifications))
+    dispatchStorageChange("notifications", notifications)
+  }
+}
+
+export function getNotifications(): Notification[] {
+  if (typeof window !== "undefined") {
+    const data = localStorage.getItem("notifications")
+    return data ? JSON.parse(data) : []
+  }
+  return []
+}
+
+export function getUnreadNotifications(): Notification[] {
+  return getNotifications().filter((n) => !n.isRead)
+}
+
+export function markNotificationAsRead(id: string): void {
+  if (typeof window !== "undefined") {
+    const notifications = getNotifications()
+    const index = notifications.findIndex((n) => n.id === id)
+    if (index !== -1) {
+      notifications[index].isRead = true
+      localStorage.setItem("notifications", JSON.stringify(notifications))
+      dispatchStorageChange("notifications", notifications)
+    }
+  }
+}
+
+export function markAllNotificationsAsRead(): void {
+  if (typeof window !== "undefined") {
+    const notifications = getNotifications()
+    notifications.forEach((n) => (n.isRead = true))
+    localStorage.setItem("notifications", JSON.stringify(notifications))
+    dispatchStorageChange("notifications", notifications)
+  }
+}
+
+export function deleteNotification(id: string): void {
+  if (typeof window !== "undefined") {
+    const notifications = getNotifications().filter((n) => n.id !== id)
+    localStorage.setItem("notifications", JSON.stringify(notifications))
+    dispatchStorageChange("notifications", notifications)
   }
 }

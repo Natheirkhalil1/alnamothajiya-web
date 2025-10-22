@@ -23,6 +23,8 @@ import {
 } from "lucide-react"
 import { useState } from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { saveServiceRequest } from "@/lib/storage"
+import { sendNotifications } from "@/lib/notifications"
 
 export default function ServiceRequestPage() {
   const { language } = useLanguage()
@@ -42,26 +44,24 @@ export default function ServiceRequestPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    const message = `
-طلب خدمة جديد:
-الاسم: ${formData.fullName}
-الهاتف: ${formData.phone}
-البريد الإلكتروني: ${formData.email}
+    saveServiceRequest({
+      name: formData.fullName,
+      phone: formData.phone,
+      email: formData.email,
+      serviceType: formData.serviceType,
+      message: `
 اسم الطالب: ${formData.studentName}
 عمر الطالب: ${formData.studentAge}
-نوع الخدمة: ${formData.serviceType}
 العنوان: ${formData.address}
 التاريخ المفضل: ${formData.preferredDate}
 ملاحظات: ${formData.notes}
-    `.trim()
+      `.trim(),
+    })
 
-    const whatsappUrl = `https://wa.me/972595864023?text=${encodeURIComponent(message)}`
-    const emailSubject = language === "ar" ? "طلب خدمة جديد" : "New Service Request"
-    const emailBody = encodeURIComponent(message)
-    const emailUrl = `mailto:mmm460286@gmail.com?subject=${emailSubject}&body=${emailBody}`
-
-    window.open(whatsappUrl, "_blank")
-    window.open(emailUrl, "_blank")
+    sendNotifications({
+      type: "service",
+      data: formData,
+    })
 
     setIsSubmitted(true)
   }
