@@ -299,6 +299,215 @@ export interface Notification {
   createdAt: string
 }
 
+export interface PageBlock {
+  id: string
+  type:
+    | "heading"
+    | "paragraph"
+    | "image"
+    | "gallery"
+    | "video"
+    | "quote"
+    | "divider"
+    | "button"
+    | "html"
+    | "row"
+    | "hero-slider"
+    | "statistics"
+    | "features"
+    | "card"
+    | "icon-box"
+    | "accordion"
+    | "tabs"
+    | "alert"
+    | "testimonial-card"
+    | "team-member"
+    | "pricing-card"
+    | "cta"
+    | "form"
+    | "map"
+    | "social-links"
+    | "spacer"
+  order: number
+  content: {
+    // For heading
+    level?: 1 | 2 | 3 | 4 | 5 | 6
+    textAr?: string
+    textEn?: string
+    // For paragraph
+    // For image
+    imageUrl?: string
+    altAr?: string
+    altEn?: string
+    captionAr?: string
+    captionEn?: string
+    // For gallery
+    images?: Array<{ url: string; alt: string; caption?: string }>
+    // For video
+    videoUrl?: string
+    titleAr?: string
+    titleEn?: string
+    // For quote
+    quoteAr?: string
+    quoteEn?: string
+    authorAr?: string
+    authorEn?: string
+    // For button
+    buttonTextAr?: string
+    buttonTextEn?: string
+    buttonUrl?: string
+    buttonStyle?: string
+    // For divider
+    dividerStyle?: string
+    // For HTML
+    htmlCode?: string
+    // For row (columns layout)
+    columns?: number
+    columnBlocks?: PageBlock[][]
+    // For hero-slider
+    slides?: Array<{
+      id: string
+      imageUrl: string
+      titleAr: string
+      titleEn: string
+      subtitleAr?: string
+      subtitleEn?: string
+      descriptionAr?: string
+      descriptionEn?: string
+    }>
+    // For statistics
+    stats?: Array<{
+      id: string
+      number: string
+      labelAr: string
+      labelEn: string
+    }>
+    // For features
+    features?: Array<{
+      id: string
+      icon: string
+      titleAr: string
+      titleEn: string
+      descriptionAr: string
+      descriptionEn: string
+    }>
+    // For card
+    cardImageUrl?: string
+    cardTitleAr?: string
+    cardTitleEn?: string
+    cardDescriptionAr?: string
+    cardDescriptionEn?: string
+    cardButtonTextAr?: string
+    cardButtonTextEn?: string
+    cardButtonUrl?: string
+    // For icon-box
+    icon?: string
+    iconColor?: string
+    // For accordion
+    accordionItems?: Array<{
+      id: string
+      titleAr: string
+      titleEn: string
+      contentAr: string
+      contentEn: string
+    }>
+    // For tabs
+    tabItems?: Array<{
+      id: string
+      labelAr: string
+      labelEn: string
+      contentAr: string
+      contentEn: string
+    }>
+    // For alert
+    alertType?: "info" | "success" | "warning" | "error"
+    alertTitleAr?: string
+    alertTitleEn?: string
+    alertMessageAr?: string
+    alertMessageEn?: string
+    // For testimonial-card
+    testimonialName?: string
+    testimonialImage?: string
+    testimonialRating?: number
+    testimonialComment?: string
+    testimonialPosition?: string
+    // For team-member
+    memberName?: string
+    memberImage?: string
+    memberPositionAr?: string
+    memberPositionEn?: string
+    memberBioAr?: string
+    memberBioEn?: string
+    memberEmail?: string
+    memberPhone?: string
+    memberSocial?: Array<{ platform: string; url: string }>
+    // For pricing-card
+    pricingTitleAr?: string
+    pricingTitleEn?: string
+    pricingPrice?: string
+    pricingPeriodAr?: string
+    pricingPeriodEn?: string
+    pricingFeatures?: Array<{ textAr: string; textEn: string; included: boolean }>
+    pricingButtonTextAr?: string
+    pricingButtonTextEn?: string
+    pricingButtonUrl?: string
+    pricingHighlighted?: boolean
+    // For cta
+    ctaTitleAr?: string
+    ctaTitleEn?: string
+    ctaDescriptionAr?: string
+    ctaDescriptionEn?: string
+    ctaButtonTextAr?: string
+    ctaButtonTextEn?: string
+    ctaButtonUrl?: string
+    ctaBackgroundImage?: string
+    // For form
+    formFields?: Array<{
+      id: string
+      type: "text" | "email" | "tel" | "textarea" | "select"
+      labelAr: string
+      labelEn: string
+      placeholderAr?: string
+      placeholderEn?: string
+      required?: boolean
+      options?: Array<{ labelAr: string; labelEn: string; value: string }>
+    }>
+    formSubmitTextAr?: string
+    formSubmitTextEn?: string
+    formSubmitUrl?: string
+    // For map
+    mapUrl?: string
+    mapHeight?: string
+    // For social-links
+    socialLinks?: Array<{
+      platform: string
+      url: string
+      icon: string
+    }>
+    // For spacer
+    spacerHeight?: string
+  }
+}
+
+export interface DynamicPage {
+  id: string
+  slug: string
+  titleAr: string
+  titleEn: string
+  descriptionAr: string
+  descriptionEn: string
+  contentAr: string
+  contentEn: string
+  image?: string
+  seoDescriptionAr?: string
+  seoDescriptionEn?: string
+  featuredImage?: string
+  blocks?: PageBlock[]
+  isPublished: boolean
+  createdAt: string
+  updatedAt: string
+}
+
 function dispatchStorageChange(key: string, value: any): void {
   if (typeof window !== "undefined") {
     window.dispatchEvent(
@@ -874,37 +1083,25 @@ export function getHeroSlides(): HeroSlide[] {
     // الشرائح الافتراضية
     const defaultSlides: HeroSlide[] = [
       {
-        id: "1",
         image: "/modern-special-education-school-classroom-with-div.jpg",
         titleAr: "المدرسة النموذجية",
         titleEn: "Al Namothajia School",
-        subtitleAr: "رؤية جديدة",
-        subtitleEn: "A New Vision",
         descriptionAr: "لتعزيز التعليم والإبداع في بيئة مريحة وآمنة تراعي الفروق الفردية وتطور قدرات كل طالب",
         descriptionEn: "To enhance education and creativity in a comfortable and safe environment",
-        order: 1,
       },
       {
-        id: "2",
         image: "/happy-special-needs-students-learning-together-wit.jpg",
         titleAr: "تعليم متميز",
         titleEn: "Distinguished Education",
-        subtitleAr: "مستقبل واعد",
-        subtitleEn: "Promising Future",
         descriptionAr: "نبني جيلاً واعياً ومبدعاً لمستقبل أفضل",
         descriptionEn: "Building a conscious and creative generation for a better future",
-        order: 2,
       },
       {
-        id: "3",
         image: "/modern-special-education-school-facilities-with-ad.jpg",
         titleAr: "بيئة تعليمية حديثة",
         titleEn: "Modern Learning Environment",
-        subtitleAr: "تقنيات متطورة",
-        subtitleEn: "Advanced Technology",
         descriptionAr: "نوفر أحدث الوسائل التعليمية لتجربة تعلم فريدة",
         descriptionEn: "We provide the latest educational tools for a unique learning experience",
-        order: 3,
       },
     ]
     localStorage.setItem("heroSlides", JSON.stringify(defaultSlides))
@@ -1350,6 +1547,24 @@ export function updateEmploymentApplicationStatus(
   }
 }
 
+export function updateEnhancedEmploymentApplication(
+  id: string,
+  updates: Partial<Omit<EnhancedEmploymentApplication, "id" | "submittedAt">>,
+): void {
+  if (typeof window !== "undefined") {
+    const applications = getEnhancedEmploymentApplications()
+    const index = applications.findIndex((app) => app.id === id)
+    if (index !== -1) {
+      applications[index] = {
+        ...applications[index],
+        ...updates,
+      }
+      localStorage.setItem("enhancedEmploymentApplications", JSON.stringify(applications))
+      dispatchStorageChange("enhancedEmploymentApplications", applications)
+    }
+  }
+}
+
 export function deleteEnhancedEmploymentApplication(id: string): void {
   if (typeof window !== "undefined") {
     const applications = getEnhancedEmploymentApplications().filter((app) => app.id !== id)
@@ -1392,6 +1607,21 @@ export function updateServiceRequestStatus(id: string, status: ServiceRequest["s
         ...requests[index],
         status,
         notes: notes || requests[index].notes,
+      }
+      localStorage.setItem("serviceRequests", JSON.stringify(requests))
+      dispatchStorageChange("serviceRequests", requests)
+    }
+  }
+}
+
+export function updateServiceRequest(id: string, updates: Partial<Omit<ServiceRequest, "id" | "submittedAt">>): void {
+  if (typeof window !== "undefined") {
+    const requests = getServiceRequests()
+    const index = requests.findIndex((req) => req.id === id)
+    if (index !== -1) {
+      requests[index] = {
+        ...requests[index],
+        ...updates,
       }
       localStorage.setItem("serviceRequests", JSON.stringify(requests))
       dispatchStorageChange("serviceRequests", requests)
@@ -1488,8 +1718,220 @@ export function getFullDepartmentsData(): DepartmentData[] {
           },
         ],
       },
-      // Add other departments (heart, housing, activities) with similar structure
-      // For brevity, I'll add just the medical department here
+      {
+        id: "2",
+        slug: "heart",
+        icon: "HeartPulse",
+        titleAr: "قلب المدرسة",
+        titleEn: "Heart of the School",
+        color: "from-pink-500 via-purple-500 to-indigo-500",
+        welcomeAr: "مرحباً بكم في قلب المدرسة - حيث يتجلى التميز والإبداع",
+        welcomeEn: "Welcome to the Heart of the School - Where Excellence and Creativity Shine",
+        descriptionAr:
+          "القسم الأساسي الذي يضم 14 قسماً متخصصاً يعملون بتكامل تام لتقديم خدمات تعليمية وتأهيلية شاملة لجميع الطلاب، مع التركيز على تنمية المهارات الفردية وتحقيق الأهداف التعليمية.",
+        descriptionEn:
+          "The core department comprising 14 specialized sections working in complete integration to provide comprehensive educational and rehabilitation services for all students, focusing on developing individual skills and achieving educational goals.",
+        heroSlides: [
+          {
+            image: "/professional-psychologist-conducting-assessment-wi.jpg",
+            titleAr: "التأهيل النفسي",
+            titleEn: "Psychological Rehabilitation",
+            descriptionAr: "دعم نفسي متخصص لتجاوز التحديات وتحقيق النمو الشخصي",
+            descriptionEn: "Specialized psychological support to overcome challenges and achieve personal growth",
+          },
+          {
+            image: "/special-education-teacher-assisting-student-in-cla.jpg",
+            titleAr: "التعليم المتخصص",
+            titleEn: "Specialized Education",
+            descriptionAr: "برامج تعليمية مصممة لتلبية الاحتياجات الفردية لكل طالب",
+            descriptionEn: "Educational programs designed to meet the individual needs of each student",
+          },
+          {
+            image: "/speech-therapist-working-with-child-on-articula.jpg",
+            titleAr: "علاج النطق",
+            titleEn: "Speech Therapy",
+            descriptionAr: "تحسين مهارات التواصل والنطق لدى الطلاب",
+            descriptionEn: "Improving communication and speech skills for students",
+          },
+        ],
+        subsections: [
+          {
+            icon: "Users",
+            titleAr: "فريق العمل",
+            titleEn: "Our Team",
+            image: "/team-of-special-education-professionals.jpg",
+            descriptionAr:
+              "نعتمد على فريق من الأخصائيين والمعلمين ذوي الخبرة العالية في مجال التربية الخاصة، ملتزمون بتقديم أفضل رعاية وتعليم.",
+            descriptionEn:
+              "We rely on a team of highly experienced specialists and teachers in the field of special education, committed to providing the best care and education.",
+            branches: [],
+          },
+          {
+            icon: "Brain",
+            titleAr: "التأهيل العصبي",
+            titleEn: "Neuro-Rehabilitation",
+            image: "/neuroscience-lab-equipment.jpg",
+            descriptionAr: "برامج تأهيلية متخصصة تعتمد على أحدث التقنيات لدعم التطور العصبي والحركي للطلاب.",
+            descriptionEn:
+              "Specialized rehabilitation programs utilizing the latest technologies to support students' neurodevelopment and motor skills.",
+            branches: [],
+          },
+          {
+            icon: "ChartSquare",
+            titleAr: "التقييم والتشخيص",
+            titleEn: "Assessment and Diagnosis",
+            image: "/professional-psychologist-conducting-assessment-wi.jpg",
+            descriptionAr: "نقدم تقييمات شاملة لتحديد احتياجات كل طالب ووضع خطط تعليمية وتأهيلية فردية.",
+            descriptionEn:
+              "We provide comprehensive assessments to identify each student's needs and develop individualized educational and rehabilitation plans.",
+            branches: [],
+          },
+        ],
+      },
+      {
+        id: "3",
+        slug: "housing",
+        icon: "Home",
+        titleAr: "السكن الداخلي",
+        titleEn: "Internal Housing",
+        color: "from-blue-400 via-cyan-500 to-teal-500",
+        welcomeAr: "مرحباً بكم في بيئة سكنية آمنة ومريحة",
+        welcomeEn: "Welcome to a Safe and Comfortable Residential Environment",
+        descriptionAr:
+          "نوفر بيئة سكنية آمنة ومريحة للطلاب، مجهزة بكافة وسائل الراحة والخدمات لضمان إقامة سعيدة وموفقة، مع إشراف دائم لضمان سلامتهم.",
+        descriptionEn:
+          "We provide a safe and comfortable residential environment for students, equipped with all amenities and services to ensure a happy and successful stay, with constant supervision to ensure their safety.",
+        heroSlides: [
+          {
+            image: "/comfortable-residential-apartment-for-special-need.jpg",
+            titleAr: "غرف مريحة",
+            titleEn: "Comfortable Rooms",
+            descriptionAr: "غرف مجهزة بالكامل لتوفير أقصى درجات الراحة",
+            descriptionEn: "Fully equipped rooms to provide maximum comfort",
+          },
+          {
+            image: "/school-dormitory-common-area-with-students-study.jpg",
+            titleAr: "مناطق مشتركة",
+            titleEn: "Common Areas",
+            descriptionAr: "مساحات اجتماعية مجهزة للدراسة والترفيه",
+            descriptionEn: "Social spaces equipped for study and recreation",
+          },
+          {
+            image: "/school-dining-hall-with-students-eating-meal.jpg",
+            titleAr: "قاعة الطعام",
+            titleEn: "Dining Hall",
+            descriptionAr: "وجبات صحية ومتوازنة تقدم في قاعة طعام مجهزة",
+            descriptionEn: "Healthy and balanced meals served in a well-equipped dining hall",
+          },
+        ],
+        subsections: [
+          {
+            icon: "Bed",
+            titleAr: "الغرف السكنية",
+            titleEn: "Residential Rooms",
+            image: "/comfortable-residential-apartment-for-special-need.jpg",
+            descriptionAr: "غرف مصممة لضمان الراحة والخصوصية، مجهزة بأثاث حديث، وتشمل خدمات النظافة الدورية.",
+            descriptionEn:
+              "Rooms designed to ensure comfort and privacy, equipped with modern furniture, and including regular cleaning services.",
+            branches: [],
+          },
+          {
+            icon: "Utensils",
+            titleAr: "خدمات الوجبات",
+            titleEn: "Meal Services",
+            image: "/school-dining-hall-with-students-eating-meal.jpg",
+            descriptionAr: "تقديم وجبات غذائية متوازنة وصحية، مع مراعاة الاحتياجات الغذائية الخاصة للطلاب.",
+            descriptionEn: "Providing balanced and healthy meals, taking into account students' special dietary needs.",
+            branches: [],
+          },
+          {
+            icon: "Users",
+            titleAr: "الإشراف والرعاية",
+            titleEn: "Supervision and Care",
+            image: "/caregiver-assisting-student-in-dormitory.jpg",
+            descriptionAr: "فريق إشراف متخصص يعمل على مدار الساعة لضمان سلامة الطلاب ورعايتهم.",
+            descriptionEn: "A specialized supervision team works around the clock to ensure students' safety and care.",
+            branches: [],
+          },
+        ],
+      },
+      {
+        id: "4",
+        slug: "activities",
+        icon: "PuzzlePiece",
+        titleAr: "الأنشطة اللامنهجية",
+        titleEn: "Extracurricular Activities",
+        color: "from-green-400 via-lime-500 to-yellow-500",
+        welcomeAr: "اكتشف عالم الإبداع والمرح معنا!",
+        welcomeEn: "Discover a World of Creativity and Fun with Us!",
+        descriptionAr:
+          "نؤمن بأهمية الأنشطة اللامنهجية في تنمية شخصية الطالب ومهاراته. نقدم مجموعة متنوعة من الأنشطة الرياضية والفنية والثقافية والترفيهية.",
+        descriptionEn:
+          "We believe in the importance of extracurricular activities in developing a student's personality and skills. We offer a variety of sports, artistic, cultural, and recreational activities.",
+        heroSlides: [
+          {
+            image: "/special-needs-students-on-educational-field-trip-w.jpg",
+            titleAr: "رحلات تعليمية",
+            titleEn: "Educational Trips",
+            descriptionAr: "استكشاف العالم وتعلم أشياء جديدة في رحلات ميدانية ممتعة",
+            descriptionEn: "Exploring the world and learning new things on fun field trips",
+          },
+          {
+            image: "/students-participating-in-school-play-or-musica.jpg",
+            titleAr: "أنشطة فنية",
+            titleEn: "Artistic Activities",
+            descriptionAr: "إطلاق العنان للإبداع من خلال الرسم والمسرح والموسيقى",
+            descriptionEn: "Unleashing creativity through drawing, theater, and music",
+          },
+          {
+            image: "/students-playing-sports-on-school-field.jpg",
+            titleAr: "أنشطة رياضية",
+            titleEn: "Sports Activities",
+            descriptionAr: "تنمية المهارات البدنية والروح الرياضية",
+            descriptionEn: "Developing physical skills and sportsmanship",
+          },
+        ],
+        subsections: [
+          {
+            icon: "Hiking",
+            titleAr: "الرحلات الميدانية",
+            titleEn: "Field Trips",
+            image: "/special-needs-students-on-educational-field-trip-w.jpg",
+            descriptionAr: "تنظيم رحلات دورية لأماكن مختلفة لتعزيز التعلم العملي واكتساب الخبرات الحياتية.",
+            descriptionEn:
+              "Organizing regular trips to various locations to enhance practical learning and gain life experiences.",
+            branches: [],
+          },
+          {
+            icon: "TheaterMasks",
+            titleAr: "الفنون المسرحية والموسيقية",
+            titleEn: "Performing Arts and Music",
+            image: "/students-participating-in-school-play-or-musica.jpg",
+            descriptionAr: "تنمية المهارات الإبداعية من خلال المشاركة في الأنشطة المسرحية والموسيقية.",
+            descriptionEn: "Developing creative skills through participation in theatrical and musical activities.",
+            branches: [],
+          },
+          {
+            icon: "Basketball",
+            titleAr: "الرياضة واللياقة البدنية",
+            titleEn: "Sports and Fitness",
+            image: "/students-playing-sports-on-school-field.jpg",
+            descriptionAr: "توفير بيئة رياضية محفزة لتنمية اللياقة البدنية والروح الرياضية لدى الطلاب.",
+            descriptionEn:
+              "Providing a stimulating sports environment to develop students' physical fitness and sportsmanship.",
+            branches: [],
+          },
+          {
+            icon: "Sparkles",
+            titleAr: "الأنشطة الثقافية والاجتماعية",
+            titleEn: "Cultural and Social Activities",
+            image: "/diverse-group-of-students-socializing-at-school.jpg",
+            descriptionAr: "برامج وأنشطة متنوعة تعزز الوعي الثقافي وتنمي المهارات الاجتماعية.",
+            descriptionEn: "Various programs and activities that enhance cultural awareness and develop social skills.",
+            branches: [],
+          },
+        ],
+      },
     ]
 
     localStorage.setItem("fullDepartmentsData", JSON.stringify(defaultData))
@@ -1986,4 +2428,560 @@ export function deleteNotification(id: string): void {
     localStorage.setItem("notifications", JSON.stringify(notifications))
     dispatchStorageChange("notifications", notifications)
   }
+}
+
+export function getDynamicPages(): DynamicPage[] {
+  if (typeof window !== "undefined") {
+    const data = localStorage.getItem("dynamicPages")
+    return data ? JSON.parse(data) : []
+  }
+  return []
+}
+
+export function saveDynamicPage(data: Omit<DynamicPage, "id" | "createdAt" | "updatedAt">): DynamicPage {
+  if (typeof window !== "undefined") {
+    const pages = getDynamicPages()
+    const newPage: DynamicPage = {
+      ...data,
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+    pages.push(newPage)
+    localStorage.setItem("dynamicPages", JSON.stringify(pages))
+    dispatchStorageChange("dynamicPages", pages)
+    return newPage
+  }
+  return {} as DynamicPage
+}
+
+export function updateDynamicPage(id: string, data: Partial<DynamicPage>): void {
+  if (typeof window !== "undefined") {
+    const pages = getDynamicPages()
+    const index = pages.findIndex((page) => page.id === id)
+    if (index !== -1) {
+      pages[index] = {
+        ...pages[index],
+        ...data,
+        updatedAt: new Date().toISOString(),
+      }
+      localStorage.setItem("dynamicPages", JSON.stringify(pages))
+      dispatchStorageChange("dynamicPages", pages)
+    }
+  }
+}
+
+export function deleteDynamicPage(id: string): void {
+  if (typeof window !== "undefined") {
+    const pages = getDynamicPages().filter((page) => page.id !== id)
+    localStorage.setItem("dynamicPages", JSON.stringify(pages))
+    dispatchStorageChange("dynamicPages", pages)
+  }
+}
+
+export function getDynamicPageBySlug(slug: string): DynamicPage | null {
+  const pages = getDynamicPages()
+  return pages.find((page) => page.slug === slug && page.isPublished) || null
+}
+
+export function generateMockupEmployees(): Employee[] {
+  return [
+    {
+      id: "emp-001",
+      fullName: "أحمد محمد العلي",
+      email: "ahmed.ali@school.edu",
+      phone: "+966501234567",
+      position: "مدير الموارد البشرية",
+      department: "الموارد البشرية",
+      role: "hr_manager",
+      password: "password123",
+      permissions: {
+        canViewApplications: true,
+        canEditApplications: true,
+        canApproveApplications: true,
+        canDeleteApplications: true,
+        canViewServiceRequests: true,
+        canEditServiceRequests: true,
+        canDeleteServiceRequests: false,
+        canViewMessages: true,
+        canReplyToMessages: true,
+        canDeleteMessages: false,
+        canViewContent: true,
+        canEditContent: false,
+        canPublishContent: false,
+        canDeleteContent: false,
+        canViewEmployees: true,
+        canAddEmployees: true,
+        canEditEmployees: true,
+        canDeleteEmployees: false,
+        canViewReports: true,
+        canExportData: true,
+      },
+      createdAt: new Date(2024, 0, 15).toISOString(),
+      isActive: true,
+      lastLogin: new Date(2025, 0, 5, 9, 30).toISOString(),
+    },
+    {
+      id: "emp-002",
+      fullName: "فاطمة حسن السعيد",
+      email: "fatima.hassan@school.edu",
+      phone: "+966502345678",
+      position: "مديرة المحتوى",
+      department: "التسويق والإعلام",
+      role: "content_manager",
+      password: "password123",
+      permissions: {
+        canViewApplications: false,
+        canEditApplications: false,
+        canApproveApplications: false,
+        canDeleteApplications: false,
+        canViewServiceRequests: false,
+        canEditServiceRequests: false,
+        canDeleteServiceRequests: false,
+        canViewMessages: true,
+        canReplyToMessages: true,
+        canDeleteMessages: false,
+        canViewContent: true,
+        canEditContent: true,
+        canPublishContent: true,
+        canDeleteContent: true,
+        canViewEmployees: false,
+        canAddEmployees: false,
+        canEditEmployees: false,
+        canDeleteEmployees: false,
+        canViewReports: false,
+        canExportData: false,
+      },
+      createdAt: new Date(2024, 1, 20).toISOString(),
+      isActive: true,
+      lastLogin: new Date(2025, 0, 5, 10, 15).toISOString(),
+    },
+    {
+      id: "emp-003",
+      fullName: "خالد عبدالله المطيري",
+      email: "khaled.mutairi@school.edu",
+      phone: "+966503456789",
+      position: "مدير الخدمات",
+      department: "خدمة العملاء",
+      role: "service_manager",
+      password: "password123",
+      permissions: {
+        canViewApplications: false,
+        canEditApplications: false,
+        canApproveApplications: false,
+        canDeleteApplications: false,
+        canViewServiceRequests: true,
+        canEditServiceRequests: true,
+        canDeleteServiceRequests: true,
+        canViewMessages: true,
+        canReplyToMessages: true,
+        canDeleteMessages: true,
+        canViewContent: false,
+        canEditContent: false,
+        canPublishContent: false,
+        canDeleteContent: false,
+        canViewEmployees: false,
+        canAddEmployees: false,
+        canEditEmployees: false,
+        canDeleteEmployees: false,
+        canViewReports: true,
+        canExportData: true,
+      },
+      createdAt: new Date(2024, 2, 10).toISOString(),
+      isActive: true,
+      lastLogin: new Date(2025, 0, 4, 16, 45).toISOString(),
+    },
+    {
+      id: "emp-004",
+      fullName: "نورة سعد القحطاني",
+      email: "noura.qahtani@school.edu",
+      phone: "+966504567890",
+      position: "موظفة استقبال",
+      department: "الاستقبال",
+      role: "receptionist",
+      password: "password123",
+      permissions: {
+        canViewApplications: true,
+        canEditApplications: false,
+        canApproveApplications: false,
+        canDeleteApplications: false,
+        canViewServiceRequests: true,
+        canEditServiceRequests: false,
+        canDeleteServiceRequests: false,
+        canViewMessages: true,
+        canReplyToMessages: false,
+        canDeleteMessages: false,
+        canViewContent: true,
+        canEditContent: false,
+        canPublishContent: false,
+        canDeleteContent: false,
+        canViewEmployees: false,
+        canAddEmployees: false,
+        canEditEmployees: false,
+        canDeleteEmployees: false,
+        canViewReports: false,
+        canExportData: false,
+      },
+      createdAt: new Date(2024, 3, 5).toISOString(),
+      isActive: true,
+      lastLogin: new Date(2025, 0, 5, 8, 0).toISOString(),
+    },
+    {
+      id: "emp-005",
+      fullName: "محمد عمر الشمري",
+      email: "mohammed.shamri@school.edu",
+      phone: "+966505678901",
+      position: "موظف إداري",
+      department: "الشؤون الإدارية",
+      role: "employee",
+      password: "password123",
+      permissions: {
+        canViewApplications: true,
+        canEditApplications: false,
+        canApproveApplications: false,
+        canDeleteApplications: false,
+        canViewServiceRequests: true,
+        canEditServiceRequests: false,
+        canDeleteServiceRequests: false,
+        canViewMessages: true,
+        canReplyToMessages: false,
+        canDeleteMessages: false,
+        canViewContent: true,
+        canEditContent: false,
+        canPublishContent: false,
+        canDeleteContent: false,
+        canViewEmployees: false,
+        canAddEmployees: false,
+        canEditEmployees: false,
+        canDeleteEmployees: false,
+        canViewReports: false,
+        canExportData: false,
+      },
+      createdAt: new Date(2024, 4, 12).toISOString(),
+      isActive: false,
+      lastLogin: new Date(2024, 11, 20, 14, 30).toISOString(),
+    },
+  ]
+}
+
+export function generateMockupPendingReviews(): PendingReview[] {
+  return [
+    {
+      id: "pr-001",
+      name: "سارة أحمد الغامدي",
+      image: "/diverse-user-avatars.png",
+      rating: 5,
+      comment: "مدرسة رائعة جداً، المعلمون متميزون والمناهج حديثة. ابنتي سعيدة جداً بالدراسة هنا.",
+      submittedAt: new Date(2025, 0, 3, 14, 30).toISOString(),
+    },
+    {
+      id: "pr-002",
+      name: "عبدالرحمن خالد",
+      image: "/diverse-user-avatars.png",
+      rating: 4,
+      comment: "تجربة تعليمية ممتازة، لكن أتمنى تحسين المرافق الرياضية.",
+      submittedAt: new Date(2025, 0, 4, 10, 15).toISOString(),
+    },
+    {
+      id: "pr-003",
+      name: "منى عبدالله السالم",
+      image: "/diverse-user-avatars.png",
+      rating: 5,
+      comment: "أفضل مدرسة في المنطقة! الاهتمام بالطلاب والتواصل مع أولياء الأمور ممتاز.",
+      submittedAt: new Date(2025, 0, 4, 16, 45).toISOString(),
+    },
+    {
+      id: "pr-004",
+      name: "يوسف محمد العتيبي",
+      image: "/diverse-user-avatars.png",
+      rating: 5,
+      comment: "مستوى تعليمي عالي وكادر تدريسي محترف. أنصح بها بشدة.",
+      submittedAt: new Date(2025, 0, 5, 9, 20).toISOString(),
+    },
+    {
+      id: "pr-005",
+      name: "ليلى حسن الدوسري",
+      image: "/diverse-user-avatars.png",
+      rating: 4,
+      comment: "مدرسة جيدة جداً، البيئة التعليمية محفزة والأنشطة متنوعة.",
+      submittedAt: new Date(2025, 0, 5, 11, 0).toISOString(),
+    },
+  ]
+}
+
+export function generateMockupMessages(): ContactMessage[] {
+  return [
+    {
+      id: "msg-001",
+      name: "عمر سعيد الزهراني",
+      phone: "+966501111111",
+      email: "omar.zahrani@email.com",
+      rating: 5,
+      message: "أود الاستفسار عن إمكانية تسجيل ابني في الصف الثالث الابتدائي للعام القادم. هل هناك مقاعد متاحة؟",
+      submittedAt: new Date(2025, 0, 2, 10, 30).toISOString(),
+    },
+    {
+      id: "msg-002",
+      name: "هند محمد القرني",
+      phone: "+966502222222",
+      email: "hind.qarni@email.com",
+      rating: 4,
+      message: "السلام عليكم، أرغب في معرفة المزيد عن البرامج الإثرائية المتاحة للطلاب الموهوبين.",
+      submittedAt: new Date(2025, 0, 3, 14, 15).toISOString(),
+    },
+    {
+      id: "msg-003",
+      name: "فهد عبدالعزيز الشهري",
+      phone: "+966503333333",
+      email: "fahad.shehri@email.com",
+      rating: 5,
+      message: "مدرسة ممتازة! أشكركم على الاهتمام بابنتي وتطوير مهاراتها. أتمنى لكم التوفيق.",
+      submittedAt: new Date(2025, 0, 4, 9, 0).toISOString(),
+    },
+    {
+      id: "msg-004",
+      name: "ريم خالد العمري",
+      phone: "+966504444444",
+      email: "reem.omari@email.com",
+      rating: 3,
+      message: "هل يمكن توفير معلومات عن الرسوم الدراسية والخصومات المتاحة للإخوة؟",
+      submittedAt: new Date(2025, 0, 4, 16, 30).toISOString(),
+    },
+    {
+      id: "msg-005",
+      name: "طارق أحمد الحربي",
+      phone: "+966505555555",
+      email: "tariq.harbi@email.com",
+      rating: 5,
+      message: "أود حجز موعد لزيارة المدرسة والاطلاع على المرافق قبل التسجيل. متى يمكنني الحضور؟",
+      submittedAt: new Date(2025, 0, 5, 11, 45).toISOString(),
+    },
+  ]
+}
+
+export function generateMockupEmploymentApplications(): EnhancedEmploymentApplication[] {
+  return [
+    {
+      id: "app-001",
+      fullName: "أحمد عبدالله المالكي",
+      birthPlace: "الرياض",
+      birthDate: "1990-05-15",
+      nationalId: "1234567890",
+      maritalStatus: "متزوج",
+      gender: "ذكر",
+      address: "الرياض، حي النرجس، شارع التخصصي",
+      phone: "+966506666666",
+      email: "ahmed.malki@email.com",
+      position: "معلم رياضيات",
+      expectedSalary: "8000 ريال",
+      canStayOvernight: "نعم",
+      education: [
+        {
+          degree: "بكالوريوس",
+          major: "رياضيات",
+          university: "جامعة الملك سعود",
+          graduationYear: "2012",
+          gpa: "4.5",
+        },
+        {
+          degree: "ماجستير",
+          major: "تعليم الرياضيات",
+          university: "جامعة الملك عبدالعزيز",
+          graduationYear: "2015",
+          gpa: "4.8",
+        },
+      ],
+      experience: [
+        {
+          institution: "مدرسة الأمل الأهلية",
+          jobTitle: "معلم رياضيات",
+          duration: "5 سنوات",
+          responsibilities: "تدريس الرياضيات للمرحلة المتوسطة والثانوية، إعداد الاختبارات، متابعة الطلاب",
+        },
+        {
+          institution: "مركز التميز التعليمي",
+          jobTitle: "مدرب رياضيات",
+          duration: "سنتان",
+          responsibilities: "تدريب الطلاب على المسابقات الرياضية، إعداد المناهج الإثرائية",
+        },
+      ],
+      cvFileName: "ahmed_cv.pdf",
+      submittedAt: new Date(2025, 0, 1, 10, 0).toISOString(),
+      status: "pending",
+    },
+    {
+      id: "app-002",
+      fullName: "مريم سعد الغامدي",
+      birthPlace: "جدة",
+      birthDate: "1992-08-22",
+      nationalId: "2345678901",
+      maritalStatus: "عزباء",
+      gender: "أنثى",
+      address: "جدة، حي الروضة، شارع الأمير سلطان",
+      phone: "+966507777777",
+      email: "mariam.ghamdi@email.com",
+      position: "معلمة لغة إنجليزية",
+      expectedSalary: "7500 ريال",
+      canStayOvernight: "لا",
+      education: [
+        {
+          degree: "بكالوريوس",
+          major: "اللغة الإنجليزية وآدابها",
+          university: "جامعة الملك عبدالعزيز",
+          graduationYear: "2014",
+          gpa: "4.7",
+        },
+      ],
+      experience: [
+        {
+          institution: "مدرسة النور الأهلية",
+          jobTitle: "معلمة لغة إنجليزية",
+          duration: "4 سنوات",
+          responsibilities: "تدريس اللغة الإنجليزية للمرحلة الابتدائية والمتوسطة، تنظيم الأنشطة اللغوية",
+        },
+      ],
+      submittedAt: new Date(2025, 0, 2, 14, 30).toISOString(),
+      status: "reviewed",
+    },
+    {
+      id: "app-003",
+      fullName: "خالد محمد العتيبي",
+      birthPlace: "الدمام",
+      birthDate: "1988-03-10",
+      nationalId: "3456789012",
+      maritalStatus: "متزوج",
+      gender: "ذكر",
+      address: "الدمام، حي الفيصلية، شارع الملك فهد",
+      phone: "+966508888888",
+      email: "khaled.otaibi@email.com",
+      position: "مدير إداري",
+      expectedSalary: "10000 ريال",
+      canStayOvernight: "نعم",
+      education: [
+        {
+          degree: "بكالوريوس",
+          major: "إدارة أعمال",
+          university: "جامعة الدمام",
+          graduationYear: "2010",
+          gpa: "4.3",
+        },
+        {
+          degree: "ماجستير",
+          major: "الإدارة التربوية",
+          university: "جامعة الملك فيصل",
+          graduationYear: "2013",
+          gpa: "4.6",
+        },
+      ],
+      experience: [
+        {
+          institution: "مدارس الفيصل العالمية",
+          jobTitle: "مساعد مدير",
+          duration: "6 سنوات",
+          responsibilities: "الإشراف على العمليات الإدارية، إدارة الموارد البشرية، التنسيق مع أولياء الأمور",
+        },
+        {
+          institution: "مجمع التميز التعليمي",
+          jobTitle: "منسق إداري",
+          duration: "3 سنوات",
+          responsibilities: "تنظيم الفعاليات المدرسية، إدارة الجداول الدراسية، متابعة الحضور والغياب",
+        },
+      ],
+      submittedAt: new Date(2025, 0, 3, 9, 15).toISOString(),
+      status: "accepted",
+    },
+    {
+      id: "app-004",
+      fullName: "نورة حسن الشهري",
+      birthPlace: "أبها",
+      birthDate: "1995-11-30",
+      nationalId: "4567890123",
+      maritalStatus: "عزباء",
+      gender: "أنثى",
+      address: "أبها، حي المنسك، شارع الملك عبدالله",
+      phone: "+966509999999",
+      email: "noura.shehri@email.com",
+      position: "معلمة علوم",
+      expectedSalary: "7000 ريال",
+      canStayOvernight: "لا",
+      education: [
+        {
+          degree: "بكالوريوس",
+          major: "الأحياء",
+          university: "جامعة الملك خالد",
+          graduationYear: "2017",
+          gpa: "4.6",
+        },
+      ],
+      experience: [
+        {
+          institution: "مدرسة الرواد الأهلية",
+          jobTitle: "معلمة علوم",
+          duration: "3 سنوات",
+          responsibilities: "تدريس مادة العلوم للمرحلة المتوسطة، الإشراف على المختبر العلمي",
+        },
+      ],
+      submittedAt: new Date(2025, 0, 4, 11, 0).toISOString(),
+      status: "pending",
+    },
+  ]
+}
+
+export function generateMockupTestimonials(): Testimonial[] {
+  return [
+    {
+      id: "test-001",
+      name: "عبدالله أحمد السعيد",
+      image: "/diverse-user-avatars.png",
+      rating: 5,
+      comment: "مدرسة متميزة بكل المقاييس. المعلمون مؤهلون والإدارة متعاونة جداً. ابني تطور كثيراً منذ التحاقه بالمدرسة.",
+      createdAt: new Date(2024, 11, 15).toISOString(),
+    },
+    {
+      id: "test-002",
+      name: "فاطمة محمد الحربي",
+      image: "/diverse-user-avatars.png",
+      rating: 5,
+      comment: "أفضل قرار اتخذته هو تسجيل ابنتي في هذه المدرسة. البيئة التعليمية رائعة والأنشطة اللاصفية متنوعة.",
+      createdAt: new Date(2024, 11, 20).toISOString(),
+    },
+    {
+      id: "test-003",
+      name: "سعد عبدالرحمن القحطاني",
+      image: "/diverse-user-avatars.png",
+      rating: 4,
+      comment: "مدرسة جيدة جداً، المناهج حديثة والمرافق ممتازة. أتمنى المزيد من التركيز على الأنشطة الرياضية.",
+      createdAt: new Date(2024, 11, 25).toISOString(),
+    },
+    {
+      id: "test-004",
+      name: "هدى خالد العمري",
+      image: "/diverse-user-avatars.png",
+      rating: 5,
+      comment: "شكراً لكل القائمين على هذه المدرسة الرائعة. التواصل مع أولياء الأمور ممتاز والمتابعة مستمرة.",
+      createdAt: new Date(2025, 0, 1).toISOString(),
+    },
+  ]
+}
+
+export function loadMockupData(): void {
+  // Load employees
+  const employees = generateMockupEmployees()
+  employees.forEach((emp) => saveEmployee(emp))
+
+  // Load pending reviews
+  const pendingReviews = generateMockupPendingReviews()
+  localStorage.setItem("pendingReviews", JSON.stringify(pendingReviews))
+
+  // Load messages
+  const messages = generateMockupMessages()
+  messages.forEach((msg) => saveContactMessage(msg))
+
+  // Load employment applications
+  const applications = generateMockupEmploymentApplications()
+  applications.forEach((app) => saveEnhancedEmploymentApplication(app))
+
+  // Load testimonials
+  const testimonials = generateMockupTestimonials()
+  testimonials.forEach((test) => saveTestimonial(test))
 }

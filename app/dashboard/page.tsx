@@ -20,12 +20,9 @@ import {
   FileText,
   Plus,
   MessageCircle,
-  ArrowRight,
   Edit,
   Settings,
   Clock,
-  CheckCircle,
-  XCircle,
   ImageIcon,
   Info,
   Contact,
@@ -37,7 +34,6 @@ import {
   Save,
   Eye,
   Sparkles,
-  Building,
   Users,
   ActivityIcon,
   Bell,
@@ -47,6 +43,8 @@ import {
   AlertCircle,
   Copy,
   EyeOff,
+  ExternalLink,
+  Database,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -54,15 +52,8 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Switch } from "@/components/ui/switch"
 import { isAuthenticated, logout, getUsername } from "@/lib/auth"
 import {
   getEmploymentApplications,
@@ -95,11 +86,7 @@ import {
   getContactInfo,
   updateContactInfo,
   getEnhancedEmploymentApplications,
-  updateEmploymentApplicationStatus,
-  deleteEnhancedEmploymentApplication,
   getServiceRequests,
-  updateServiceRequestStatus,
-  deleteServiceRequest,
   // Added imports for Employees, Activities, Notifications
   getEmployees,
   saveEmployee,
@@ -110,6 +97,10 @@ import {
   getUnreadNotifications,
   markNotificationAsRead,
   markAllNotificationsAsRead,
+  // Types
+  type Employee,
+  type Activity,
+  type Notification,
   type EnhancedEmploymentApplication,
   type ServiceRequest,
   type EmploymentApplication,
@@ -123,10 +114,19 @@ import {
   type GalleryImage,
   type DepartmentContent,
   type ContactInfo,
-  // New types
-  type Employee,
-  type Activity,
-  type Notification,
+  type DynamicPage,
+  // Dynamic page functions
+  getDynamicPages,
+  saveDynamicPage,
+  updateDynamicPage,
+  deleteDynamicPage,
+  // Mockup data function
+  loadMockupData,
+  // Added functions for enhanced employment applications and service requests
+  deleteEnhancedEmploymentApplication,
+  updateEnhancedEmploymentApplication,
+  deleteServiceRequest,
+  updateServiceRequest,
 } from "@/lib/storage"
 import { useToast } from "@/hooks/use-toast"
 import { useLanguage } from "@/lib/language-context"
@@ -147,8 +147,8 @@ export default function DashboardPage() {
 
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [activeSection, setActiveSection] = useState("overview")
-  // Add new tabs for applications and service requests
-  const [activeTab, setActiveTab] = useState("overview")
+  // REMOVED activeTab state - using only activeSection now
+  // const [activeTab, setActiveTab] = useState("overview")
 
   const [applications, setApplications] = useState<EmploymentApplication[]>([])
   const [messages, setMessages] = useState<ContactMessage[]>([])
@@ -196,6 +196,10 @@ export default function DashboardPage() {
     password: string
   } | null>(null)
 
+  const [dynamicPages, setDynamicPages] = useState<DynamicPage[]>([])
+  const [isPageDialogOpen, setIsPageDialogOpen] = useState(false)
+  const [editingPage, setEditingPage] = useState<DynamicPage | null>(null)
+
   useEffect(() => {
     if (!isAuthenticated()) {
       router.push("/login")
@@ -225,6 +229,17 @@ export default function DashboardPage() {
         setNotifications(e.detail.value)
         setUnreadCount(getUnreadNotifications().length)
       }
+      if (e.detail.key === "dynamicPages") {
+        setDynamicPages(e.detail.value)
+      }
+      // Handle messages storage changes
+      if (e.detail.key === "contactMessages") {
+        setMessages(e.detail.value)
+      }
+      // Handle pending reviews storage changes
+      if (e.detail.key === "pendingReviews") {
+        setPendingReviews(e.detail.value)
+      }
     }
 
     window.addEventListener("localStorageChange", handleStorageChange as EventListener)
@@ -234,6 +249,7 @@ export default function DashboardPage() {
     setActivities(getActivities(50)) // آخر 50 نشاط
     setNotifications(getNotifications())
     setUnreadCount(getUnreadNotifications().length)
+    setDynamicPages(getDynamicPages())
 
     return () => window.removeEventListener("localStorageChange", handleStorageChange as EventListener)
   }, [router])
@@ -250,6 +266,7 @@ export default function DashboardPage() {
     setGalleryImages(getGalleryImages())
     setDepartmentContents(getDepartmentContents())
     setContactInfo(getContactInfo())
+    setDynamicPages(getDynamicPages())
   }
 
   // Handle Logout
@@ -295,7 +312,7 @@ export default function DashboardPage() {
 
   const handleDeleteMessage = (id: string) => {
     deleteContactMessage(id)
-    loadData()
+    loadData() // Reload data to reflect deletion
     toast({
       title: language === "ar" ? "تم الحذف" : "Deleted",
       description: language === "ar" ? "تم حذف الرسالة بنجاح" : "Message deleted successfully",
@@ -555,12 +572,89 @@ export default function DashboardPage() {
     })
   }
 
+  const handleSavePage = () => {
+    if (!editingPage) return
+
+    if (editingPage.id) {
+      // Update existing page
+      updateDynamicPage(editingPage.id, editingPage)
+      toast({
+        title: language === "ar" ? "تم التحديث" : "Updated",
+        description: language === "ar" ? "تم تحديث الصفحة بنجاح" : "Page updated successfully",
+      })
+    } else {
+      // Create new page
+      saveDynamicPage({
+        slug: editingPage.slug,
+        titleAr: editingPage.titleAr,
+        titleEn: editingPage.titleEn,
+        descriptionAr: editingPage.descriptionAr,
+        descriptionEn: editingPage.descriptionEn,
+        contentAr: editingPage.contentAr,
+        contentEn: editingPage.contentEn,
+        image: editingPage.image,
+        isPublished: editingPage.isPublished,
+      })
+      toast({
+        title: language === "ar" ? "تم الإنشاء" : "Created",
+        description: language === "ar" ? "تم إنشاء الصفحة بنجاح" : "Page created successfully",
+      })
+    }
+
+    setIsPageDialogOpen(false)
+    setEditingPage(null)
+    loadData()
+  }
+
+  const handleDeletePage = (id: string) => {
+    if (confirm(language === "ar" ? "هل تريد حذف هذه الصفحة؟" : "Delete this page?")) {
+      deleteDynamicPage(id)
+      toast({
+        title: language === "ar" ? "تم الحذف" : "Deleted",
+        description: language === "ar" ? "تم حذف الصفحة بنجاح" : "Page deleted successfully",
+      })
+      loadData()
+    }
+  }
+
+  const handleLoadMockupData = () => {
+    if (
+      confirm(
+        language === "ar"
+          ? "هل أنت متأكد من تحميل البيانات التجريبية؟ سيتم إضافة بيانات نموذجية للموظفين والرسائل والطلبات."
+          : "Are you sure you want to load mockup data? This will add sample data for employees, messages, and applications.",
+      )
+    ) {
+      loadMockupData()
+      // Refresh all data
+      setEmployees(getEmployees())
+      setPendingReviews(getPendingReviews())
+      setMessages(getContactMessages())
+      setEmploymentApplications(getEnhancedEmploymentApplications())
+      setTestimonials(getTestimonials())
+      setApplications(getEmploymentApplications()) // Also load employment applications
+
+      toast({
+        title: language === "ar" ? "تم التحميل بنجاح" : "Loaded Successfully",
+        description:
+          language === "ar" ? "تم تحميل البيانات التجريبية بنجاح" : "Mockup data has been loaded successfully",
+      })
+    }
+  }
+
   const navigationItems = [
     {
       id: "overview",
       label: language === "ar" ? "نظرة عامة" : "Overview",
       icon: LayoutDashboard,
       color: "from-blue-500 to-blue-600",
+    },
+    {
+      id: "pages",
+      label: language === "ar" ? "إدارة الصفحات" : "Pages Management",
+      icon: FileText,
+      color: "from-violet-500 to-violet-600",
+      badge: dynamicPages.length,
     },
     {
       id: "homepage",
@@ -609,12 +703,14 @@ export default function DashboardPage() {
       label: language === "ar" ? "طلبات التوظيف" : "Applications",
       icon: FileText,
       color: "from-indigo-500 to-indigo-600",
+      badge: employmentApplications.filter((app) => app.status === "pending").length,
     },
     {
       id: "messages",
       label: language === "ar" ? "الرسائل" : "Messages",
       icon: MessageSquare,
       color: "from-teal-500 to-teal-600",
+      badge: messages.length, // Add badge for messages
     },
     {
       id: "pending",
@@ -623,7 +719,6 @@ export default function DashboardPage() {
       color: "from-amber-500 to-amber-600",
       badge: pendingReviews.length,
     },
-    // إضافة قسم الموظفين
     {
       id: "employees",
       label: language === "ar" ? "الموظفون" : "Employees",
@@ -631,7 +726,6 @@ export default function DashboardPage() {
       color: "from-indigo-500 to-indigo-600",
       badge: employees.filter((emp) => emp.isActive).length,
     },
-    // إضافة قسم سجل النشاطات
     {
       id: "activities",
       label: language === "ar" ? "سجل النشاطات" : "Activity Log",
@@ -707,14 +801,7 @@ export default function DashboardPage() {
                 onClick={() => {
                   setActiveSection(item.id)
                   // Only update activeTab if it's a relevant tab
-                  if (
-                    item.id === "applications" ||
-                    item.id === "service-requests" ||
-                    item.id === "messages" ||
-                    item.id === "overview"
-                  ) {
-                    setActiveTab(item.id)
-                  }
+                  // REMOVED: if ( item.id === "applications" || item.id === "service-requests" || item.id === "messages" || item.id === "overview") { setActiveTab(item.id) }
                 }}
                 className={cn(
                   "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative overflow-hidden",
@@ -782,10 +869,10 @@ export default function DashboardPage() {
             </div>
             <div className="flex gap-2">
               <Button
-                variant={activeTab === "applications" ? "default" : "ghost"}
+                variant={activeSection === "applications" ? "default" : "ghost"}
                 onClick={() => {
-                  setActiveTab("applications")
-                  setActiveSection("applications") // Ensure section also updates
+                  setActiveSection("applications")
+                  // setActiveTab("applications") // REMOVED
                 }}
                 className="flex items-center gap-2"
               >
@@ -799,10 +886,10 @@ export default function DashboardPage() {
               </Button>
 
               <Button
-                variant={activeTab === "service-requests" ? "default" : "ghost"}
+                variant={activeSection === "service-requests" ? "default" : "ghost"}
                 onClick={() => {
-                  setActiveTab("service-requests")
-                  setActiveSection("service-requests") // Changed to 'service-requests'
+                  setActiveSection("service-requests")
+                  // setActiveTab("service-requests") // REMOVED
                 }}
                 className="flex items-center gap-2"
               >
@@ -816,10 +903,10 @@ export default function DashboardPage() {
               </Button>
 
               <Button
-                variant={activeSection === "employees" ? "default" : "ghost"} // Changed to 'employees'
+                variant={activeSection === "employees" ? "default" : "ghost"}
                 onClick={() => {
                   setActiveSection("employees")
-                  setActiveTab("employees") // Also set activeTab for consistency
+                  // setActiveTab("employees") // REMOVED
                 }}
                 className="flex items-center gap-2"
               >
@@ -898,6 +985,33 @@ export default function DashboardPage() {
           {/* Overview Section */}
           {activeSection === "overview" && (
             <div className="space-y-6 animate-in fade-in duration-500">
+              <Card className="p-6 bg-gradient-to-br from-blue-50 via-muted/20 to-background dark:from-blue-950 dark:to-background border-blue-200 dark:border-blue-800">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center">
+                      <Database className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-foreground">
+                        {language === "ar" ? "بيانات تجريبية" : "Mockup Data"}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {language === "ar"
+                          ? "قم بتحميل بيانات نموذجية للاختبار والعرض التوضيحي"
+                          : "Load sample data for testing and demonstration"}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={handleLoadMockupData}
+                    className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+                  >
+                    <Download className="w-4 h-4 ml-2" />
+                    {language === "ar" ? "تحميل البيانات التجريبية" : "Load Mockup Data"}
+                  </Button>
+                </div>
+              </Card>
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {stats.map((stat, index) => (
                   <Card
@@ -1052,7 +1166,7 @@ export default function DashboardPage() {
                     {heroSlides.map((slide, index) => (
                       <Card
                         key={slide.id}
-                        className="group overflow-hidden hover:shadow-2xl transition-all duration-300 border-2 hover:border-purple-500/50"
+                        className="group overflow-hidden hover:shadow-2xl transition-all duration-500 border-2 hover:border-purple-500/50"
                       >
                         <div className="relative w-full h-56 overflow-hidden bg-muted">
                           <Image
@@ -1200,8 +1314,8 @@ export default function DashboardPage() {
                       <Input
                         value={aboutContent.image}
                         onChange={(e) => setAboutContent({ ...aboutContent, image: e.target.value })}
-                        placeholder={language === "ar" ? "رابط الصورة" : "Image URL"}
                         className="h-12"
+                        placeholder={language === "ar" ? "رابط الصورة" : "Image URL"}
                       />
                     </div>
                   </Card>
@@ -1962,330 +2076,14 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Applications Section */}
+          {/* Job Applications Section */}
           {activeSection === "applications" && (
             <div className="space-y-6 animate-in fade-in duration-500">
-              <Card className="p-8">
-                <div className="flex items-center justify-between mb-8">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
-                      <FileText className="w-7 h-7 text-white" />
-                    </div>
-                    <div>
-                      <h2 className="text-3xl font-bold text-foreground">
-                        {language === "ar" ? "طلبات التوظيف" : "Employment Applications"}
-                      </h2>
-                      <p className="text-muted-foreground">
-                        {language === "ar" ? `${applications.length} طلب توظيف` : `${applications.length} applications`}
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    onClick={() => exportToExcel(applications, "employment-applications")}
-                    disabled={applications.length === 0}
-                    size="lg"
-                    className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
-                  >
-                    <Download className="w-5 h-5 ml-2" />
-                    {language === "ar" ? "تصدير Excel" : "Export Excel"}
-                  </Button>
-                </div>
-
-                {applications.length === 0 ? (
-                  <div className="text-center py-20 bg-muted/20 rounded-2xl">
-                    <FileText className="w-20 h-20 text-muted-foreground/30 mx-auto mb-6" />
-                    <p className="text-muted-foreground text-lg">
-                      {language === "ar" ? "لا توجد طلبات توظيف" : "No applications yet"}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {applications.map((app) => (
-                      <Card key={app.id} className="p-6 hover:shadow-xl transition-shadow border-2">
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                              <User className="w-7 h-7 text-white" />
-                            </div>
-                            <div>
-                              <h3 className="text-xl font-bold text-foreground">{app.fullName}</h3>
-                              <Badge className="mt-1 bg-indigo-500/10 text-indigo-600 hover:bg-indigo-500/20">
-                                {app.position}
-                              </Badge>
-                            </div>
-                          </div>
-                          <Button
-                            onClick={() => handleDeleteApplication(app.id)}
-                            variant="destructive"
-                            size="sm"
-                            className="hover:scale-105 transition-transform"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-
-                        <div className="grid md:grid-cols-2 gap-4 mb-4">
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <Phone className="w-4 h-4 text-indigo-500" />
-                            <span>{app.phone}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <Mail className="w-4 h-4 text-indigo-500" />
-                            <span className="truncate">{app.email}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <FileText className="w-4 h-4 text-indigo-500" />
-                            <span>
-                              {language === "ar" ? "الرقم الوطني" : "National ID"}: {app.nationalId}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <User className="w-4 h-4 text-indigo-500" />
-                            <span>
-                              {language === "ar" ? "الجنس" : "Gender"}:{" "}
-                              {app.gender === "male"
-                                ? language === "ar"
-                                  ? "ذكر"
-                                  : "Male"
-                                : language === "ar"
-                                  ? "أنثى"
-                                  : "Female"}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="bg-muted/50 rounded-xl p-4 mb-3">
-                          <p className="text-sm font-semibold text-foreground mb-2">
-                            {language === "ar" ? "نبذة عن المتقدم:" : "About:"}
-                          </p>
-                          <p className="text-muted-foreground leading-relaxed">{app.coverLetter}</p>
-                        </div>
-
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Calendar className="w-3 h-3" />
-                          <span>
-                            {new Date(app.submittedAt).toLocaleDateString(language === "ar" ? "ar-EG" : "en-US")}
-                          </span>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </Card>
-            </div>
-          )}
-
-          {/* Messages Section */}
-          {activeSection === "messages" && (
-            <div className="space-y-6 animate-in fade-in duration-500">
-              <Card className="p-8">
-                <div className="flex items-center justify-between mb-8">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg">
-                      <MessageSquare className="w-7 h-7 text-white" />
-                    </div>
-                    <div>
-                      <h2 className="text-3xl font-bold text-foreground">
-                        {language === "ar" ? "رسائل التواصل" : "Contact Messages"}
-                      </h2>
-                      <p className="text-muted-foreground">
-                        {language === "ar" ? `${messages.length} رسالة` : `${messages.length} messages`}
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    onClick={() => exportToExcel(messages, "contact-messages")}
-                    disabled={messages.length === 0}
-                    size="lg"
-                    className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
-                  >
-                    <Download className="w-5 h-5 ml-2" />
-                    {language === "ar" ? "تصدير Excel" : "Export Excel"}
-                  </Button>
-                </div>
-
-                {messages.length === 0 ? (
-                  <div className="text-center py-20 bg-muted/20 rounded-2xl">
-                    <MessageSquare className="w-20 h-20 text-muted-foreground/30 mx-auto mb-6" />
-                    <p className="text-muted-foreground text-lg">
-                      {language === "ar" ? "لا توجد رسائل" : "No messages yet"}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {messages.map((msg) => (
-                      <Card key={msg.id} className="p-6 hover:shadow-xl transition-shadow border-2">
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
-                              <User className="w-7 h-7 text-white" />
-                            </div>
-                            <div>
-                              <h3 className="text-xl font-bold text-foreground">{msg.name}</h3>
-                              <div className="flex gap-1 mt-1">
-                                {Array.from({ length: msg.rating }).map((_, i) => (
-                                  <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              onClick={() => handleConvertMessageToTestimonial(msg)}
-                              variant="outline"
-                              size="sm"
-                              className="hover:bg-teal-500 hover:text-white hover:border-teal-500 transition-colors"
-                            >
-                              <ArrowRight className="w-4 h-4 ml-1" />
-                              {language === "ar" ? "تحويل لرأي" : "Convert"}
-                            </Button>
-                            <Button
-                              onClick={() => handleDeleteMessage(msg.id)}
-                              variant="destructive"
-                              size="sm"
-                              className="hover:scale-105 transition-transform"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-
-                        <div className="grid md:grid-cols-2 gap-4 mb-4">
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <Phone className="w-4 h-4 text-teal-500" />
-                            <span>{msg.phone}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <Mail className="w-4 h-4 text-teal-500" />
-                            <span className="truncate">{msg.email}</span>
-                          </div>
-                        </div>
-
-                        <div className="bg-muted/50 rounded-xl p-4 mb-3">
-                          <p className="text-sm font-semibold text-foreground mb-2">
-                            {language === "ar" ? "الرسالة:" : "Message:"}
-                          </p>
-                          <p className="text-muted-foreground leading-relaxed">{msg.message}</p>
-                        </div>
-
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Calendar className="w-3 h-3" />
-                          <span>
-                            {new Date(msg.submittedAt).toLocaleDateString(language === "ar" ? "ar-EG" : "en-US")}
-                          </span>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </Card>
-            </div>
-          )}
-
-          {/* Pending Reviews Section */}
-          {activeSection === "pending" && (
-            <div className="space-y-6 animate-in fade-in duration-500">
-              <Card className="p-8">
-                <div className="flex items-center gap-4 mb-8">
-                  <div className="w-14 h-14 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl flex items-center justify-center shadow-lg">
-                    <Clock className="w-7 h-7 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-3xl font-bold text-foreground">
-                      {language === "ar" ? "الآراء المعلقة" : "Pending Reviews"}
-                    </h2>
-                    <p className="text-muted-foreground">
-                      {language === "ar"
-                        ? `${pendingReviews.length} رأي بانتظار الموافقة`
-                        : `${pendingReviews.length} reviews pending approval`}
-                    </p>
-                  </div>
-                </div>
-
-                {pendingReviews.length === 0 ? (
-                  <div className="text-center py-20 bg-muted/20 rounded-2xl">
-                    <Clock className="w-20 h-20 text-muted-foreground/30 mx-auto mb-6" />
-                    <p className="text-muted-foreground text-lg">
-                      {language === "ar" ? "لا توجد آراء معلقة" : "No pending reviews"}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {pendingReviews.map((review) => (
-                      <Card
-                        key={review.id}
-                        className="p-6 hover:shadow-2xl transition-shadow border-2 border-amber-500/20"
-                      >
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex items-center gap-3">
-                            <img
-                              src={review.image || "/diverse-user-avatars.png"}
-                              alt={review.name}
-                              className="w-14 h-14 rounded-full object-cover shadow-lg"
-                            />
-                            <div>
-                              <h3 className="font-bold text-foreground">{review.name}</h3>
-                              <div className="flex gap-1 mt-1">
-                                {Array.from({ length: review.rating }).map((_, i) => (
-                                  <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <p className="text-muted-foreground leading-relaxed mb-4">"{review.comment}"</p>
-
-                        <div className="flex gap-2 mb-3">
-                          <Button
-                            onClick={() => handleApprovePendingReview(review.id)}
-                            className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
-                            size="sm"
-                          >
-                            <CheckCircle className="w-4 h-4 ml-1" />
-                            {language === "ar" ? "موافقة" : "Approve"}
-                          </Button>
-                          <Button
-                            onClick={() => handleRejectPendingReview(review.id)}
-                            variant="destructive"
-                            size="sm"
-                            className="flex-1"
-                          >
-                            <XCircle className="w-4 h-4 ml-1" />
-                            {language === "ar" ? "رفض" : "Reject"}
-                          </Button>
-                        </div>
-
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Calendar className="w-3 h-3" />
-                          <span>
-                            {new Date(review.submittedAt).toLocaleDateString(language === "ar" ? "ar-EG" : "en-US")}
-                          </span>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </Card>
-            </div>
-          )}
-
-          {/* Applications Section (Enhanced) */}
-          {activeTab === "applications" && (
-            <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-3xl font-bold">{language === "ar" ? "طلبات التوظيف" : "Job Applications"}</h2>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    className="gap-2 bg-transparent"
-                    onClick={() => exportToExcel(employmentApplications, "enhanced-employment-applications")}
-                    disabled={employmentApplications.length === 0}
-                  >
-                    <Download className="w-4 h-4" />
-                    {language === "ar" ? "تصدير" : "Export"}
-                  </Button>
-                </div>
+                <Badge variant="secondary" className="text-lg px-4 py-2">
+                  {employmentApplications.length} {language === "ar" ? "طلب" : "applications"}
+                </Badge>
               </div>
 
               <div className="grid gap-4">
@@ -2298,353 +2096,121 @@ export default function DashboardPage() {
                   </Card>
                 ) : (
                   employmentApplications.map((app) => (
-                    <Card key={app.id} className="p-6">
-                      <div className="flex flex-col md:flex-row items-start justify-between gap-4">
-                        <div className="flex-1 space-y-4 w-full md:w-auto">
+                    <Card key={app.id} className="p-6 hover:shadow-lg transition-shadow">
+                      <div className="space-y-4">
+                        {/* Header */}
+                        <div className="flex items-start justify-between">
                           <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
                               <User className="w-6 h-6 text-white" />
                             </div>
                             <div>
                               <h3 className="font-bold text-xl">{app.fullName}</h3>
-                              <p className="text-muted-foreground">{app.position}</p>
+                              <p className="text-sm text-muted-foreground">{app.email}</p>
                             </div>
                           </div>
+                          <Badge
+                            className={cn(
+                              app.status === "pending" && "bg-yellow-500/10 text-yellow-600",
+                              app.status === "approved" && "bg-green-500/10 text-green-600",
+                              app.status === "rejected" && "bg-red-500/10 text-red-600",
+                            )}
+                          >
+                            {app.status === "pending" && (language === "ar" ? "قيد المراجعة" : "Pending")}
+                            {app.status === "approved" && (language === "ar" ? "مقبول" : "Approved")}
+                            {app.status === "rejected" && (language === "ar" ? "مرفوض" : "Rejected")}
+                          </Badge>
+                        </div>
 
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <p className="text-sm text-muted-foreground">{language === "ar" ? "الهاتف" : "Phone"}</p>
-                              <p className="font-medium">{app.phone}</p>
-                            </div>
-                            <div className="space-y-2">
-                              <p className="text-sm text-muted-foreground">
-                                {language === "ar" ? "الراتب المتوقع" : "Expected Salary"}
-                              </p>
-                              <p className="font-medium">{app.expectedSalary}</p>
-                            </div>
-                            <div className="space-y-2">
-                              <p className="text-sm text-muted-foreground">
-                                {language === "ar" ? "المؤهلات" : "Education"}
-                              </p>
-                              <p className="font-medium">
-                                {app.education.length} {language === "ar" ? "مؤهل" : "degrees"}
-                              </p>
-                            </div>
-                            <div className="space-y-2">
-                              <p className="text-sm text-muted-foreground">
-                                {language === "ar" ? "الخبرات" : "Experience"}
-                              </p>
-                              <p className="font-medium">
-                                {app.experience.length} {language === "ar" ? "خبرة" : "positions"}
-                              </p>
-                            </div>
+                        {/* Personal Info */}
+                        <div className="grid md:grid-cols-3 gap-4">
+                          <div>
+                            <p className="text-sm text-muted-foreground">{language === "ar" ? "الهاتف" : "Phone"}</p>
+                            <p className="font-medium">{app.phone}</p>
                           </div>
-
-                          <div className="flex items-center gap-2">
-                            <span
-                              className={`px-3 py-1 rounded-full text-sm font-bold ${
-                                app.status === "pending"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : app.status === "reviewed"
-                                    ? "bg-blue-100 text-blue-800"
-                                    : app.status === "accepted"
-                                      ? "bg-green-100 text-green-800"
-                                      : "bg-red-100 text-red-800"
-                              }`}
-                            >
-                              {app.status === "pending" && (language === "ar" ? "قيد المراجعة" : "Pending")}
-                              {app.status === "reviewed" && (language === "ar" ? "تمت المراجعة" : "Reviewed")}
-                              {app.status === "accepted" && (language === "ar" ? "مقبول" : "Accepted")}
-                              {app.status === "rejected" && (language === "ar" ? "مرفوض" : "Rejected")}
-                            </span>
-                            <span className="text-sm text-muted-foreground">
-                              {new Date(app.submittedAt).toLocaleDateString("ar-EG")}
-                            </span>
+                          <div>
+                            <p className="text-sm text-muted-foreground">
+                              {language === "ar" ? "تاريخ الميلاد" : "Birth Date"}
+                            </p>
+                            <p className="font-medium">{app.birthDate}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">
+                              {language === "ar" ? "الجنسية" : "Nationality"}
+                            </p>
+                            <p className="font-medium">{app.nationality}</p>
                           </div>
                         </div>
 
-                        <div className="flex flex-col md:flex-col gap-2 mt-4 md:mt-0 w-full md:w-auto">
-                          {/* Added Dialog and DialogTrigger for View Details button */}
-                          <Dialog
-                            open={detailsDialogOpen && selectedApplication?.id === app.id}
-                            onOpenChange={(open) => {
-                              setDetailsDialogOpen(open)
-                              if (!open) setSelectedApplication(null)
-                            }}
-                          >
-                            <DialogTrigger asChild>
+                        {/* Education */}
+                        {app.education && app.education.length > 0 && (
+                          <div>
+                            <h4 className="font-semibold mb-2">
+                              {language === "ar" ? "المؤهلات العلمية" : "Education"}
+                            </h4>
+                            <div className="space-y-2">
+                              {app.education.map((edu, idx) => (
+                                <div key={idx} className="bg-muted/30 p-3 rounded-lg">
+                                  <p className="font-medium">{edu.degree}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {edu.institution} • {edu.graduationYear}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Experience */}
+                        {app.experience && app.experience.length > 0 && (
+                          <div>
+                            <h4 className="font-semibold mb-2">
+                              {language === "ar" ? "الخبرات العملية" : "Experience"}
+                            </h4>
+                            <div className="space-y-2">
+                              {app.experience.map((exp, idx) => (
+                                <div key={idx} className="bg-muted/30 p-3 rounded-lg">
+                                  <p className="font-medium">{exp.position}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {exp.company} • {exp.duration}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Actions */}
+                        <div className="flex gap-2 pt-4 border-t">
+                          {app.status === "pending" && (
+                            <>
                               <Button
-                                variant="default"
                                 size="sm"
                                 onClick={() => {
-                                  setSelectedApplication(app)
-                                  setDetailsDialogOpen(true)
+                                  updateEnhancedEmploymentApplication(app.id, { status: "approved" })
+                                  setEmploymentApplications(getEnhancedEmploymentApplications())
                                 }}
-                                className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                                className="bg-green-500 hover:bg-green-600"
                               >
-                                <Eye className="w-4 h-4 mr-2" />
-                                {language === "ar" ? "عرض التفاصيل" : "View Details"}
+                                <CheckCircle2 className="w-4 h-4 mr-2" />
+                                {language === "ar" ? "قبول" : "Approve"}
                               </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                              <DialogHeader>
-                                <DialogTitle className="text-2xl font-bold flex items-center gap-3">
-                                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                                    <User className="w-6 h-6 text-white" />
-                                  </div>
-                                  {app.fullName}
-                                </DialogTitle>
-                                <DialogDescription className="text-lg">{app.position}</DialogDescription>
-                              </DialogHeader>
-
-                              <div className="space-y-6 mt-6">
-                                {/* Personal Information */}
-                                <div className="space-y-4">
-                                  <h3 className="text-xl font-bold flex items-center gap-2 border-b-2 border-primary/20 pb-2">
-                                    <User className="w-5 h-5 text-primary" />
-                                    {language === "ar" ? "المعلومات الشخصية" : "Personal Information"}
-                                  </h3>
-                                  <div className="grid md:grid-cols-2 gap-4">
-                                    <div className="p-4 bg-muted/30 rounded-lg">
-                                      <p className="text-sm text-muted-foreground mb-1">
-                                        {language === "ar" ? "الاسم الكامل" : "Full Name"}
-                                      </p>
-                                      <p className="font-semibold">{app.fullName}</p>
-                                    </div>
-                                    <div className="p-4 bg-muted/30 rounded-lg">
-                                      <p className="text-sm text-muted-foreground mb-1">
-                                        {language === "ar" ? "رقم الهاتف" : "Phone"}
-                                      </p>
-                                      <p className="font-semibold">{app.phone}</p>
-                                    </div>
-                                    {app.birthPlace && (
-                                      <div className="p-4 bg-muted/30 rounded-lg">
-                                        <p className="text-sm text-muted-foreground mb-1">
-                                          {language === "ar" ? "مكان الولادة" : "Birth Place"}
-                                        </p>
-                                        <p className="font-semibold">{app.birthPlace}</p>
-                                      </div>
-                                    )}
-                                    {app.birthDate && (
-                                      <div className="p-4 bg-muted/30 rounded-lg">
-                                        <p className="text-sm text-muted-foreground mb-1">
-                                          {language === "ar" ? "تاريخ الولادة" : "Birth Date"}
-                                        </p>
-                                        <p className="font-semibold">
-                                          {new Date(app.birthDate).toLocaleDateString("ar-EG")}
-                                        </p>
-                                      </div>
-                                    )}
-                                    {app.nationalId && (
-                                      <div className="p-4 bg-muted/30 rounded-lg">
-                                        <p className="text-sm text-muted-foreground mb-1">
-                                          {language === "ar" ? "رقم الهوية" : "National ID"}
-                                        </p>
-                                        <p className="font-semibold">{app.nationalId}</p>
-                                      </div>
-                                    )}
-                                    {app.maritalStatus && (
-                                      <div className="p-4 bg-muted/30 rounded-lg">
-                                        <p className="text-sm text-muted-foreground mb-1">
-                                          {language === "ar" ? "الحالة الاجتماعية" : "Marital Status"}
-                                        </p>
-                                        <p className="font-semibold">
-                                          {app.maritalStatus === "single" &&
-                                            (language === "ar" ? "أعزب/عزباء" : "Single")}
-                                          {app.maritalStatus === "married" &&
-                                            (language === "ar" ? "متزوج/متزوجة" : "Married")}
-                                          {app.maritalStatus === "divorced" &&
-                                            (language === "ar" ? "مطلق/مطلقة" : "Divorced")}
-                                          {app.maritalStatus === "widowed" &&
-                                            (language === "ar" ? "أرمل/أرملة" : "Widowed")}
-                                        </p>
-                                      </div>
-                                    )}
-                                    {app.address && (
-                                      <div className="p-4 bg-muted/30 rounded-lg md:col-span-2">
-                                        <p className="text-sm text-muted-foreground mb-1">
-                                          {language === "ar" ? "العنوان" : "Address"}
-                                        </p>
-                                        <p className="font-semibold">{app.address}</p>
-                                      </div>
-                                    )}
-                                    <div className="p-4 bg-muted/30 rounded-lg">
-                                      <p className="text-sm text-muted-foreground mb-1">
-                                        {language === "ar" ? "الوظيفة المطلوبة" : "Position"}
-                                      </p>
-                                      <p className="font-semibold">{app.position}</p>
-                                    </div>
-                                    <div className="p-4 bg-muted/30 rounded-lg">
-                                      <p className="text-sm text-muted-foreground mb-1">
-                                        {language === "ar" ? "الراتب المتوقع" : "Expected Salary"}
-                                      </p>
-                                      <p className="font-semibold">{app.expectedSalary}</p>
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {/* Education */}
-                                {app.education && app.education.length > 0 && (
-                                  <div className="space-y-4">
-                                    <h3 className="text-xl font-bold flex items-center gap-2 border-b-2 border-primary/20 pb-2">
-                                      <GraduationCap className="w-5 h-5 text-primary" />
-                                      {language === "ar" ? "المؤهلات العلمية" : "Education"}
-                                    </h3>
-                                    <div className="space-y-4">
-                                      {app.education.map((edu: any, index: number) => (
-                                        <Card key={index} className="p-4 border-2 border-primary/10">
-                                          <div className="grid md:grid-cols-2 gap-3">
-                                            <div>
-                                              <p className="text-sm text-muted-foreground">
-                                                {language === "ar" ? "الدرجة العلمية" : "Degree"}
-                                              </p>
-                                              <p className="font-semibold">{edu.degree}</p>
-                                            </div>
-                                            <div>
-                                              <p className="text-sm text-muted-foreground">
-                                                {language === "ar" ? "التخصص" : "Major"}
-                                              </p>
-                                              <p className="font-semibold">{edu.major}</p>
-                                            </div>
-                                            <div>
-                                              <p className="text-sm text-muted-foreground">
-                                                {language === "ar" ? "الجامعة" : "University"}
-                                              </p>
-                                              <p className="font-semibold">{edu.university}</p>
-                                            </div>
-                                            <div>
-                                              <p className="text-sm text-muted-foreground">
-                                                {language === "ar" ? "سنة التخرج" : "Graduation Year"}
-                                              </p>
-                                              <p className="font-semibold">{edu.graduationYear}</p>
-                                            </div>
-                                            {edu.gpa && (
-                                              <div>
-                                                <p className="text-sm text-muted-foreground">
-                                                  {language === "ar" ? "المعدل" : "GPA"}
-                                                </p>
-                                                <p className="font-semibold">{edu.gpa}</p>
-                                              </div>
-                                            )}
-                                          </div>
-                                        </Card>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Experience */}
-                                {app.experience && app.experience.length > 0 && (
-                                  <div className="space-y-4">
-                                    <h3 className="text-xl font-bold flex items-center gap-2 border-b-2 border-primary/20 pb-2">
-                                      <Building className="w-5 h-5 text-primary" />
-                                      {language === "ar" ? "الخبرات العملية" : "Work Experience"}
-                                    </h3>
-                                    <div className="space-y-4">
-                                      {app.experience.map((exp: any, index: number) => (
-                                        <Card key={index} className="p-4 border-2 border-primary/10">
-                                          <div className="space-y-3">
-                                            <div className="flex items-start justify-between">
-                                              <div>
-                                                <h4 className="font-bold text-lg">{exp.position}</h4>
-                                                <p className="text-muted-foreground">{exp.company}</p>
-                                              </div>
-                                              {exp.currentlyWorking && (
-                                                <span className="px-3 py-1 bg-green-100 text-green-800 text-sm font-semibold rounded-full">
-                                                  {language === "ar" ? "حالياً" : "Current"}
-                                                </span>
-                                              )}
-                                            </div>
-                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                              <Calendar className="w-4 h-4" />
-                                              <span>
-                                                {exp.startDate && new Date(exp.startDate).toLocaleDateString("ar-EG")}
-                                                {" - "}
-                                                {exp.currentlyWorking
-                                                  ? language === "ar"
-                                                    ? "حتى الآن"
-                                                    : "Present"
-                                                  : exp.endDate && new Date(exp.endDate).toLocaleDateString("ar-EG")}
-                                              </span>
-                                            </div>
-                                            {exp.description && (
-                                              <div className="p-3 bg-muted/30 rounded-lg">
-                                                <p className="text-sm text-muted-foreground mb-1">
-                                                  {language === "ar" ? "الوصف" : "Description"}
-                                                </p>
-                                                <p className="text-sm leading-relaxed">{exp.description}</p>
-                                              </div>
-                                            )}
-                                          </div>
-                                        </Card>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* CV File */}
-                                {app.cvFileName && (
-                                  <div className="p-4 bg-gradient-to-r from-primary/5 to-accent/5 rounded-lg border border-primary/20">
-                                    <div className="flex items-center gap-3">
-                                      <FileText className="w-6 h-6 text-primary" />
-                                      <div>
-                                        <p className="text-sm text-muted-foreground">
-                                          {language === "ar" ? "السيرة الذاتية" : "CV File"}
-                                        </p>
-                                        <p className="font-semibold">{app.cvFileName}</p>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Submission Date */}
-                                <div className="p-4 bg-muted/30 rounded-lg">
-                                  <p className="text-sm text-muted-foreground mb-1">
-                                    {language === "ar" ? "تاريخ التقديم" : "Submission Date"}
-                                  </p>
-                                  <p className="font-semibold">{new Date(app.submittedAt).toLocaleString("ar-EG")}</p>
-                                </div>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-
-                          <Select
-                            value={app.status}
-                            onValueChange={(value) => {
-                              updateEmploymentApplicationStatus(app.id, value as any)
-                              // Optionally update local state immediately for responsiveness
-                              setEmploymentApplications((prevApps) =>
-                                prevApps.map((a) => (a.id === app.id ? { ...a, status: value as any } : a)),
-                              )
-                            }}
-                          >
-                            <SelectTrigger className="w-40">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="pending">{language === "ar" ? "قيد المراجعة" : "Pending"}</SelectItem>
-                              <SelectItem value="reviewed">
-                                {language === "ar" ? "تمت المراجعة" : "Reviewed"}
-                              </SelectItem>
-                              <SelectItem value="accepted">{language === "ar" ? "مقبول" : "Accepted"}</SelectItem>
-                              <SelectItem value="rejected">{language === "ar" ? "مرفوض" : "Rejected"}</SelectItem>
-                            </SelectContent>
-                          </Select>
-
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => {
+                                  updateEnhancedEmploymentApplication(app.id, { status: "rejected" })
+                                  setEmploymentApplications(getEnhancedEmploymentApplications())
+                                }}
+                              >
+                                <X className="w-4 h-4 mr-2" />
+                                {language === "ar" ? "رفض" : "Reject"}
+                              </Button>
+                            </>
+                          )}
                           <Button
+                            size="sm"
                             variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              window.open(`https://wa.me/${app.phone}`, "_blank")
-                            }}
-                          >
-                            <MessageSquare className="w-4 h-4 mr-2" />
-                            {language === "ar" ? "واتساب" : "WhatsApp"}
-                          </Button>
-
-                          <Button
-                            variant="destructive"
-                            size="sm"
                             onClick={() => {
                               if (confirm(language === "ar" ? "هل تريد حذف هذا الطلب؟" : "Delete this application?")) {
                                 deleteEnhancedEmploymentApplication(app.id)
@@ -2663,11 +2229,14 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Tab for Service Requests */}
-          {activeTab === "service-requests" && (
-            <div className="space-y-6">
+          {/* Service Requests Section */}
+          {activeSection === "service-requests" && (
+            <div className="space-y-6 animate-in fade-in duration-500">
               <div className="flex items-center justify-between">
                 <h2 className="text-3xl font-bold">{language === "ar" ? "طلبات الخدمة" : "Service Requests"}</h2>
+                <Badge variant="secondary" className="text-lg px-4 py-2">
+                  {serviceRequests.length} {language === "ar" ? "طلب" : "requests"}
+                </Badge>
               </div>
 
               <div className="grid gap-4">
@@ -2680,82 +2249,167 @@ export default function DashboardPage() {
                   </Card>
                 ) : (
                   serviceRequests.map((req) => (
-                    <Card key={req.id} className="p-6">
-                      <div className="flex flex-col md:flex-row items-start justify-between gap-4">
-                        <div className="flex-1 space-y-4 w-full md:w-auto">
+                    <Card key={req.id} className="p-6 hover:shadow-lg transition-shadow">
+                      <div className="space-y-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+                              <User className="w-6 h-6 text-white" />
+                            </div>
+                            <div>
+                              <h3 className="font-bold text-xl">{req.fullName}</h3>
+                              <p className="text-sm text-muted-foreground">{req.email}</p>
+                            </div>
+                          </div>
+                          <Badge
+                            className={cn(
+                              req.status === "pending" && "bg-yellow-500/10 text-yellow-600",
+                              req.status === "approved" && "bg-green-500/10 text-green-600",
+                              req.status === "rejected" && "bg-red-500/10 text-red-600",
+                            )}
+                          >
+                            {req.status === "pending" && (language === "ar" ? "قيد المراجعة" : "Pending")}
+                            {req.status === "approved" && (language === "ar" ? "مقبول" : "Approved")}
+                            {req.status === "rejected" && (language === "ar" ? "مرفوض" : "Rejected")}
+                          </Badge>
+                        </div>
+
+                        <div className="grid md:grid-cols-2 gap-4">
                           <div>
-                            <h3 className="font-bold text-xl">{req.name}</h3>
-                            <p className="text-muted-foreground">{req.serviceType}</p>
+                            <p className="text-sm text-muted-foreground">{language === "ar" ? "الهاتف" : "Phone"}</p>
+                            <p className="font-medium">{req.phone}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">
+                              {language === "ar" ? "نوع الخدمة" : "Service Type"}
+                            </p>
+                            <p className="font-medium">{req.serviceType}</p>
+                          </div>
+                        </div>
+
+                        <div>
+                          <p className="text-sm text-muted-foreground mb-2">
+                            {language === "ar" ? "التفاصيل" : "Details"}
+                          </p>
+                          <p className="bg-muted/30 p-4 rounded-lg">{req.message}</p>
+                        </div>
+
+                        <div className="flex gap-2 pt-4 border-t">
+                          {req.status === "pending" && (
+                            <>
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  updateServiceRequest(req.id, { status: "approved" })
+                                  setServiceRequests(getServiceRequests())
+                                }}
+                                className="bg-green-500 hover:bg-green-600"
+                              >
+                                <CheckCircle2 className="w-4 h-4 mr-2" />
+                                {language === "ar" ? "قبول" : "Approve"}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => {
+                                  updateServiceRequest(req.id, { status: "rejected" })
+                                  setServiceRequests(getServiceRequests())
+                                }}
+                              >
+                                <X className="w-4 h-4 mr-2" />
+                                {language === "ar" ? "رفض" : "Reject"}
+                              </Button>
+                            </>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              if (confirm(language === "ar" ? "هل تريد حذف هذا الطلب؟" : "Delete this request?")) {
+                                deleteServiceRequest(req.id)
+                                setServiceRequests(getServiceRequests())
+                              }
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Messages Section */}
+          {activeSection === "messages" && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-3xl font-bold">{language === "ar" ? "الرسائل" : "Messages"}</h2>
+                <Badge variant="secondary" className="text-lg px-4 py-2">
+                  {messages.length} {language === "ar" ? "رسالة" : "messages"}
+                </Badge>
+              </div>
+
+              <div className="grid gap-4">
+                {messages.length === 0 ? (
+                  <Card className="p-12 text-center">
+                    <MessageSquare className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground text-lg">
+                      {language === "ar" ? "لا توجد رسائل" : "No messages yet"}
+                    </p>
+                  </Card>
+                ) : (
+                  messages.map((msg) => (
+                    <Card key={msg.id} className="p-6 hover:shadow-lg transition-shadow">
+                      <div className="flex flex-col md:flex-row items-start justify-between gap-4">
+                        <div className="flex-1 space-y-3 w-full">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center">
+                              <User className="w-6 h-6 text-white" />
+                            </div>
+                            <div>
+                              <h3 className="font-bold text-xl">{msg.name}</h3>
+                              <p className="text-sm text-muted-foreground">{msg.email}</p>
+                            </div>
                           </div>
 
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
+                          <div className="grid md:grid-cols-2 gap-4">
+                            <div className="space-y-1">
                               <p className="text-sm text-muted-foreground">{language === "ar" ? "الهاتف" : "Phone"}</p>
-                              <p className="font-medium">{req.phone}</p>
+                              <p className="font-medium">{msg.phone}</p>
                             </div>
-                            <div className="space-y-2">
-                              <p className="text-sm text-muted-foreground">{language === "ar" ? "البريد" : "Email"}</p>
-                              <p className="font-medium">{req.email}</p>
+                            <div className="space-y-1">
+                              <p className="text-sm text-muted-foreground">{language === "ar" ? "التاريخ" : "Date"}</p>
+                              <p className="font-medium">{new Date(msg.createdAt).toLocaleDateString("ar-EG")}</p>
                             </div>
                           </div>
 
                           <div className="space-y-2">
                             <p className="text-sm text-muted-foreground">{language === "ar" ? "الرسالة" : "Message"}</p>
-                            <p className="text-base">{req.message}</p>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <span
-                              className={`px-3 py-1 rounded-full text-sm font-bold ${
-                                req.status === "pending"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : req.status === "contacted"
-                                    ? "bg-blue-100 text-blue-800"
-                                    : req.status === "completed"
-                                      ? "bg-green-100 text-green-800"
-                                      : "bg-red-100 text-red-800"
-                              }`}
-                            >
-                              {req.status === "pending" && (language === "ar" ? "جديد" : "Pending")}
-                              {req.status === "contacted" && (language === "ar" ? "تم التواصل" : "Contacted")}
-                              {req.status === "completed" && (language === "ar" ? "مكتمل" : "Completed")}
-                              {req.status === "cancelled" && (language === "ar" ? "ملغي" : "Cancelled")}
-                            </span>
-                            <span className="text-sm text-muted-foreground">
-                              {new Date(req.submittedAt).toLocaleDateString("ar-EG")}
-                            </span>
+                            <p className="text-base bg-muted/30 p-4 rounded-lg">{msg.message}</p>
                           </div>
                         </div>
 
-                        <div className="flex flex-col md:flex-col gap-2 mt-4 md:mt-0 w-full md:w-auto">
-                          <Select
-                            value={req.status}
-                            onValueChange={(value) => {
-                              updateServiceRequestStatus(req.id, value as any)
-                              // Optionally update local state immediately for responsiveness
-                              setServiceRequests((prevReqs) =>
-                                prevReqs.map((r) => (r.id === req.id ? { ...r, status: value as any } : r)),
-                              )
+                        <div className="flex flex-col gap-2 w-full md:w-auto">
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => {
+                              window.open(`mailto:${msg.email}`, "_blank")
                             }}
+                            className="bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700"
                           >
-                            <SelectTrigger className="w-40">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="pending">{language === "ar" ? "جديد" : "Pending"}</SelectItem>
-                              <SelectItem value="contacted">
-                                {language === "ar" ? "تم التواصل" : "Contacted"}
-                              </SelectItem>
-                              <SelectItem value="completed">{language === "ar" ? "مكتمل" : "Completed"}</SelectItem>
-                              <SelectItem value="cancelled">{language === "ar" ? "ملغي" : "Cancelled"}</SelectItem>
-                            </SelectContent>
-                          </Select>
+                            <Mail className="w-4 h-4 mr-2" />
+                            {language === "ar" ? "رد بالبريد" : "Reply via Email"}
+                          </Button>
 
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => {
-                              window.open(`https://wa.me/${req.phone}`, "_blank")
+                              window.open(`https://wa.me/${msg.phone}`, "_blank")
                             }}
                           >
                             <MessageSquare className="w-4 h-4 mr-2" />
@@ -2766,13 +2420,100 @@ export default function DashboardPage() {
                             variant="destructive"
                             size="sm"
                             onClick={() => {
-                              if (confirm(language === "ar" ? "هل تريد حذف هذا الطلب؟" : "Delete this request?")) {
-                                deleteServiceRequest(req.id)
-                                setServiceRequests(getServiceRequests())
+                              if (confirm(language === "ar" ? "هل تريد حذف هذه الرسالة؟" : "Delete this message?")) {
+                                deleteContactMessage(msg.id)
+                                setMessages(getContactMessages()) // Refresh messages
                               }
                             }}
                           >
                             <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Pending Reviews Section */}
+          {activeSection === "pending" && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-3xl font-bold">{language === "ar" ? "آراء معلقة" : "Pending Reviews"}</h2>
+                <Badge variant="secondary" className="text-lg px-4 py-2">
+                  {pendingReviews.length} {language === "ar" ? "رأي" : "reviews"}
+                </Badge>
+              </div>
+
+              <div className="grid gap-4">
+                {pendingReviews.length === 0 ? (
+                  <Card className="p-12 text-center">
+                    <Clock className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground text-lg">
+                      {language === "ar" ? "لا توجد آراء معلقة" : "No pending reviews"}
+                    </p>
+                  </Card>
+                ) : (
+                  pendingReviews.map((review) => (
+                    <Card key={review.id} className="p-6 hover:shadow-lg transition-shadow">
+                      <div className="flex flex-col md:flex-row items-start justify-between gap-4">
+                        <div className="flex-1 space-y-3 w-full">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+                              <User className="w-6 h-6 text-white" />
+                            </div>
+                            <div>
+                              <h3 className="font-bold text-xl">{review.name}</h3>
+                              <div className="flex items-center gap-1">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star
+                                    key={i}
+                                    className={`w-4 h-4 ${i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <p className="text-base bg-muted/30 p-4 rounded-lg">{review.comment}</p>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground">
+                              {new Date(review.submittedAt).toLocaleDateString("ar-EG")}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-2 w-full md:w-auto">
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => {
+                              handleApprovePendingReview(review.id)
+                              // No need to reload data as handleApprovePendingReview does it
+                            }}
+                            className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                          >
+                            <CheckCircle2 className="w-4 h-4 mr-2" />
+                            {language === "ar" ? "موافقة" : "Approve"}
+                          </Button>
+
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => {
+                              if (confirm(language === "ar" ? "هل تريد رفض هذا الرأي؟" : "Reject this review?")) {
+                                handleRejectPendingReview(review.id)
+                                // No need to reload data as handleRejectPendingReview does it
+                              }
+                            }}
+                          >
+                            <X className="w-4 h-4 mr-2" />
+                            {language === "ar" ? "رفض" : "Reject"}
                           </Button>
                         </div>
                       </div>
@@ -3110,8 +2851,271 @@ export default function DashboardPage() {
               </div>
             </div>
           )}
+
+          {activeSection === "pages" && (
+            <div className="space-y-6 animate-in fade-in duration-500">
+              <Card className="p-8 bg-gradient-to-br from-violet-500/5 to-purple-500/5 border-2 border-violet-500/10">
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-gradient-to-br from-violet-500 to-violet-600 rounded-2xl flex items-center justify-center shadow-lg">
+                      <FileText className="w-7 h-7 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-3xl font-bold text-foreground">
+                        {language === "ar" ? "إدارة الصفحات" : "Pages Management"}
+                      </h2>
+                      <p className="text-muted-foreground">
+                        {language === "ar"
+                          ? `إدارة ${dynamicPages.length} صفحة ديناميكية`
+                          : `Manage ${dynamicPages.length} dynamic pages`}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => router.push("/dashboard/pages/new")}
+                    size="lg"
+                    className="bg-gradient-to-r from-violet-500 to-violet-600 hover:from-violet-600 hover:to-violet-700 shadow-lg hover:shadow-xl transition-all"
+                  >
+                    <Plus className="w-5 h-5 ml-2" />
+                    {language === "ar" ? "إضافة صفحة جديدة" : "Add New Page"}
+                  </Button>
+                </div>
+
+                {dynamicPages.length === 0 ? (
+                  <div className="text-center py-20 bg-background/50 rounded-2xl border-2 border-dashed border-border">
+                    <FileText className="w-20 h-20 text-muted-foreground/30 mx-auto mb-6" />
+                    <h3 className="text-xl font-bold text-foreground mb-2">
+                      {language === "ar" ? "لا توجد صفحات" : "No Pages"}
+                    </h3>
+                    <p className="text-muted-foreground mb-6">
+                      {language === "ar" ? "ابدأ بإضافة الصفحة الأولى" : "Start by adding your first page"}
+                    </p>
+                    <Button
+                      onClick={() => router.push("/dashboard/pages/new")}
+                      className="bg-gradient-to-r from-violet-500 to-violet-600"
+                    >
+                      <Plus className="w-5 h-5 ml-2" />
+                      {language === "ar" ? "إضافة صفحة جديدة" : "Add New Page"}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {dynamicPages.map((page) => (
+                      <Card
+                        key={page.id}
+                        className="p-6 hover:shadow-2xl transition-all duration-300 border-2 hover:border-violet-500/50"
+                      >
+                        {page.image && (
+                          <div className="relative w-full h-48 rounded-xl overflow-hidden mb-4 shadow-lg">
+                            <Image
+                              src={page.image || "/placeholder.svg"}
+                              alt={page.titleAr}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between mb-3">
+                          <Badge
+                            className={cn(
+                              page.isPublished
+                                ? "bg-green-500/10 text-green-600 hover:bg-green-500/20"
+                                : "bg-gray-500/10 text-gray-600 hover:bg-gray-500/20",
+                            )}
+                          >
+                            {page.isPublished
+                              ? language === "ar"
+                                ? "منشورة"
+                                : "Published"
+                              : language === "ar"
+                                ? "مسودة"
+                                : "Draft"}
+                          </Badge>
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={() => {
+                                setEditingPage(page)
+                                setIsPageDialogOpen(true)
+                              }}
+                              variant="outline"
+                              size="sm"
+                              className="hover:bg-violet-500 hover:text-white hover:border-violet-500 transition-colors"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              onClick={() => handleDeletePage(page.id)}
+                              variant="destructive"
+                              size="sm"
+                              className="hover:scale-105 transition-transform"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        <h3 className="font-bold text-xl text-foreground mb-2">
+                          {language === "ar" ? page.titleAr : page.titleEn}
+                        </h3>
+                        <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
+                          {language === "ar" ? page.descriptionAr : page.descriptionEn}
+                        </p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Calendar className="w-3 h-3" />
+                          <span>
+                            {new Date(page.updatedAt).toLocaleDateString(language === "ar" ? "ar-EG" : "en-US")}
+                          </span>
+                        </div>
+                        <div className="mt-3 pt-3 border-t border-border">
+                          <code className="text-xs bg-muted px-2 py-1 rounded">/pages/{page.slug}</code>
+                          {page.isPublished && (
+                            <Button
+                              onClick={() => window.open(`/pages/${page.slug}`, "_blank")}
+                              variant="link"
+                              size="sm"
+                              className="mt-2 w-full text-violet-600 hover:text-violet-700"
+                            >
+                              <ExternalLink className="w-3 h-3 ml-1" />
+                              {language === "ar" ? "عرض الصفحة" : "View Page"}
+                            </Button>
+                          )}
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </Card>
+            </div>
+          )}
+
+          {/* ... existing sections ... */}
         </div>
       </main>
+
+      <Dialog open={isPageDialogOpen} onOpenChange={setIsPageDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingPage?.id
+                ? language === "ar"
+                  ? "تعديل الصفحة"
+                  : "Edit Page"
+                : language === "ar"
+                  ? "إضافة صفحة جديدة"
+                  : "Add New Page"}
+            </DialogTitle>
+          </DialogHeader>
+          {editingPage && (
+            <div className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label>{language === "ar" ? "العنوان (عربي)" : "Title (Arabic)"}</Label>
+                  <Input
+                    value={editingPage.titleAr}
+                    onChange={(e) => setEditingPage({ ...editingPage, titleAr: e.target.value })}
+                    placeholder={language === "ar" ? "أدخل العنوان بالعربية" : "Enter title in Arabic"}
+                  />
+                </div>
+                <div>
+                  <Label>{language === "ar" ? "العنوان (إنجليزي)" : "Title (English)"}</Label>
+                  <Input
+                    value={editingPage.titleEn}
+                    onChange={(e) => setEditingPage({ ...editingPage, titleEn: e.target.value })}
+                    placeholder={language === "ar" ? "أدخل العنوان بالإنجليزية" : "Enter title in English"}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label>{language === "ar" ? "رابط الصفحة (Slug)" : "Page Slug"}</Label>
+                <Input
+                  value={editingPage.slug}
+                  onChange={(e) =>
+                    setEditingPage({ ...editingPage, slug: e.target.value.toLowerCase().replace(/\s+/g, "-") })
+                  }
+                  placeholder="page-url"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {language === "ar" ? "سيكون رابط الصفحة:" : "Page URL will be:"} /{editingPage.slug}
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label>{language === "ar" ? "الوصف (عربي)" : "Description (Arabic)"}</Label>
+                  <Textarea
+                    value={editingPage.descriptionAr}
+                    onChange={(e) => setEditingPage({ ...editingPage, descriptionAr: e.target.value })}
+                    rows={3}
+                    placeholder={language === "ar" ? "وصف مختصر بالعربية" : "Short description in Arabic"}
+                  />
+                </div>
+                <div>
+                  <Label>{language === "ar" ? "الوصف (إنجليزي)" : "Description (English)"}</Label>
+                  <Textarea
+                    value={editingPage.descriptionEn}
+                    onChange={(e) => setEditingPage({ ...editingPage, descriptionEn: e.target.value })}
+                    rows={3}
+                    placeholder={language === "ar" ? "وصف مختصر بالإنجليزية" : "Short description in English"}
+                  />
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label>{language === "ar" ? "المحتوى (عربي)" : "Content (Arabic)"}</Label>
+                  <Textarea
+                    value={editingPage.contentAr}
+                    onChange={(e) => setEditingPage({ ...editingPage, contentAr: e.target.value })}
+                    rows={8}
+                    placeholder={language === "ar" ? "المحتوى الكامل بالعربية" : "Full content in Arabic"}
+                  />
+                </div>
+                <div>
+                  <Label>{language === "ar" ? "المحتوى (إنجليزي)" : "Content (English)"}</Label>
+                  <Textarea
+                    value={editingPage.contentEn}
+                    onChange={(e) => setEditingPage({ ...editingPage, contentEn: e.target.value })}
+                    rows={8}
+                    placeholder={language === "ar" ? "المحتوى الكامل بالإنجليزية" : "Full content in English"}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label>{language === "ar" ? "صورة الصفحة" : "Page Image"}</Label>
+                <Input
+                  value={editingPage.image || ""}
+                  onChange={(e) => setEditingPage({ ...editingPage, image: e.target.value })}
+                  placeholder={language === "ar" ? "رابط الصورة" : "Image URL"}
+                />
+                {editingPage.image && (
+                  <div className="relative w-full h-48 rounded-xl overflow-hidden mt-3 border-2 border-border">
+                    <Image src={editingPage.image || "/placeholder.svg"} alt="Preview" fill className="object-cover" />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={editingPage.isPublished}
+                  onCheckedChange={(checked) => setEditingPage({ ...editingPage, isPublished: checked })}
+                />
+                <Label>{language === "ar" ? "نشر الصفحة" : "Publish Page"}</Label>
+              </div>
+
+              <div className="flex gap-3">
+                <Button onClick={handleSavePage} className="flex-1 bg-gradient-to-r from-violet-500 to-violet-600">
+                  <Save className="w-4 h-4 ml-2" />
+                  {language === "ar" ? "حفظ" : "Save"}
+                </Button>
+                <Button onClick={() => setIsPageDialogOpen(false)} variant="outline" className="flex-1">
+                  {language === "ar" ? "إلغاء" : "Cancel"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Dialogs */}
       {/* Hero Slide Dialog */}
@@ -4053,15 +4057,6 @@ function EmployeeForm({
             <span className="text-sm">{language === "ar" ? "عرض التقارير" : "View Reports"}</span>
           </label>
         </div>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          checked={formData.isActive}
-          onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-        />
-        <Label>{language === "ar" ? "الحساب نشط" : "Account Active"}</Label>
       </div>
 
       <div className="flex gap-2 justify-end">
