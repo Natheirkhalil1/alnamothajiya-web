@@ -84,8 +84,12 @@ export function TestimonialsSection() {
   const [isUploadingImage, setIsUploadingImage] = useState(false)
 
   useEffect(() => {
-    const loadedTestimonials = getTestimonials()
-    setTestimonials(loadedTestimonials)
+    const loadTestimonials = async () => {
+      const loadedTestimonials = await getTestimonials()
+      setTestimonials(loadedTestimonials)
+    }
+
+    loadTestimonials()
   }, [])
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

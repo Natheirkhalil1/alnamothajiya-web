@@ -13,22 +13,26 @@ export function JobsSection() {
   const [services, setServices] = useState<any[]>([])
 
   useEffect(() => {
-    const loadedServices = getServiceContents()
-    const mappedServices = loadedServices.map((service) => ({
-      icon: service.type === "education" ? ClipboardList : service.type === "training" ? Briefcase : Users,
-      titleAr: service.titleAr,
-      titleEn: service.titleEn,
-      descriptionAr: service.descriptionAr,
-      descriptionEn: service.descriptionEn,
-      link: `/jobs/${service.type === "education" ? "service-request" : service.type}`,
-      gradient:
-        service.type === "education"
-          ? "from-emerald-500 via-teal-500 to-cyan-500"
-          : service.type === "training"
-            ? "from-green-500 via-emerald-500 to-teal-500"
-            : "from-purple-500 via-pink-500 to-rose-500",
-    }))
-    setServices(mappedServices)
+    const loadServices = async () => {
+      const loadedServices = await getServiceContents()
+      const mappedServices = loadedServices.map((service) => ({
+        icon: service.type === "education" ? ClipboardList : service.type === "training" ? Briefcase : Users,
+        titleAr: service.titleAr,
+        titleEn: service.titleEn,
+        descriptionAr: service.descriptionAr,
+        descriptionEn: service.descriptionEn,
+        link: `/jobs/${service.type === "education" ? "service-request" : service.type}`,
+        gradient:
+          service.type === "education"
+            ? "from-emerald-500 via-teal-500 to-cyan-500"
+            : service.type === "training"
+              ? "from-green-500 via-emerald-500 to-teal-500"
+              : "from-purple-500 via-pink-500 to-rose-500",
+      }))
+      setServices(mappedServices)
+    }
+
+    loadServices()
   }, [])
 
   const ArrowIcon = language === "ar" ? ArrowLeft : ArrowRight

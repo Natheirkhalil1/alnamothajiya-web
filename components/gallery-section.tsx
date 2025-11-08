@@ -16,8 +16,8 @@ export function GallerySection() {
   const [visibleCount, setVisibleCount] = useState(6)
 
   useEffect(() => {
-    const loadGalleryData = () => {
-      const images = getGalleryImages()
+    const loadGalleryData = async () => {
+      const images = await getGalleryImages()
       setGalleryItems(images)
     }
 

@@ -11,8 +11,8 @@ export function AboutSection() {
   const [aboutContent, setAboutContent] = useState<AboutContent | null>(null)
 
   useEffect(() => {
-    const loadContent = () => {
-      const content = getAboutContent()
+    const loadContent = async () => {
+      const content = await getAboutContent()
       setAboutContent(content)
     }
 
@@ -111,7 +111,7 @@ export function AboutSection() {
                   className="bg-gradient-to-br from-card/95 to-card/80 backdrop-blur-xl p-6 rounded-2xl shadow-2xl border border-border/50 hover:scale-105 transition-all duration-300 animate-slide-up"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <div className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  <div className="text-3xl font-bold bg-gradient-to-r from-foreground via-foreground/90 to-foreground/80 bg-clip-text text-transparent">
                     {stat.number}
                   </div>
                   <div className="text-sm font-medium text-muted-foreground mt-1">

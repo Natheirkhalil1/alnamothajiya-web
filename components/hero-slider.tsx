@@ -12,9 +12,9 @@ export function HeroSlider() {
   const [slides, setSlides] = useState<HeroSlide[]>([])
 
   useEffect(() => {
-    const loadSlides = () => {
-      const loadedSlides = getHeroSlides()
-      setSlides(loadedSlides.sort((a, b) => a.order - b.order))
+    const loadSlides = async () => {
+      const loadedSlides = await getHeroSlides()
+      setSlides(loadedSlides.sort((a, b) => (a.order || 0) - (b.order || 0)))
     }
 
     loadSlides()
@@ -81,7 +81,7 @@ export function HeroSlider() {
         >
           {/* Improved overlay background with better gradient */}
           <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/70 to-background/90" />
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5" />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary via-transparent to-accent/5" />
 
           <img
             src={slide.image || "/placeholder.svg"}

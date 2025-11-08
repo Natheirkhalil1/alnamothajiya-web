@@ -208,8 +208,9 @@ export default function DashboardPage() {
 
     setUsername(getUsername() || "")
     loadData()
-    setEmploymentApplications(getEnhancedEmploymentApplications())
-    setServiceRequests(getServiceRequests())
+
+    getEnhancedEmploymentApplications().then(setEmploymentApplications)
+    getServiceRequests().then(setServiceRequests)
 
     // Listen for storage changes
     const handleStorageChange = (e: CustomEvent) => {
@@ -244,29 +245,31 @@ export default function DashboardPage() {
 
     window.addEventListener("localStorageChange", handleStorageChange as EventListener)
 
-    setEmployees(getEmployees())
-    setStaff(getEmployees()) // Initialize staff state
-    setActivities(getActivities(50)) // آخر 50 نشاط
-    setNotifications(getNotifications())
-    setUnreadCount(getUnreadNotifications().length)
-    setDynamicPages(getDynamicPages())
+    getEmployees().then((employees) => {
+      setEmployees(employees)
+      setStaff(employees) // Initialize staff state
+    })
+    getActivities(50).then(setActivities) // آخر 50 نشاط
+    getNotifications().then(setNotifications)
+    getUnreadNotifications().then((unread) => setUnreadCount(unread.length))
+    getDynamicPages().then(setDynamicPages)
 
     return () => window.removeEventListener("localStorageChange", handleStorageChange as EventListener)
   }, [router])
 
-  const loadData = () => {
-    setApplications(getEmploymentApplications())
-    setMessages(getContactMessages())
-    setTestimonials(getTestimonials())
-    setJobs(getJobPositions())
-    setPendingReviews(getPendingReviews())
-    setServices(getServiceContents())
-    setHeroSlides(getHeroSlides())
-    setAboutContent(getAboutContent())
-    setGalleryImages(getGalleryImages())
-    setDepartmentContents(getDepartmentContents())
-    setContactInfo(getContactInfo())
-    setDynamicPages(getDynamicPages())
+  const loadData = async () => {
+    setApplications(await getEmploymentApplications())
+    setMessages(await getContactMessages())
+    setTestimonials(await getTestimonials())
+    setJobs(await getJobPositions())
+    setPendingReviews(await getPendingReviews())
+    setServices(await getServiceContents())
+    setHeroSlides(await getHeroSlides())
+    setAboutContent(await getAboutContent())
+    setGalleryImages(await getGalleryImages())
+    setDepartmentContents(await getDepartmentContents())
+    setContactInfo(await getContactInfo())
+    setDynamicPages(await getDynamicPages())
   }
 
   // Handle Logout
@@ -617,7 +620,7 @@ export default function DashboardPage() {
     }
   }
 
-  const handleLoadMockupData = () => {
+  const handleLoadMockupData = async () => {
     if (
       confirm(
         language === "ar"
@@ -625,14 +628,13 @@ export default function DashboardPage() {
           : "Are you sure you want to load mockup data? This will add sample data for employees, messages, and applications.",
       )
     ) {
-      loadMockupData()
-      // Refresh all data
-      setEmployees(getEmployees())
-      setPendingReviews(getPendingReviews())
-      setMessages(getContactMessages())
-      setEmploymentApplications(getEnhancedEmploymentApplications())
-      setTestimonials(getTestimonials())
-      setApplications(getEmploymentApplications()) // Also load employment applications
+      await loadMockupData()
+      setEmployees(await getEmployees())
+      setPendingReviews(await getPendingReviews())
+      setMessages(await getContactMessages())
+      setEmploymentApplications(await getEnhancedEmploymentApplications())
+      setTestimonials(await getTestimonials())
+      setApplications(await getEmploymentApplications()) // Also load employment applications
 
       toast({
         title: language === "ar" ? "تم التحميل بنجاح" : "Loaded Successfully",

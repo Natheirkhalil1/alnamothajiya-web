@@ -3,7 +3,7 @@
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
 import type { Employee } from "./storage"
-import { getEmployees, updateEmployee } from "./storage"
+import { updateEmployee, getEmployeeById, authenticateEmployee } from "./storage"
 
 interface AuthContextType {
   currentUser: Employee | null
@@ -18,67 +18,78 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<Employee | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check if user is logged in
-    const storedUser = localStorage.getItem("currentStaffUser")
-    const adminStatus = localStorage.getItem("isAdmin")
-
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser)
-      const allEmployees = getEmployees()
-      const updatedUser = allEmployees.find((s) => s.id === parsedUser.id)
-
-      if (updatedUser) {
-        setCurrentUser(updatedUser)
-        localStorage.setItem("currentStaffUser", JSON.stringify(updatedUser))
+    const checkAuth = async () => {
+      const storedEmployeeId = localStorage.getItem("employeeId")
+      if (storedEmployeeId) {
+        const employee = await getEmployeeById(storedEmployeeId)
+        if (employee && employee.isActive) {
+          setCurrentUser(employee)
+          setIsAdmin(employee.role === "admin")
+        } else {
+          setCurrentUser(null)
+          setIsAdmin(false)
+        }
       } else {
-        setCurrentUser(parsedUser)
+        setCurrentUser(null)
+        setIsAdmin(false)
       }
+      setLoading(false)
     }
 
-    if (adminStatus === "true") {
-      setIsAdmin(true)
-    }
+    checkAuth()
+
+    return () => {}
   }, [])
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Check if admin
-    if (email === "admin@namothajia.com" && password === "admin123") {
-      setIsAdmin(true)
-      localStorage.setItem("isAdmin", "true")
-      return true
+    try {
+      const employee = await authenticateEmployee(email, password)
+
+      if (employee && employee.isActive) {
+        setCurrentUser(employee)
+        setIsAdmin(employee.role === "admin")
+        localStorage.setItem("employeeId", employee.id)
+
+        // Update last login time
+        await updateEmployee(employee.id, { lastLogin: new Date().toISOString() })
+
+        return true
+      } else {
+        // Employee not found or inactive
+        localStorage.removeItem("employeeId")
+        return false
+      }
+    } catch (error) {
+      console.error("Login error:", error)
+      return false
     }
-
-    // Check staff members
-    const allEmployees = getEmployees()
-    const employee = allEmployees.find((s) => s.email === email)
-
-    if (employee && employee.password === password && employee.isActive) {
-      const updatedEmployee = { ...employee, lastLogin: new Date().toISOString() }
-      setCurrentUser(updatedEmployee)
-      localStorage.setItem("currentStaffUser", JSON.stringify(updatedEmployee))
-
-      // تحديث في قاعدة البيانات
-      updateEmployee(employee.id, { lastLogin: updatedEmployee.lastLogin })
-
-      return true
-    }
-
-    return false
   }
 
-  const logout = () => {
-    setCurrentUser(null)
-    setIsAdmin(false)
-    localStorage.removeItem("currentStaffUser")
-    localStorage.removeItem("isAdmin")
+  const logout = async () => {
+    try {
+      localStorage.removeItem("employeeId")
+      setCurrentUser(null)
+      setIsAdmin(false)
+    } catch (error) {
+      console.error("Logout error:", error)
+    }
   }
 
   const hasPermission = (permission: keyof Employee["permissions"]): boolean => {
     if (isAdmin) return true
     if (!currentUser) return false
     return currentUser.permissions[permission]
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-pulse text-gray-600">Loading...</div>
+      </div>
+    )
   }
 
   return (

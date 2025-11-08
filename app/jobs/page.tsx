@@ -15,9 +15,8 @@ export default function JobsPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Load jobs from localStorage
-    const loadJobs = () => {
-      const jobsData = getJobPositions()
+    const loadJobs = async () => {
+      const jobsData = await getJobPositions()
       setJobs(jobsData)
       setLoading(false)
     }

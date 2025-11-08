@@ -13,8 +13,8 @@ export function DepartmentsSection() {
   const [departments, setDepartments] = useState<DepartmentContent[]>([])
 
   useEffect(() => {
-    const loadDepartmentsData = () => {
-      const depts = getDepartmentContents()
+    const loadDepartmentsData = async () => {
+      const depts = await getDepartmentContents()
       setDepartments(depts)
     }
 
