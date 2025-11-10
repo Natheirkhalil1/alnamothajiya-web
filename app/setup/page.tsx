@@ -32,8 +32,7 @@ export default function SetupPage() {
     try {
       const usersExist = await hasUsers()
       if (usersExist) {
-        // Users already exist, redirect to login
-        router.push("/admin-login")
+        router.push("/login")
       } else {
         setLoading(false)
       }
@@ -69,8 +68,7 @@ export default function SetupPage() {
       const result = await createFirstAdmin(formData.fullName, formData.email, formData.password)
 
       if (result.success) {
-        // Redirect to login page
-        router.push("/admin-login?setup=complete")
+        router.push("/login?setup=complete")
       } else {
         setError(result.error || "Failed to create admin user")
       }

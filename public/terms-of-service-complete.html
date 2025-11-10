@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Service - شروط الخدمة</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #1e293b;
+            background: linear-gradient(to bottom, #f8fafc, #e2e8f0);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        [dir="rtl"] {
+            font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+        }
+
+        .school-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1e293b;
+        }
+
+        .lang-switcher {
+            display: flex;
+            gap: 10px;
+            background: #f1f5f9;
+            padding: 6px;
+            border-radius: 12px;
+        }
+
+        .lang-btn {
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .lang-btn.active {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            color: #3b82f6;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            padding: 60px 30px;
+            border-radius: 16px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 42px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .hero p {
+            font-size: 18px;
+            opacity: 0.95;
+        }
+
+        .content-section {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+        }
+
+        .content-section:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            transform: translateY(-2px);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .section-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .section-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .section-content {
+            color: #475569;
+            font-size: 16px;
+            line-height: 1.8;
+        }
+
+        .section-content h3 {
+            font-size: 20px;
+            color: #1e293b;
+            margin: 20px 0 10px 0;
+            font-weight: 600;
+        }
+
+        .section-content ul {
+            list-style: none;
+            padding: 0;
+            margin: 15px 0;
+        }
+
+        .section-content li {
+            padding: 8px 0 8px 25px;
+            position: relative;
+        }
+
+        .section-content li:before {
+            content: "•";
+            position: absolute;
+            left: 10px;
+            color: #3b82f6;
+            font-weight: bold;
+        }
+
+        [dir="rtl"] .section-content li {
+            padding: 8px 25px 8px 0;
+        }
+
+        [dir="rtl"] .section-content li:before {
+            left: auto;
+            right: 10px;
+        }
+
+        .contact-info {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 16px;
+            margin-top: 40px;
+        }
+
+        .contact-info h2 {
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .contact-info p {
+            margin: 10px 0;
+            font-size: 16px;
+        }
+
+        .contact-info a {
+            color: white;
+            text-decoration: underline;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 32px;
+            }
+
+            .section-title {
+                font-size: 20px;
+            }
+
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header with Logo and Language Switcher -->
+        <div class="header">
+            <div class="logo-section">
+                <img src="https://v0-school-website-design-tan-delta.vercel.app/logo.webp" alt="School Logo" class="logo">
+                <div class="school-name" id="schoolName">نموذجية</div>
+            </div>
+            <div class="lang-switcher">
+                <button class="lang-btn active" onclick="switchLang('ar')" id="arBtn">العربية</button>
+                <button class="lang-btn" onclick="switchLang('en')" id="enBtn">English</button>
+            </div>
+        </div>
+
+        <!-- Hero Section -->
+        <div class="hero">
+            <h1 id="heroTitle">شروط الخدمة</h1>
+            <p id="heroSubtitle">آخر تحديث: 10 نوفمبر 2025</p>
+        </div>
+
+        <!-- Content Sections - Arabic -->
+        <div id="contentAr">
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                    </div>
+                    <h2 class="section-title">المقدمة</h2>
+                </div>
+                <div class="section-content">
+                    <p>مرحباً بكم في مدرستنا. من خلال الوصول إلى خدماتنا أو استخدامها، فإنك توافق على الالتزام بشروط الخدمة هذه. يرجى قراءتها بعناية.</p>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    </div>
+                    <h2 class="section-title">القبول في المدرسة</h2>
+                </div>
+                <div class="section-content">
+                    <p>يخضع القبول في المدرسة لتوافر المقاعد، والعمر المناسب، واستيفاء معايير القبول. تحتفظ المدرسة بالحق في رفض أي طلب دون تقديم أسباب. بمجرد القبول، يجب على الطلاب الالتزام بسياسات وقواعد المدرسة.</p>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
+                    </div>
+                    <h2 class="section-title">الرسوم والمدفوعات</h2>
+                </div>
+                <div class="section-content">
+                    <h3>جدول الرسوم:</h3>
+                    <ul>
+                        <li>رسوم التسجيل غير قابلة للاسترداد</li>
+                        <li>يجب دفع الرسوم الدراسية في بداية كل فصل دراسي</li>
+                        <li>تطبق رسوم التأخير بعد 15 يوماً من تاريخ الاستحقاق</li>
+                        <li>يجب سداد جميع المتأخرات قبل بدء العام الدراسي الجديد</li>
+                    </ul>
+                    <h3>سياسة الاسترداد:</h3>
+                    <ul>
+                        <li>الانسحاب قبل بدء الفصل الدراسي: استرداد 50%</li>
+                        <li>الانسحاب خلال الشهر الأول: استرداد 25%</li>
+                        <li>الانسحاب بعد الشهر الأول: لا يوجد استرداد</li>
+                        <li>يجب تقديم إشعار كتابي قبل 30 يوماً</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                    </div>
+                    <h2 class="section-title">الحضور والالتزام بالمواعيد</h2>
+                </div>
+                <div class="section-content">
+                    <ul>
+                        <li>معدل حضور يساوي أو يزيد عن 90% مطلوب للترقية</li>
+                        <li>الغياب لأكثر من 3 أيام متتالية يتطلب شهادة طبية</li>
+                        <li>التأخير المتكرر قد يؤدي إلى إجراءات تأديبية</li>
+                        <li>يجب إبلاغ المدرسة عن أي غياب قبل الساعة 9 صباحاً</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    </div>
+                    <h2 class="section-title">قواعد السلوك والانضباط</h2>
+                </div>
+                <div class="section-content">
+                    <h3>السلوك المتوقع:</h3>
+                    <ul>
+                        <li>احترام جميع المعلمين والموظفين والزملاء</li>
+                        <li>اتباع قواعد الزي الرسمي</li>
+                        <li>عدم استخدام الأجهزة الإلكترونية أثناء الفصول الدراسية</li>
+                        <li>عدم التنمر أو المضايقة بأي شكل</li>
+                        <li>الحفاظ على ممتلكات المدرسة</li>
+                    </ul>
+                    <h3>الإجراءات التأديبية:</h3>
+                    <ul>
+                        <li>التحذير الشفهي</li>
+                        <li>التحذير الكتابي</li>
+                        <li>اجتماع مع أولياء الأمور</li>
+                        <li>الإيقاف المؤقت</li>
+                        <li>الفصل النهائي (للانتهاكات الخطيرة)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                    </div>
+                    <h2 class="section-title">مسؤوليات أولياء الأمور</h2>
+                </div>
+                <div class="section-content">
+                    <ul>
+                        <li>ضمان الحضور المنتظم وفي الوقت المحدد</li>
+                        <li>تحديث معلومات الاتصال في حالة التغيير</li>
+                        <li>حضور الاجتماعات المجدولة مع المعلمين</li>
+                        <li>مراقبة الواجبات المنزلية والتقدم الأكاديمي</li>
+                        <li>الإبلاغ عن المشاكل الصحية التي قد تؤثر على التعلم</li>
+                        <li>دعم سياسات المدرسة وتعزيزها في المنزل</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z"/></svg>
+                    </div>
+                    <h2 class="section-title">الصحة والسلامة</h2>
+                </div>
+                <div class="section-content">
+                    <ul>
+                        <li>سياسة عدم التسامح مع المخدرات والكحول والتدخين</li>
+                        <li>يجب تقديم سجلات التطعيمات الكاملة</li>
+                        <li>يجب إبلاغ المدرسة عن الأمراض المعدية</li>
+                        <li>يتم إعطاء الأدوية فقط بموافقة كتابية من الوالدين</li>
+                        <li>تجري المدرسة تدريبات طوارئ منتظمة</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M20.5 6c-2.61.7-5.67 1-8.5 1s-5.89-.3-8.5-1L3 8c1.86.5 4 .83 6 1v13h2v-6h2v6h2V9c2-.17 4.14-.5 6-1l-.5-2zM12 6c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/></svg>
+                    </div>
+                    <h2 class="section-title">النقل والأنشطة الخارجية</h2>
+                </div>
+                <div class="section-content">
+                    <ul>
+                        <li>تخضع خدمات النقل لرسوم إضافية</li>
+                        <li>السلوك المناسب مطلوب في الحافلات</li>
+                        <li>مطلوب نماذج موافقة للرحلات الميدانية</li>
+                        <li>يجب على الطلاب اتباع تعليمات المشرفين</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+                    </div>
+                    <h2 class="section-title">التواصل</h2>
+                </div>
+                <div class="section-content">
+                    <ul>
+                        <li>البوابة الإلكترونية للوالدين: تحديثات يومية</li>
+                        <li>رسائل البريد الإلكتروني: للإخطارات الرسمية</li>
+                        <li>الرسائل النصية: للتنبيهات العاجلة</li>
+                        <li>اجتماعات الوالدين والمعلمين: في الفصل الدراسي</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm0 4c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm6 12H6v-1.4c0-2 4-3.1 6-3.1s6 1.1 6 3.1V19z"/></svg>
+                    </div>
+                    <h2 class="section-title">الملكية الفكرية</h2>
+                </div>
+                <div class="section-content">
+                    <p>جميع المواد والموارد التعليمية هي ملك للمدرسة. لا يجوز استنساخ أو توزيع أو نشر أي محتوى دون إذن كتابي.</p>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+                    </div>
+                    <h2 class="section-title">المسؤولية والتعويض</h2>
+                </div>
+                <div class="section-content">
+                    <p>بينما نتخذ جميع الاحتياطات المعقولة، المدرسة ليست مسؤولة عن الممتلكات المفقودة أو المسروقة أو التالفة. الطلاب وأولياء الأمور مسؤولون عن الأضرار التي تلحق بممتلكات المدرسة.</p>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg>
+                    </div>
+                    <h2 class="section-title">الإنهاء</h2>
+                </div>
+                <div class="section-content">
+                    <p>تحتفظ المدرسة بالحق في إنهاء التسجيل بسبب:</p>
+                    <ul>
+                        <li>عدم دفع الرسوم</li>
+                        <li>انتهاكات السلوك المتكررة</li>
+                        <li>عدم الامتثال لسياسات المدرسة</li>
+                        <li>معلومات كاذبة في طلب التسجيل</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                    </div>
+                    <h2 class="section-title">تعديلات على الشروط</h2>
+                </div>
+                <div class="section-content">
+                    <p>تحتفظ المدرسة بالحق في تعديل هذه الشروط في أي وقت. سيتم إخطار أولياء الأمور بالتغييرات الهامة قبل 30 يوماً على الأقل.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Sections - English -->
+        <div id="contentEn" class="hidden">
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                    </div>
+                    <h2 class="section-title">Introduction</h2>
+                </div>
+                <div class="section-content">
+                    <p>Welcome to our school. By accessing or using our services, you agree to be bound by these Terms of Service. Please read them carefully.</p>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    </div>
+                    <h2 class="section-title">School Admission</h2>
+                </div>
+                <div class="section-content">
+                    <p>Admission to the school is subject to seat availability, appropriate age, and meeting admission criteria. The school reserves the right to deny any application without providing reasons. Once admitted, students must comply with school policies and rules.</p>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
+                    </div>
+                    <h2 class="section-title">Fees and Payments</h2>
+                </div>
+                <div class="section-content">
+                    <h3>Fee Schedule:</h3>
+                    <ul>
+                        <li>Registration fees are non-refundable</li>
+                        <li>Tuition fees must be paid at the start of each semester</li>
+                        <li>Late fees apply after 15 days from due date</li>
+                        <li>All outstanding dues must be cleared before the new academic year</li>
+                    </ul>
+                    <h3>Refund Policy:</h3>
+                    <ul>
+                        <li>Withdrawal before semester starts: 50% refund</li>
+                        <li>Withdrawal within first month: 25% refund</li>
+                        <li>Withdrawal after first month: No refund</li>
+                        <li>30 days written notice required</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                    </div>
+                    <h2 class="section-title">Attendance and Punctuality</h2>
+                </div>
+                <div class="section-content">
+                    <ul>
+                        <li>Minimum 90% attendance required for promotion</li>
+                        <li>Absence for more than 3 consecutive days requires medical certificate</li>
+                        <li>Repeated tardiness may result in disciplinary action</li>
+                        <li>School must be notified of any absence before 9 AM</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    </div>
+                    <h2 class="section-title">Code of Conduct and Discipline</h2>
+                </div>
+                <div class="section-content">
+                    <h3>Expected Behavior:</h3>
+                    <ul>
+                        <li>Respect all teachers, staff, and fellow students</li>
+                        <li>Follow the school uniform policy</li>
+                        <li>No use of electronic devices during classes</li>
+                        <li>No bullying or harassment of any kind</li>
+                        <li>Maintain school property</li>
+                    </ul>
+                    <h3>Disciplinary Actions:</h3>
+                    <ul>
+                        <li>Verbal warning</li>
+                        <li>Written warning</li>
+                        <li>Parent-teacher meeting</li>
+                        <li>Temporary suspension</li>
+                        <li>Permanent expulsion (for serious violations)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                    </div>
+                    <h2 class="section-title">Parental Responsibilities</h2>
+                </div>
+                <div class="section-content">
+                    <ul>
+                        <li>Ensure regular and timely attendance</li>
+                        <li>Update contact information when changed</li>
+                        <li>Attend scheduled parent-teacher meetings</li>
+                        <li>Monitor homework and academic progress</li>
+                        <li>Inform school of health issues that may affect learning</li>
+                        <li>Support and reinforce school policies at home</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z"/></svg>
+                    </div>
+                    <h2 class="section-title">Health and Safety</h2>
+                </div>
+                <div class="section-content">
+                    <ul>
+                        <li>Zero tolerance policy for drugs, alcohol, and smoking</li>
+                        <li>Complete immunization records must be provided</li>
+                        <li>School must be informed of contagious illnesses</li>
+                        <li>Medications only administered with written parental consent</li>
+                        <li>Regular emergency drills conducted</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M20.5 6c-2.61.7-5.67 1-8.5 1s-5.89-.3-8.5-1L3 8c1.86.5 4 .83 6 1v13h2v-6h2v6h2V9c2-.17 4.14-.5 6-1l-.5-2zM12 6c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/></svg>
+                    </div>
+                    <h2 class="section-title">Transportation and Extracurricular Activities</h2>
+                </div>
+                <div class="section-content">
+                    <ul>
+                        <li>Transportation services subject to additional fees</li>
+                        <li>Appropriate behavior required on buses</li>
+                        <li>Permission forms required for field trips</li>
+                        <li>Students must follow supervisors' instructions</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+                    </div>
+                    <h2 class="section-title">Communication</h2>
+                </div>
+                <div class="section-content">
+                    <ul>
+                        <li>Parent portal: Daily updates available</li>
+                        <li>Email: For official notices</li>
+                        <li>SMS: For urgent alerts</li>
+                        <li>Parent-teacher meetings: Quarterly</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm0 4c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm6 12H6v-1.4c0-2 4-3.1 6-3.1s6 1.1 6 3.1V19z"/></svg>
+                    </div>
+                    <h2 class="section-title">Intellectual Property</h2>
+                </div>
+                <div class="section-content">
+                    <p>All educational materials and resources are property of the school. No content may be reproduced, distributed, or published without written permission.</p>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+                    </div>
+                    <h2 class="section-title">Liability and Indemnification</h2>
+                </div>
+                <div class="section-content">
+                    <p>While we take all reasonable precautions, the school is not liable for lost, stolen, or damaged property. Students and parents are responsible for damages to school property.</p>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg>
+                    </div>
+                    <h2 class="section-title">Termination</h2>
+                </div>
+                <div class="section-content">
+                    <p>The school reserves the right to terminate enrollment due to:</p>
+                    <ul>
+                        <li>Non-payment of fees</li>
+                        <li>Repeated conduct violations</li>
+                        <li>Failure to comply with school policies</li>
+                        <li>False information on enrollment application</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                    </div>
+                    <h2 class="section-title">Amendments to Terms</h2>
+                </div>
+                <div class="section-content">
+                    <p>The school reserves the right to amend these terms at any time. Parents will be notified of significant changes at least 30 days in advance.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="contact-info">
+            <h2 id="contactTitle">اتصل بنا</h2>
+            <p id="contactText1">إذا كان لديك أي أسئلة حول شروط الخدمة هذه، يرجى الاتصال بنا:</p>
+            <p><strong id="contactEmail">البريد الإلكتروني:</strong> <a href="mailto:info@namothajia.com">info@namothajia.com</a></p>
+            <p><strong id="contactPhone">الهاتف:</strong> +962 6 412 2002</p>
+            <p><strong id="contactAddress">العنوان:</strong> <span id="addressText">شارع المطار / حي الأمير علي - عمان - الأردن</span></p>
+        </div>
+    </div>
+
+    <script>
+        function switchLang(lang) {
+            const html = document.documentElement;
+            const arBtn = document.getElementById('arBtn');
+            const enBtn = document.getElementById('enBtn');
+            const contentAr = document.getElementById('contentAr');
+            const contentEn = document.getElementById('contentEn');
+            
+            if (lang === 'ar') {
+                html.setAttribute('lang', 'ar');
+                html.setAttribute('dir', 'rtl');
+                arBtn.classList.add('active');
+                enBtn.classList.remove('active');
+                contentAr.classList.remove('hidden');
+                contentEn.classList.add('hidden');
+                
+                // Update text content
+                document.getElementById('schoolName').textContent = 'نموذجية';
+                document.getElementById('heroTitle').textContent = 'شروط الخدمة';
+                document.getElementById('heroSubtitle').textContent = 'آخر تحديث: 10 نوفمبر 2025';
+                document.getElementById('contactTitle').textContent = 'اتصل بنا';
+                document.getElementById('contactText1').textContent = 'إذا كان لديك أي أسئلة حول شروط الخدمة هذه، يرجى الاتصال بنا:';
+                document.getElementById('contactEmail').textContent = 'البريد الإلكتروني:';
+                document.getElementById('contactPhone').textContent = 'الهاتف:';
+                document.getElementById('contactAddress').textContent = 'العنوان:';
+                document.getElementById('addressText').textContent = 'شارع المطار / حي الأمير علي - عمان - الأردن';
+            } else {
+                html.setAttribute('lang', 'en');
+                html.setAttribute('dir', 'ltr');
+                enBtn.classList.add('active');
+                arBtn.classList.remove('active');
+                contentEn.classList.remove('hidden');
+                contentAr.classList.add('hidden');
+                
+                // Update text content
+                document.getElementById('schoolName').textContent = 'Namoothajia';
+                document.getElementById('heroTitle').textContent = 'Terms of Service';
+                document.getElementById('heroSubtitle').textContent = 'Last Updated: November 10, 2025';
+                document.getElementById('contactTitle').textContent = 'Contact Us';
+                document.getElementById('contactText1').textContent = 'If you have any questions about these Terms of Service, please contact us:';
+                document.getElementById('contactEmail').textContent = 'Email:';
+                document.getElementById('contactPhone').textContent = 'Phone:';
+                document.getElementById('contactAddress').textContent = 'Address:';
+                document.getElementById('addressText').textContent = 'Airport Road / Prince Ali District - Amman - Jordan';
+            }
+        }
+    </script>
+</body>
+</html>

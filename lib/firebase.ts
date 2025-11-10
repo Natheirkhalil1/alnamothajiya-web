@@ -1,6 +1,7 @@
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app"
 import { getFirestore, type Firestore } from "firebase/firestore"
 import { getAuth, type Auth } from "firebase/auth"
+import { getStorage, type FirebaseStorage } from "firebase/storage"
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -14,18 +15,25 @@ const firebaseConfig = {
 let app: FirebaseApp
 let db: Firestore
 let auth: Auth
+let storage: FirebaseStorage
+
+const { app: firebaseApp, db: firebaseDb, auth: firebaseAuth, storage: firebaseStorage } = initializeFirebase()
+
+export { firebaseDb as db, firebaseAuth as auth, firebaseStorage as storage, firebaseApp as app }
 
 export function initializeFirebase() {
   if (getApps().length === 0) {
     app = initializeApp(firebaseConfig)
     db = getFirestore(app)
     auth = getAuth(app)
+    storage = getStorage(app)
   } else {
     app = getApps()[0]
     db = getFirestore(app)
     auth = getAuth(app)
+    storage = getStorage(app)
   }
-  return { app, db, auth }
+  return { app, db, auth, storage }
 }
 
 export function getDb(): Firestore {
@@ -40,6 +48,13 @@ export function getFirebaseAuth(): Auth {
     initializeFirebase()
   }
   return auth
+}
+
+export function getFirebaseStorage(): FirebaseStorage {
+  if (!storage) {
+    initializeFirebase()
+  }
+  return storage
 }
 
 // Collection names with web_ prefix

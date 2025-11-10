@@ -1,6 +1,39 @@
 import { getFromLocalStorage, saveToLocalStorage, COLLECTIONS } from "./storage-adapter"
-import { getDb, FIREBASE_COLLECTIONS } from "./firebase"
-import { collection, getDocs, query, orderBy, addDoc } from "firebase/firestore"
+// import { getDb, FIREBASE_COLLECTIONS, getFirebaseAuth } from "./firebase"
+// import { collection, getDocs, query, orderBy, addDoc, doc, setDoc, updateDoc, deleteDoc } from "firebase/firestore"
+
+let firestoreModule: any = null
+let firebaseModule: any = null
+
+async function loadFirestore() {
+  if (!firestoreModule) {
+    try {
+      const { getDb, FIREBASE_COLLECTIONS } = await import("./firebase")
+      const firestore = await import("firebase/firestore")
+      firestoreModule = { getDb, FIREBASE_COLLECTIONS, ...firestore }
+      console.log("[v0] Firebase Firestore loaded successfully")
+    } catch (error) {
+      console.log("[v0] Firebase not available, using localStorage fallback")
+      firestoreModule = null
+    }
+  }
+  return firestoreModule
+}
+
+async function loadFirebaseAuth() {
+  if (!firebaseModule) {
+    try {
+      const { getFirebaseAuth } = await import("./firebase")
+      const auth = await import("firebase/auth")
+      firebaseModule = { getFirebaseAuth, ...auth }
+      console.log("[v0] Firebase Auth loaded successfully")
+    } catch (error) {
+      console.log("[v0] Firebase not available, using localStorage fallback")
+      firebaseModule = null
+    }
+  }
+  return firebaseModule
+}
 
 export interface EmploymentApplication {
   id: string
@@ -1379,9 +1412,9 @@ export async function getAboutContent(): Promise<AboutContent | null> {
         titleAr: "المدرسة النموذجية للتربية الخاصة",
         titleEn: "Al Namothajia School for Special Education",
         descriptionAr:
-          "مؤسسة تعليمية رائدة تأسست عام 1994، نقدم خدمات تعليمية وتأهيلية متميزة لذوي الاحتياجات الخاصة في بيئة آمنة ومحفزة تراعي الفروق الفردية وتطور قدرات كل طالب",
+          "مؤسسة تعليمية رائدة تأسست عام 1985، نقدم خدمات تعليمية وتأهيلية متميزة لذوي الاحتياجات الخاصة في بيئة آمنة ومحفزة تراعي الفروق الفردية وتطور قدرات كل طالب",
         descriptionEn:
-          "A leading educational institution established in 1994, providing distinguished educational and rehabilitation services for people with special needs in a safe and stimulating environment",
+          "A leading educational institution established in 1985, providing distinguished educational and rehabilitation services for people with special needs in a safe and stimulating environment",
         image: "/modern-special-education-school-building-exterior.jpg",
         features: [
           {
@@ -1971,57 +2004,29 @@ export function getFullDepartmentsData(): DepartmentData[] {
 
 export async function getEmployees(): Promise<Employee[]> {
   try {
-    // Removed Firebase getDocs, using localStorage via storage-adapter
-    const snapshot = getFromLocalStorage<Employee[]>(COLLECTIONS.EMPLOYEES, [])
-
-    if (snapshot.length === 0) {
-      // Initialize with default employee data
-      const defaultEmployees: Employee[] = [
-        {
-          id: "1",
-          fullName: "Admin User",
-          email: "admin@school.com",
-          phone: "+972595864023",
-          position: "System Administrator",
-          department: "Administration",
-          role: "admin",
-          password: "admin123", // Storing password in plain text is a security risk. Consider hashing it.
-          permissions: {
-            canViewApplications: true,
-            canEditApplications: true,
-            canApproveApplications: true,
-            canDeleteApplications: true,
-            canViewServiceRequests: true,
-            canEditServiceRequests: true,
-            canDeleteServiceRequests: true,
-            canViewMessages: true,
-            canReplyToMessages: true,
-            canDeleteMessages: true,
-            canViewContent: true,
-            canEditContent: true,
-            canPublishContent: true,
-            canDeleteContent: true,
-            canViewEmployees: true,
-            canAddEmployees: true,
-            canEditEmployees: true,
-            canDeleteEmployees: true,
-            canViewReports: true,
-            canExportData: true,
-          },
-          createdAt: new Date().toISOString(),
-          isActive: true,
-        },
-      ]
-
-      // Save default employees to localStorage
-      saveToLocalStorage(COLLECTIONS.EMPLOYEES, defaultEmployees)
-      return defaultEmployees
+    const firestore = await loadFirestore()
+    if (!firestore) {
+      throw new Error("Firestore not available")
     }
+    const { collection, getDocs } = firestore
+    const db = firestore.getDb()
 
-    return snapshot
+    console.log("[v0] Fetching employees from Firestore...")
+    const employeesRef = collection(db, firestore.FIREBASE_COLLECTIONS.EMPLOYEES)
+    const snapshot = await getDocs(employeesRef)
+
+    const employees = snapshot.docs.map((doc) => ({
+      ...doc.data(),
+      id: doc.id,
+    })) as Employee[]
+
+    console.log("[v0] Fetched", employees.length, "employees from Firestore")
+    return employees
   } catch (error) {
-    console.error("Error getting employees:", error)
-    return []
+    console.error("[v0] Error getting employees from Firestore, falling back to localStorage:", error)
+    // Fallback to localStorage if Firebase fails
+    const snapshot = getFromLocalStorage<Employee[]>(COLLECTIONS.EMPLOYEES, [])
+    return snapshot
   }
 }
 
@@ -2037,18 +2042,99 @@ export async function getEmployeeById(id: string): Promise<Employee | null> {
   }
 }
 
+export async function getEmployeeByEmail(email: string): Promise<Employee | null> {
+  try {
+    console.log("[v0] Fetching employee by email:", email)
+    const employees = await getEmployees()
+    const employee = employees.find((emp) => emp.email === email)
+
+    if (employee) {
+      console.log("[v0] Employee found:", employee.fullName)
+    } else {
+      console.log("[v0] No employee found with email:", email)
+    }
+
+    return employee || null
+  } catch (error) {
+    console.error("[v0] Error getting employee by email:", error)
+    return null
+  }
+}
+
 export async function updateEmployee(id: string, updates: Partial<Employee>): Promise<void> {
   try {
-    // Removed Firebase updateDoc, using localStorage via storage-adapter
+    const firestore = await loadFirestore()
+    if (!firestore) {
+      throw new Error("Firestore not available")
+    }
+    const { doc, updateDoc } = firestore
+    const db = firestore.getDb()
+
+    console.log("[v0] Updating employee in Firestore:", id)
+    const employeeRef = doc(db, firestore.FIREBASE_COLLECTIONS.EMPLOYEES, id)
+    await updateDoc(employeeRef, updates)
+    console.log("[v0] Employee updated successfully")
+  } catch (error) {
+    console.error("[v0] Error updating employee in Firestore, falling back to localStorage:", error)
+    // Fallback to localStorage
     const employees = getFromLocalStorage<Employee[]>(COLLECTIONS.EMPLOYEES, [])
     const index = employees.findIndex((emp) => emp.id === id)
+
     if (index !== -1) {
       employees[index] = { ...employees[index], ...updates }
       saveToLocalStorage(COLLECTIONS.EMPLOYEES, employees)
     }
+  }
+}
+
+export async function saveEmployee(employee: Employee): Promise<void> {
+  try {
+    const firestore = await loadFirestore()
+    if (!firestore) {
+      throw new Error("Firestore not available")
+    }
+    const { doc, setDoc } = firestore
+    const db = firestore.getDb()
+
+    console.log("[v0] Saving employee to Firestore:", employee.email)
+    const employeeRef = doc(db, firestore.FIREBASE_COLLECTIONS.EMPLOYEES, employee.id)
+    await setDoc(employeeRef, employee)
+    console.log("[v0] Employee saved successfully")
   } catch (error) {
-    console.error("Error updating employee:", error)
-    throw error
+    console.error("[v0] Error saving employee to Firestore, falling back to localStorage:", error)
+    // Fallback to localStorage
+    const employees = getFromLocalStorage<Employee[]>(COLLECTIONS.EMPLOYEES, [])
+    const index = employees.findIndex((emp) => emp.id === employee.id)
+
+    if (index !== -1) {
+      employees[index] = employee
+    } else {
+      employees.push(employee)
+    }
+
+    saveToLocalStorage(COLLECTIONS.EMPLOYEES, employees)
+  }
+}
+
+export async function deleteEmployee(id: string): Promise<void> {
+  try {
+    const firestore = await loadFirestore()
+    if (!firestore) {
+      throw new Error("Firestore not available")
+    }
+    const { doc, deleteDoc } = firestore
+    const db = firestore.getDb()
+
+    console.log("[v0] Deleting employee from Firestore:", id)
+    const employeeRef = doc(db, firestore.FIREBASE_COLLECTIONS.EMPLOYEES, id)
+    await deleteDoc(employeeRef)
+    console.log("[v0] Employee deleted successfully")
+  } catch (error) {
+    console.error("[v0] Error deleting employee from Firestore, falling back to localStorage:", error)
+    // Fallback to localStorage
+    const employees = getFromLocalStorage<Employee[]>(COLLECTIONS.EMPLOYEES, [])
+    const filtered = employees.filter((emp) => emp.id !== id)
+    saveToLocalStorage(COLLECTIONS.EMPLOYEES, filtered)
   }
 }
 
@@ -2067,18 +2153,6 @@ export async function addEmployee(employee: Omit<Employee, "id" | "createdAt">):
     return newEmployee
   } catch (error) {
     console.error("Error adding employee:", error)
-    throw error
-  }
-}
-
-export async function deleteEmployee(id: string): Promise<void> {
-  try {
-    // Removed Firebase deleteDoc, using localStorage via storage-adapter
-    const employees = getFromLocalStorage<Employee[]>(COLLECTIONS.EMPLOYEES, [])
-    const filtered = employees.filter((emp) => emp.id !== id)
-    saveToLocalStorage(COLLECTIONS.EMPLOYEES, filtered)
-  } catch (error) {
-    console.error("Error deleting employee:", error)
     throw error
   }
 }
@@ -2105,12 +2179,20 @@ export async function authenticateEmployee(email: string, password: string): Pro
 
 export async function hasUsers(): Promise<boolean> {
   try {
-    // Removed Firebase getDocs, using localStorage via storage-adapter
-    const employees = getFromLocalStorage<Employee[]>(COLLECTIONS.EMPLOYEES, [])
-    return employees.length > 0
+    const firestore = await loadFirestore()
+    if (!firestore) {
+      throw new Error("Firestore not available")
+    }
+    const { getDocs, collection } = firestore
+    const db = firestore.getDb()
+    const employeesRef = collection(db, firestore.FIREBASE_COLLECTIONS.EMPLOYEES)
+    const snapshot = await getDocs(employeesRef)
+    return !snapshot.empty
   } catch (error) {
     console.error("Error checking users:", error)
-    return false
+    // Fallback to localStorage if Firebase fails
+    const employees = getFromLocalStorage<Employee[]>(COLLECTIONS.EMPLOYEES, [])
+    return employees.length > 0
   }
 }
 
@@ -2120,18 +2202,31 @@ export async function createFirstAdmin(
   password: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // Removed Firebase auth, using localStorage via storage-adapter
+    const firestore = await loadFirestore()
+    const firebase = await loadFirebaseAuth()
+    if (!firestore || !firebase) {
+      throw new Error("Firebase not available")
+    }
 
-    // Create employee record in localStorage
+    const { createUserWithEmailAndPassword } = firebase
+    const { setDoc, doc } = firestore
+    const auth = firebase.getFirebaseAuth()
+    const db = firestore.getDb()
+
+    // Create user in Firebase Authentication
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+    const userId = userCredential.user.uid
+
+    // Create employee record in Firestore web_employees collection
     const newEmployee: Employee = {
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9), // Generate a temporary ID
+      id: userId,
       fullName,
       email,
       phone: "",
       position: "System Administrator",
       department: "Administration",
       role: "admin",
-      password: password, // Storing password in plain text is a security risk. Consider hashing it.
+      password: "", // Don't store password in Firestore, Firebase Auth handles it
       permissions: {
         canViewApplications: true,
         canEditApplications: true,
@@ -2158,9 +2253,8 @@ export async function createFirstAdmin(
       isActive: true,
     }
 
-    const employees = getFromLocalStorage<Employee[]>(COLLECTIONS.EMPLOYEES, [])
-    employees.push(newEmployee)
-    saveToLocalStorage(COLLECTIONS.EMPLOYEES, employees)
+    const employeeRef = doc(db, firestore.FIREBASE_COLLECTIONS.EMPLOYEES, userId)
+    await setDoc(employeeRef, newEmployee)
 
     return { success: true }
   } catch (error: any) {
@@ -2173,16 +2267,41 @@ export async function createFirstAdmin(
 }
 
 export async function getDynamicPages(): Promise<DynamicPage[]> {
+  console.log("[v0] Attempting to fetch dynamic pages from Firebase...")
   try {
-    // Removed Firebase getDocs, using localStorage via storage-adapter
-    return getFromLocalStorage<DynamicPage[]>(COLLECTIONS.PAGES, [])
+    const firestore = await loadFirestore()
+    if (!firestore) {
+      console.log("[v0] Firestore not available, using localStorage fallback")
+      throw new Error("Firestore not available")
+    }
+
+    console.log("[v0] Firestore loaded, fetching from collection:", COLLECTIONS.PAGES)
+    const { collection, getDocs } = firestore
+    const db = firestore.getDb()
+    const pagesCollection = collection(db, COLLECTIONS.PAGES)
+    const snapshot = await getDocs(pagesCollection)
+
+    const pages: DynamicPage[] = []
+    snapshot.forEach((doc) => {
+      // The data() method returns the data for the document.
+      // We need to ensure it conforms to DynamicPage interface.
+      pages.push(doc.data() as DynamicPage)
+    })
+
+    console.log("[v0] Fetched", pages.length, "pages from Firestore")
+    return pages
   } catch (error) {
-    console.error("Error getting dynamic pages:", error)
-    return []
+    console.error("[v0] Error fetching dynamic pages from Firestore:", error)
+    console.log("[v0] Falling back to localStorage...")
+    // Fallback to localStorage
+    const pages = getFromLocalStorage<DynamicPage[]>(COLLECTIONS.PAGES, [])
+    console.log("[v0] Fetched", pages.length, "pages from localStorage")
+    return pages
   }
 }
 
 export async function saveDynamicPage(page: Omit<DynamicPage, "id" | "createdAt" | "updatedAt">): Promise<DynamicPage> {
+  console.log("[v0] Attempting to save dynamic page to Firebase...")
   try {
     const newPage: DynamicPage = {
       ...page,
@@ -2191,20 +2310,61 @@ export async function saveDynamicPage(page: Omit<DynamicPage, "id" | "createdAt"
       updatedAt: new Date().toISOString(),
     }
 
-    // Removed Firebase setDoc, using localStorage via storage-adapter
-    const pages = getFromLocalStorage<DynamicPage[]>(COLLECTIONS.PAGES, [])
-    pages.push(newPage)
-    saveToLocalStorage(COLLECTIONS.PAGES, pages)
+    const firestore = await loadFirestore()
+    if (!firestore) {
+      console.log("[v0] Firestore not available, using localStorage fallback")
+      throw new Error("Firestore not available")
+    }
+
+    console.log("[v0] Firestore loaded, saving to collection:", COLLECTIONS.PAGES)
+    const { doc, setDoc } = firestore
+    const db = firestore.getDb()
+    const docRef = doc(db, COLLECTIONS.PAGES, newPage.id)
+    await setDoc(docRef, newPage)
+
+    console.log("[v0] Dynamic page saved to Firestore successfully:", newPage.id)
     return newPage
   } catch (error) {
-    console.error("Error saving dynamic page:", error)
-    throw error
+    console.error("[v0] Error saving dynamic page to Firestore:", error)
+    console.log("[v0] Falling back to localStorage...")
+    // Fallback to localStorage
+    const pages = getFromLocalStorage<DynamicPage[]>(COLLECTIONS.PAGES, [])
+    const newPage: DynamicPage = {
+      ...page,
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+    pages.push(newPage)
+    saveToLocalStorage(COLLECTIONS.PAGES, pages)
+    console.log("[v0] Dynamic page saved to localStorage:", newPage.id)
+    return newPage
   }
 }
 
 export async function updateDynamicPage(id: string, updates: Partial<DynamicPage>): Promise<void> {
+  console.log("[v0] Attempting to update dynamic page in Firebase:", id)
   try {
-    // Removed Firebase updateDoc, using localStorage via storage-adapter
+    const firestore = await loadFirestore()
+    if (!firestore) {
+      console.log("[v0] Firestore not available, using localStorage fallback")
+      throw new Error("Firestore not available")
+    }
+
+    console.log("[v0] Firestore loaded, updating in collection:", COLLECTIONS.PAGES)
+    const { doc, updateDoc } = firestore
+    const db = firestore.getDb()
+    const docRef = doc(db, COLLECTIONS.PAGES, id)
+    await updateDoc(docRef, {
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    })
+
+    console.log("[v0] Dynamic page updated in Firestore successfully:", id)
+  } catch (error) {
+    console.error("[v0] Error updating dynamic page in Firestore:", error)
+    console.log("[v0] Falling back to localStorage...")
+    // Fallback to localStorage
     const pages = getFromLocalStorage<DynamicPage[]>(COLLECTIONS.PAGES, [])
     const index = pages.findIndex((p) => p.id === id)
     if (index !== -1) {
@@ -2214,23 +2374,61 @@ export async function updateDynamicPage(id: string, updates: Partial<DynamicPage
         updatedAt: new Date().toISOString(),
       }
       saveToLocalStorage(COLLECTIONS.PAGES, pages)
+      console.log("[v0] Dynamic page updated in localStorage:", id)
     }
-  } catch (error) {
-    console.error("Error updating dynamic page:", error)
-    throw error
   }
 }
 
 export async function deleteDynamicPage(id: string): Promise<void> {
+  console.log("[v0] Attempting to delete dynamic page from Firebase:", id)
   try {
-    // Removed Firebase deleteDoc, using localStorage via storage-adapter
-    const pages = getFromLocalStorage<DynamicPage[]>(COLLECTIONS.PAGES, [])
-    const filtered = pages.filter((p) => p.id !== id)
-    saveToLocalStorage(COLLECTIONS.PAGES, filtered)
+    const firestore = await loadFirestore()
+    if (!firestore) {
+      console.log("[v0] Firestore not available, using localStorage fallback")
+      throw new Error("Firestore not available")
+    }
+
+    console.log("[v0] Firestore loaded, deleting from collection:", COLLECTIONS.PAGES)
+    const { doc, deleteDoc } = firestore
+    const db = firestore.getDb()
+    const docRef = doc(db, COLLECTIONS.PAGES, id)
+    await deleteDoc(docRef)
+
+    console.log("[v0] Dynamic page deleted from Firestore successfully:", id)
   } catch (error) {
-    console.error("Error deleting dynamic page:", error)
-    throw error
+    console.error("[v0] Error deleting dynamic page from Firestore:", error)
+    console.log("[v0] Falling back to localStorage...")
+    // Fallback to localStorage
+    const pages = getFromLocalStorage<DynamicPage[]>(COLLECTIONS.PAGES, [])
+    const filteredPages = pages.filter((p) => p.id !== id)
+    saveToLocalStorage(COLLECTIONS.PAGES, filteredPages)
+    console.log("[v0] Dynamic page deleted from localStorage:", id)
   }
+}
+
+export async function createPage(pageData: {
+  title: string
+  slug: string
+  language: "ar" | "en"
+  status: "draft" | "published"
+  blocks: PageBlock[]
+}): Promise<DynamicPage> {
+  console.log("[v0] Creating new page from template...")
+
+  // Convert the page builder format to DynamicPage format
+  const newPage: Omit<DynamicPage, "id" | "createdAt" | "updatedAt"> = {
+    slug: pageData.slug,
+    titleAr: pageData.language === "ar" ? pageData.title : "",
+    titleEn: pageData.language === "en" ? pageData.title : "",
+    descriptionAr: "",
+    descriptionEn: "",
+    contentAr: "",
+    contentEn: "",
+    blocks: pageData.blocks,
+    isPublished: pageData.status === "published",
+  }
+
+  return await saveDynamicPage(newPage)
 }
 
 // Activity logging functions
@@ -2248,8 +2446,13 @@ export interface Activity {
 
 export async function getActivities(limit = 50): Promise<Activity[]> {
   try {
-    const db = getDb()
-    const activitiesRef = collection(db, FIREBASE_COLLECTIONS.ACTIVITIES)
+    const firestore = await loadFirestore()
+    if (!firestore) {
+      throw new Error("Firestore not available")
+    }
+    const { collection, query, orderBy, getDocs } = firestore
+    const db = firestore.getDb()
+    const activitiesRef = collection(db, firestore.FIREBASE_COLLECTIONS.ACTIVITIES)
     const q = query(activitiesRef, orderBy("timestamp", "desc"))
     const snapshot = await getDocs(q)
 
@@ -2269,8 +2472,13 @@ export async function getActivities(limit = 50): Promise<Activity[]> {
 
 export async function logActivity(activity: Omit<Activity, "id" | "timestamp">): Promise<void> {
   try {
-    const db = getDb()
-    const activitiesRef = collection(db, FIREBASE_COLLECTIONS.ACTIVITIES)
+    const firestore = await loadFirestore()
+    if (!firestore) {
+      throw new Error("Firestore not available")
+    }
+    const { collection, addDoc } = firestore
+    const db = firestore.getDb()
+    const activitiesRef = collection(db, firestore.FIREBASE_COLLECTIONS.ACTIVITIES)
 
     await addDoc(activitiesRef, {
       ...activity,
@@ -2461,18 +2669,40 @@ export async function updateServiceRequestStatus(id: string, status: ServiceRequ
 }
 
 export async function getDynamicPageBySlug(slug: string): Promise<DynamicPage | null> {
+  console.log("[v0] Attempting to fetch page by slug:", slug)
   try {
-    // Removed Firebase query, using localStorage via storage-adapter
+    const firestore = await loadFirestore()
+    if (!firestore) {
+      console.log("[v0] Firestore not available, using localStorage fallback")
+      throw new Error("Firestore not available")
+    }
+
+    console.log("[v0] Firestore loaded, fetching from collection:", COLLECTIONS.PAGES)
+    const { collection, query, where, getDocs } = firestore
+    const db = firestore.getDb()
+    const pagesCollection = collection(db, COLLECTIONS.PAGES)
+    const q = query(pagesCollection, where("slug", "==", slug))
+    const snapshot = await getDocs(q)
+
+    if (snapshot.empty) {
+      console.log("[v0] No page found with slug:", slug)
+      return null
+    }
+
+    const page = snapshot.docs[0].data() as DynamicPage
+    console.log("[v0] Found page in Firestore:", page.title)
+    return page
+  } catch (error) {
+    console.error("[v0] Error getting dynamic page by slug from Firestore:", error)
+    console.log("[v0] Falling back to localStorage...")
+    // Fallback to localStorage
     const pages = getFromLocalStorage<DynamicPage[]>(COLLECTIONS.PAGES, [])
     const page = pages.find((p) => p.slug === slug)
+    if (page) {
+      console.log("[v0] Found page in localStorage:", page.title)
+    } else {
+      console.log("[v0] No page found in localStorage with slug:", slug)
+    }
     return page || null
-  } catch (error) {
-    console.error("Error getting dynamic page by slug:", error)
-    return null
   }
-}
-
-// Employee save function (alias for addEmployee)
-export async function saveEmployee(employee: Omit<Employee, "id" | "createdAt">): Promise<Employee> {
-  return addEmployee(employee)
 }

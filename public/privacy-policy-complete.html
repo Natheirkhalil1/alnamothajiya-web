@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - سياسة الخصوصية</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #1e293b;
+            background: linear-gradient(to bottom, #f8fafc, #e2e8f0);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        [dir="rtl"] {
+            font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+        }
+
+        .school-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1e293b;
+        }
+
+        .lang-switcher {
+            display: flex;
+            gap: 10px;
+            background: #f1f5f9;
+            padding: 6px;
+            border-radius: 12px;
+        }
+
+        .lang-btn {
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .lang-btn.active {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            color: #3b82f6;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            padding: 60px 30px;
+            border-radius: 16px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 42px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .hero p {
+            font-size: 18px;
+            opacity: 0.95;
+        }
+
+        .content-section {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+        }
+
+        .content-section:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            transform: translateY(-2px);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .section-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .section-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .section-content {
+            color: #475569;
+            font-size: 16px;
+            line-height: 1.8;
+        }
+
+        .section-content h3 {
+            font-size: 20px;
+            color: #1e293b;
+            margin: 20px 0 10px 0;
+            font-weight: 600;
+        }
+
+        .section-content ul {
+            list-style: none;
+            padding: 0;
+            margin: 15px 0;
+        }
+
+        .section-content li {
+            padding: 8px 0 8px 25px;
+            position: relative;
+        }
+
+        .section-content li:before {
+            content: "•";
+            position: absolute;
+            left: 10px;
+            color: #3b82f6;
+            font-weight: bold;
+        }
+
+        [dir="rtl"] .section-content li {
+            padding: 8px 25px 8px 0;
+        }
+
+        [dir="rtl"] .section-content li:before {
+            left: auto;
+            right: 10px;
+        }
+
+        .contact-info {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 16px;
+            margin-top: 40px;
+        }
+
+        .contact-info h2 {
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .contact-info p {
+            margin: 10px 0;
+            font-size: 16px;
+        }
+
+        .contact-info a {
+            color: white;
+            text-decoration: underline;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 32px;
+            }
+
+            .section-title {
+                font-size: 20px;
+            }
+
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header with Logo and Language Switcher -->
+        <div class="header">
+            <div class="logo-section">
+                <img src="https://v0-school-website-design-tan-delta.vercel.app/logo.webp" alt="School Logo" class="logo">
+                <div class="school-name" id="schoolName">نموذجية</div>
+            </div>
+            <div class="lang-switcher">
+                <button class="lang-btn active" onclick="switchLang('ar')" id="arBtn">العربية</button>
+                <button class="lang-btn" onclick="switchLang('en')" id="enBtn">English</button>
+            </div>
+        </div>
+
+        <!-- Hero Section -->
+        <div class="hero">
+            <h1 id="heroTitle">سياسة الخصوصية</h1>
+            <p id="heroSubtitle">آخر تحديث: 10 نوفمبر 2025</p>
+        </div>
+
+        <!-- Content Sections - Arabic -->
+        <div id="contentAr">
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                    </div>
+                    <h2 class="section-title">نظرة عامة</h2>
+                </div>
+                <div class="section-content">
+                    <p>تلتزم مدرستنا بحماية خصوصية جميع الطلاب وأولياء الأمور والموظفين. توضح سياسة الخصوصية هذه كيفية جمع واستخدام وحماية المعلومات الشخصية وفقاً لقوانين حماية البيانات المعمول بها، بما في ذلك قانون حماية خصوصية الأطفال على الإنترنت (COPPA).</p>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/></svg>
+                    </div>
+                    <h2 class="section-title">المعلومات التي نجمعها</h2>
+                </div>
+                <div class="section-content">
+                    <h3>معلومات الطلاب:</h3>
+                    <ul>
+                        <li>الاسم الكامل وتاريخ الميلاد</li>
+                        <li>معلومات الاتصال (العنوان، رقم الهاتف، البريد الإلكتروني)</li>
+                        <li>معلومات الاتصال بأولياء الأمور/الأوصياء</li>
+                        <li>الصور والفيديوهات للأنشطة المدرسية</li>
+                    </ul>
+                    <h3>السجلات الطبية:</h3>
+                    <ul>
+                        <li>التاريخ الطبي والحساسية</li>
+                        <li>معلومات التطعيمات</li>
+                        <li>معلومات جهات الاتصال في حالات الطوارئ</li>
+                    </ul>
+                    <h3>السجلات الأكاديمية:</h3>
+                    <ul>
+                        <li>الدرجات والنصوص</li>
+                        <li>سجلات الحضور</li>
+                        <li>تقييمات المعلمين وتقارير التقدم</li>
+                        <li>نتائج الامتحانات الموحدة</li>
+                    </ul>
+                    <h3>بيانات الاستخدام:</h3>
+                    <ul>
+                        <li>سجلات تسجيل الدخول إلى البوابة الإلكترونية</li>
+                        <li>استخدام الأجهزة الصادرة عن المدرسة</li>
+                        <li>نشاط نظام إدارة التعلم</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+                    </div>
+                    <h2 class="section-title">كيف نحمي بياناتك</h2>
+                </div>
+                <div class="section-content">
+                    <ul>
+                        <li>التشفير من طرف إلى طرف لجميع عمليات نقل البيانات</li>
+                        <li>خوادم آمنة مع جدران حماية وكشف التسلل</li>
+                        <li>مصادقة متعددة العوامل للموظفين</li>
+                        <li>عمليات تدقيق أمنية منتظمة وتقييمات الضعف</li>
+                        <li>الوصول المقيد بناءً على الدور</li>
+                        <li>نسخ احتياطي للبيانات وخطط استعادة الكوارث</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.11 0 2-.9 2-2V5c0-1.1-.89-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    </div>
+                    <h2 class="section-title">كيف نستخدم المعلومات</h2>
+                </div>
+                <div class="section-content">
+                    <ul>
+                        <li>تسجيل الطلاب وإدارة الفصول الدراسية</li>
+                        <li>التواصل مع أولياء الأمور بشأن الأحداث والتقدم الأكاديمي</li>
+                        <li>توفير الرعاية الطبية والصحية المناسبة</li>
+                        <li>تتبع الأداء الأكاديمي وتحسين التدريس</li>
+                        <li>الامتثال للمتطلبات القانونية والتنظيمية</li>
+                        <li>ضمان سلامة الحرم المدرسي</li>
+                        <li>تحسين الخدمات التعليمية والمناهج الدراسية</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                    </div>
+                    <h2 class="section-title">خصوصية الأطفال</h2>
+                </div>
+                <div class="section-content">
+                    <p>نلتزم بحماية خصوصية الأطفال دون سن 13 عاماً وفقاً لقانون حماية خصوصية الأطفال على الإنترنت (COPPA). نحصل على موافقة الوالدين قبل جمع أي معلومات شخصية من الأطفال، ونسمح للوالدين بمراجعة، وتعديل، أو حذف معلومات أطفالهم.</p>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+                    </div>
+                    <h2 class="section-title">أذونات الأجهزة</h2>
+                </div>
+                <div class="section-content">
+                    <p>قد يطلب تطبيقنا المحمول الأذونات التالية:</p>
+                    <ul>
+                        <li>الكاميرا: لإضافة الصور إلى المشاريع المدرسية والملفات الشخصية</li>
+                        <li>الموقع: لميزات تسجيل الوصول وأمان الحرم المدرسي</li>
+                        <li>الإشعارات: لإرسال التنبيهات المدرسية المهمة والتحديثات</li>
+                        <li>التخزين: لحفظ المواد التعليمية دون الاتصال بالإنترنت</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
+                    </div>
+                    <h2 class="section-title">الإعلانات</h2>
+                </div>
+                <div class="section-content">
+                    <p>لا نعرض إعلانات من طرف ثالث على منصاتنا، ولا نبيع أو نشارك بيانات الطلاب لأغراض التسويق.</p>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                    </div>
+                    <h2 class="section-title">الاحتفاظ بالبيانات</h2>
+                </div>
+                <div class="section-content">
+                    <ul>
+                        <li>السجلات الأكاديمية: يتم الاحتفاظ بها لمدة 7 سنوات بعد التخرج</li>
+                        <li>السجلات الطبية: يتم الاحتفاظ بها حتى بلوغ الطالب سن 25 عاماً</li>
+                        <li>سجلات الحضور: يتم الاحتفاظ بها لمدة 3 سنوات</li>
+                        <li>سجلات الانضباط: يتم الاحتفاظ بها وفقاً للمتطلبات القانونية</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    </div>
+                    <h2 class="section-title">حقوقك</h2>
+                </div>
+                <div class="section-content">
+                    <ul>
+                        <li><strong>الوصول:</strong> طلب نسخة من المعلومات الشخصية التي نحتفظ بها</li>
+                        <li><strong>التصحيح:</strong> طلب تصحيح المعلومات غير الدقيقة</li>
+                        <li><strong>المحو:</strong> طلب حذف البيانات الشخصية (مع استثناءات قانونية)</li>
+                        <li><strong>قابلية النقل:</strong> تلقي البيانات بتنسيق منظم</li>
+                        <li><strong>الاعتراض:</strong> الاعتراض على معالجة معينة للبيانات</li>
+                        <li><strong>الشكوى:</strong> تقديم شكوى إلى سلطة حماية البيانات</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                    </div>
+                    <h2 class="section-title">نقل البيانات الدولية</h2>
+                </div>
+                <div class="section-content">
+                    <p>يتم تخزين بياناتك على خوادم آمنة في الأردن. إذا تطلب الأمر نقل البيانات دولياً، نضمن الامتثال لمعايير حماية البيانات من خلال الضمانات المناسبة.</p>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg>
+                    </div>
+                    <h2 class="section-title">تغييرات السياسة</h2>
+                </div>
+                <div class="section-content">
+                    <p>نحتفظ بالحق في تحديث سياسة الخصوصية هذه. سيتم إخطار المستخدمين بأي تغييرات جوهرية عبر البريد الإلكتروني ومن خلال إشعار على موقعنا الإلكتروني. سيشير استمرار استخدام خدماتنا بعد مثل هذه التغييرات إلى قبولك للسياسة المحدثة.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Sections - English -->
+        <div id="contentEn" class="hidden">
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                    </div>
+                    <h2 class="section-title">Overview</h2>
+                </div>
+                <div class="section-content">
+                    <p>Our school is committed to protecting the privacy of all students, parents, and staff. This Privacy Policy explains how we collect, use, and safeguard personal information in accordance with applicable data protection laws, including the Children's Online Privacy Protection Act (COPPA).</p>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/></svg>
+                    </div>
+                    <h2 class="section-title">Information We Collect</h2>
+                </div>
+                <div class="section-content">
+                    <h3>Student Information:</h3>
+                    <ul>
+                        <li>Full name and date of birth</li>
+                        <li>Contact information (address, phone number, email)</li>
+                        <li>Parent/guardian contact information</li>
+                        <li>Photos and videos from school activities</li>
+                    </ul>
+                    <h3>Medical Records:</h3>
+                    <ul>
+                        <li>Health history and allergies</li>
+                        <li>Immunization records</li>
+                        <li>Emergency contact information</li>
+                    </ul>
+                    <h3>Academic Records:</h3>
+                    <ul>
+                        <li>Grades and transcripts</li>
+                        <li>Attendance records</li>
+                        <li>Teacher evaluations and progress reports</li>
+                        <li>Standardized test results</li>
+                    </ul>
+                    <h3>Usage Data:</h3>
+                    <ul>
+                        <li>Login records to online portal</li>
+                        <li>School-issued device usage</li>
+                        <li>Learning management system activity</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+                    </div>
+                    <h2 class="section-title">How We Protect Your Data</h2>
+                </div>
+                <div class="section-content">
+                    <ul>
+                        <li>End-to-end encryption for all data transmissions</li>
+                        <li>Secure servers with firewalls and intrusion detection</li>
+                        <li>Multi-factor authentication for staff access</li>
+                        <li>Regular security audits and vulnerability assessments</li>
+                        <li>Role-based access restrictions</li>
+                        <li>Data backups and disaster recovery plans</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.11 0 2-.9 2-2V5c0-1.1-.89-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    </div>
+                    <h2 class="section-title">How We Use Information</h2>
+                </div>
+                <div class="section-content">
+                    <ul>
+                        <li>Student enrollment and classroom management</li>
+                        <li>Communication with parents about events and academic progress</li>
+                        <li>Providing appropriate medical and health care</li>
+                        <li>Tracking academic performance and improving instruction</li>
+                        <li>Complying with legal and regulatory requirements</li>
+                        <li>Ensuring campus safety and security</li>
+                        <li>Improving educational services and curriculum</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                    </div>
+                    <h2 class="section-title">Children's Privacy</h2>
+                </div>
+                <div class="section-content">
+                    <p>We are committed to protecting the privacy of children under 13 in accordance with COPPA. We obtain parental consent before collecting any personal information from children, and allow parents to review, modify, or delete their children's information.</p>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+                    </div>
+                    <h2 class="section-title">Device Permissions</h2>
+                </div>
+                <div class="section-content">
+                    <p>Our mobile app may request the following permissions:</p>
+                    <ul>
+                        <li>Camera: To add photos to school projects and profiles</li>
+                        <li>Location: For check-in features and campus security</li>
+                        <li>Notifications: To send important school alerts and updates</li>
+                        <li>Storage: To save educational materials offline</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
+                    </div>
+                    <h2 class="section-title">Advertising</h2>
+                </div>
+                <div class="section-content">
+                    <p>We do not display third-party advertisements on our platforms, and we do not sell or share student data for marketing purposes.</p>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                    </div>
+                    <h2 class="section-title">Data Retention</h2>
+                </div>
+                <div class="section-content">
+                    <ul>
+                        <li>Academic records: Retained for 7 years after graduation</li>
+                        <li>Medical records: Retained until student reaches age 25</li>
+                        <li>Attendance records: Retained for 3 years</li>
+                        <li>Disciplinary records: Retained as per legal requirements</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    </div>
+                    <h2 class="section-title">Your Rights</h2>
+                </div>
+                <div class="section-content">
+                    <ul>
+                        <li><strong>Access:</strong> Request a copy of the personal information we hold</li>
+                        <li><strong>Rectification:</strong> Request correction of inaccurate information</li>
+                        <li><strong>Erasure:</strong> Request deletion of personal data (with legal exceptions)</li>
+                        <li><strong>Portability:</strong> Receive data in a structured format</li>
+                        <li><strong>Object:</strong> Object to certain data processing</li>
+                        <li><strong>Complain:</strong> File a complaint with a data protection authority</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                    </div>
+                    <h2 class="section-title">International Data Transfers</h2>
+                </div>
+                <div class="section-content">
+                    <p>Your data is stored on secure servers located in Jordan. If international data transfer is required, we ensure compliance with data protection standards through appropriate safeguards.</p>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg>
+                    </div>
+                    <h2 class="section-title">Policy Changes</h2>
+                </div>
+                <div class="section-content">
+                    <p>We reserve the right to update this Privacy Policy. Users will be notified of any material changes via email and through a notice on our website. Continued use of our services after such changes indicates your acceptance of the updated policy.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="contact-info">
+            <h2 id="contactTitle">اتصل بنا</h2>
+            <p id="contactText1">إذا كان لديك أي أسئلة حول سياسة الخصوصية هذه، يرجى الاتصال بنا:</p>
+            <p><strong id="contactEmail">البريد الإلكتروني:</strong> <a href="mailto:info@namothajia.com">info@namothajia.com</a></p>
+            <p><strong id="contactPhone">الهاتف:</strong> +962 6 412 2002</p>
+            <p><strong id="contactAddress">العنوان:</strong> <span id="addressText">شارع المطار / حي الأمير علي - عمان - الأردن</span></p>
+        </div>
+    </div>
+
+    <script>
+        function switchLang(lang) {
+            const html = document.documentElement;
+            const arBtn = document.getElementById('arBtn');
+            const enBtn = document.getElementById('enBtn');
+            const contentAr = document.getElementById('contentAr');
+            const contentEn = document.getElementById('contentEn');
+            
+            if (lang === 'ar') {
+                html.setAttribute('lang', 'ar');
+                html.setAttribute('dir', 'rtl');
+                arBtn.classList.add('active');
+                enBtn.classList.remove('active');
+                contentAr.classList.remove('hidden');
+                contentEn.classList.add('hidden');
+                
+                // Update text content
+                document.getElementById('schoolName').textContent = 'نموذجية';
+                document.getElementById('heroTitle').textContent = 'سياسة الخصوصية';
+                document.getElementById('heroSubtitle').textContent = 'آخر تحديث: 10 نوفمبر 2025';
+                document.getElementById('contactTitle').textContent = 'اتصل بنا';
+                document.getElementById('contactText1').textContent = 'إذا كان لديك أي أسئلة حول سياسة الخصوصية هذه، يرجى الاتصال بنا:';
+                document.getElementById('contactEmail').textContent = 'البريد الإلكتروني:';
+                document.getElementById('contactPhone').textContent = 'الهاتف:';
+                document.getElementById('contactAddress').textContent = 'العنوان:';
+                document.getElementById('addressText').textContent = 'شارع المطار / حي الأمير علي - عمان - الأردن';
+            } else {
+                html.setAttribute('lang', 'en');
+                html.setAttribute('dir', 'ltr');
+                enBtn.classList.add('active');
+                arBtn.classList.remove('active');
+                contentEn.classList.remove('hidden');
+                contentAr.classList.add('hidden');
+                
+                // Update text content
+                document.getElementById('schoolName').textContent = 'Namoothajia';
+                document.getElementById('heroTitle').textContent = 'Privacy Policy';
+                document.getElementById('heroSubtitle').textContent = 'Last Updated: November 10, 2025';
+                document.getElementById('contactTitle').textContent = 'Contact Us';
+                document.getElementById('contactText1').textContent = 'If you have any questions about this Privacy Policy, please contact us:';
+                document.getElementById('contactEmail').textContent = 'Email:';
+                document.getElementById('contactPhone').textContent = 'Phone:';
+                document.getElementById('contactAddress').textContent = 'Address:';
+                document.getElementById('addressText').textContent = 'Airport Road / Prince Ali District - Amman - Jordan';
+            }
+        }
+    </script>
+</body>
+</html>

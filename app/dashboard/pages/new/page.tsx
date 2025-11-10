@@ -1,6 +1,6 @@
 "use client"
-
-import { useState } from "react" // Added useEffect
+import { useState } from "react"
+import type { JSX } from "react"
 import { useRouter } from "next/navigation"
 import { useLanguage } from "@/lib/language-context"
 import { saveDynamicPage, type PageBlock } from "@/lib/storage"
@@ -9,10 +9,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card" // Imported Alert components
+import { Card } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
+import { AspectRatio } from "@/components/ui/aspect-ratio"
 import {
   ArrowLeft,
   Save,
@@ -40,17 +41,11 @@ import {
   ChevronUp,
   ChevronDown,
   X,
-  Check,
-} from "lucide-react" // Added missing icon imports
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+} from "lucide-react"
 import { ImageUpload } from "@/components/image-upload"
-import React from "react" // Import React
-import { cn } from "@/lib/utils" // Import cn for conditional class names
-
-// Import all Lucide Icons used in the editor
-import * as LucideIcons from "lucide-react" // Renamed from Icons to LucideIcons
-
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
+import { EditableHeroSlider } from "@/components/editable/editable-hero-slider"
+import { EditableTextSection } from "@/components/editable/editable-text-section"
+import { EditableCardsSection } from "@/components/editable/editable-cards-section"
 
 export default function NewPageEditor() {
   const router = useRouter()
@@ -61,8 +56,10 @@ export default function NewPageEditor() {
   const [showBlockModal, setShowBlockModal] = useState(false)
   const [showBlockMenu, setShowBlockMenu] = useState(false)
   const [editingBlock, setEditingBlock] = useState<PageBlock | null>(null)
+  const [tempBlockChanges, setTempBlockChanges] = useState<Partial<PageBlock> | null>(null)
   const [activeContainer, setActiveContainer] = useState<{ blockId: string; columnIndex?: number } | null>(null)
   const [isPreviewMode, setIsPreviewMode] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
 
   const [pageData, setPageData] = useState({
     titleAr: "",
@@ -79,7 +76,6 @@ export default function NewPageEditor() {
   const [blocks, setBlocks] = useState<PageBlock[]>([])
 
   const blockTypes = [
-    // Basic blocks
     { type: "heading", icon: Type, label: language === "ar" ? "عنوان" : "Heading", category: "basic" },
     { type: "paragraph", icon: Type, label: language === "ar" ? "فقرة" : "Paragraph", category: "basic" },
     { type: "image", icon: ImageIcon, label: language === "ar" ? "صورة" : "Image", category: "basic" },
@@ -90,9 +86,7 @@ export default function NewPageEditor() {
     { type: "divider", icon: Minus, label: language === "ar" ? "فاصل" : "Divider", category: "basic" },
     { type: "html", icon: Code, label: language === "ar" ? "HTML" : "HTML", category: "basic" },
     { type: "spacer", icon: Minus, label: language === "ar" ? "مسافة" : "Spacer", category: "basic" },
-    // Layout blocks
     { type: "row", icon: Columns, label: language === "ar" ? "صف (أعمدة)" : "Row (Columns)", category: "layout" },
-    // Component blocks
     {
       type: "card",
       icon: Building2,
@@ -183,13 +177,16 @@ export default function NewPageEditor() {
       label: language === "ar" ? "روابط اجتماعية" : "Social Links",
       category: "components",
     },
+    // Adding new block types for home page
+    { type: "hero", icon: Presentation, label: "Hero", category: "home" },
+    { type: "text", icon: Type, label: "Text Section", category: "home" },
+    { type: "cards", icon: Building2, label: "Cards Section", category: "home" },
   ]
 
   const copyContent = (from: "ar" | "en", to: "ar" | "en") => {
     const updatedBlocks = blocks.map((block) => {
       const newContent = { ...block.content }
 
-      // Copy text content
       if (from === "ar" && to === "en") {
         if (block.content.textAr) newContent.textEn = block.content.textAr
         if (block.content.quoteAr) newContent.quoteEn = block.content.quoteAr
@@ -199,7 +196,7 @@ export default function NewPageEditor() {
         if (block.content.subtitleAr) newContent.subtitleEn = block.content.subtitleAr
         if (block.content.descriptionAr) newContent.descriptionEn = block.content.descriptionAr
         if (block.content.labelAr) newContent.labelEn = block.content.labelAr
-        if (block.content.captionAr) newContent.captionEn = block.content.captionAr
+        if (block.content.captionAr) newContent.captionAr = block.content.captionAr
       } else if (from === "en" && to === "ar") {
         if (block.content.textEn) newContent.textAr = block.content.textEn
         if (block.content.quoteEn) newContent.quoteAr = block.content.quoteEn
@@ -240,11 +237,9 @@ export default function NewPageEditor() {
         blocks.map((block) => {
           if (block.id === containerId) {
             const children = block.children || []
-            // Ensure correct order for children within a column
             newBlock.order = columnIndex !== undefined ? columnIndex : children.length
             return { ...block, children: [...children, newBlock] }
           }
-          // Recursively search for the container in nested blocks
           if (block.children) {
             return { ...block, children: addBlockToNestedChildren(block.children, type, containerId, columnIndex) }
           }
@@ -255,11 +250,10 @@ export default function NewPageEditor() {
       setBlocks([...blocks, newBlock])
     }
 
-    setShowBlockMenu(false)
+    setShowBlockModal(false)
     setEditingBlock(newBlock)
   }
 
-  // Helper function to recursively add blocks to nested children
   const addBlockToNestedChildren = (
     blockList: PageBlock[],
     type: PageBlock["type"],
@@ -308,7 +302,6 @@ export default function NewPageEditor() {
           if (block.id === parentId) {
             return { ...block, children: (block.children || []).filter((child) => child.id !== id) }
           }
-          // Also check nested children
           if (block.children) {
             return { ...block, children: deleteBlockFromNestedChildren(block.children, id) }
           }
@@ -320,7 +313,6 @@ export default function NewPageEditor() {
     }
   }
 
-  // Helper function to recursively delete blocks from nested children
   const deleteBlockFromNestedChildren = (blockList: PageBlock[], id: string): PageBlock[] => {
     return blockList.filter((block) => {
       if (block.id === id) return false
@@ -355,7 +347,6 @@ export default function NewPageEditor() {
           if (block.id === parentId) {
             return { ...block, children: moveInList(block.children || []) }
           }
-          // Also check nested children
           if (block.children) {
             return { ...block, children: moveBlockInNestedChildren(block.children, id, direction) }
           }
@@ -367,11 +358,9 @@ export default function NewPageEditor() {
     }
   }
 
-  // Helper function to recursively move blocks in nested children
   const moveBlockInNestedChildren = (blockList: PageBlock[], id: string, direction: "up" | "down"): PageBlock[] => {
     return blockList.map((block) => {
       if (block.id === id) {
-        // This case should ideally not be hit if parentId is correctly passed, but as a fallback:
         const index = blockList.findIndex((b) => b.id === id)
         if ((direction === "up" && index === 0) || (direction === "down" && index === blockList.length - 1)) {
           return block
@@ -391,7 +380,7 @@ export default function NewPageEditor() {
     })
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!pageData.titleAr || !pageData.titleEn || !pageData.slug) {
       toast({
         title: language === "ar" ? "خطأ" : "Error",
@@ -401,45 +390,58 @@ export default function NewPageEditor() {
       return
     }
 
-    saveDynamicPage({
-      ...pageData,
-      contentAr: "",
-      contentEn: "",
-      blocks,
-    })
+    setIsSaving(true)
+    console.log("[v0] Attempting to save new page to Firebase...")
+    try {
+      const savedPage = await saveDynamicPage({
+        ...pageData,
+        contentAr: "",
+        contentEn: "",
+        blocks,
+      })
 
-    toast({
-      title: language === "ar" ? "تم الحفظ" : "Saved",
-      description: language === "ar" ? "تم حفظ الصفحة بنجاح" : "Page saved successfully",
-    })
+      console.log("[v0] New page successfully saved to Firebase:", savedPage.id)
 
-    router.push("/dashboard?section=pages")
+      toast({
+        title: language === "ar" ? "تم الحفظ" : "Saved",
+        description: language === "ar" ? "تم حفظ الصفحة بنجاح" : "Page saved successfully",
+      })
+
+      router.push(`/dashboard/pages/edit/${savedPage.id}`)
+    } catch (error) {
+      console.error("[v0] Error saving new page to Firebase:", error)
+      toast({
+        title: language === "ar" ? "خطأ" : "Error",
+        description: language === "ar" ? "فشل في حفظ الصفحة" : "Failed to save page",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const basicBlocks = blockTypes.filter((b) => b.category === "basic")
   const layoutBlocks = blockTypes.filter((b) => b.category === "layout")
   const componentBlocks = blockTypes.filter((b) => b.category === "components")
+  const homeBlocks = blockTypes.filter((b) => b.category === "home") // Filter for home blocks
 
   const handlePreviewToggle = () => {
     setIsPreviewMode(!isPreviewMode)
   }
 
-  // Helper function to handle adding blocks, considering containers
   const handleContainerAdd = (type: PageBlock["type"], container: { blockId: string; columnIndex?: number } | null) => {
     const newBlock: PageBlock = {
       id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
       type,
       content: {},
       styles: {},
-      ...(type === "row" && { children: [] }), // Initialize children for row blocks
+      ...(type === "row" && { children: [] }),
     }
 
-    // If adding to a container (either a row's column or a general container)
     if (container) {
       setBlocks((prevBlocks) => handleNestedContainerAdd(prevBlocks, type, container))
     } else {
-      // If not adding to a specific container, add to the top level
-      newBlock.order = blocks.length // Ensure correct order at top level
+      newBlock.order = blocks.length
       setBlocks((prevBlocks) => [...prevBlocks, newBlock])
     }
 
@@ -448,13 +450,12 @@ export default function NewPageEditor() {
     setActiveContainer(null)
   }
 
-  // Recursive helper to add blocks to nested containers
   const handleNestedContainerAdd = (
     blockList: PageBlock[],
     type: PageBlock["type"],
     container: { blockId: string; columnIndex?: number } | null,
   ): PageBlock[] => {
-    if (!container) return blockList // Should not happen if called correctly
+    if (!container) return blockList
 
     return blockList.map((block) => {
       if (block.id === container.blockId) {
@@ -485,23 +486,75 @@ export default function NewPageEditor() {
     const description = contentLanguage === "ar" ? block.content.descriptionAr : block.content.descriptionEn
 
     switch (block.type) {
-      case "heading":
-        return <div className="font-bold text-lg">{text || (language === "ar" ? "عنوان" : "Heading")}</div>
-      case "paragraph":
-        return <div className="text-muted-foreground">{text || (language === "ar" ? "فقرة" : "Paragraph")}</div>
-      case "image":
+      case "hero":
+        return <EditableHeroSlider slides={block.content.slides || []} language={contentLanguage} />
+
+      case "text":
         return (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <ImageIcon className="w-4 h-4" />
-            {block.content.imageUrl || (language === "ar" ? "صورة" : "Image")}
-          </div>
+          <EditableTextSection
+            title={block.content.title || {}}
+            subtitle={block.content.subtitle || {}}
+            description={block.content.description || {}}
+            features={block.content.features || []}
+            language={contentLanguage}
+            styles={block.styles}
+          />
         )
+
+      case "cards":
+        return (
+          <EditableCardsSection
+            title={block.content.title || {}}
+            subtitle={block.content.subtitle || {}}
+            cards={block.content.cards || []}
+            language={contentLanguage}
+            styles={block.styles}
+          />
+        )
+
       case "gallery":
         return (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <ImagePlus className="w-4 h-4" />
             {language === "ar" ? "معرض صور" : "Gallery"} ({block.content.images?.length || 0}{" "}
             {language === "ar" ? "صور" : "images"})
+          </div>
+        )
+
+      case "testimonials":
+        return (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <MessageSquare className="w-4 h-4" />
+            {language === "ar" ? "شهادات" : "Testimonials"} ({block.content.testimonials?.length || 0}{" "}
+            {language === "ar" ? "عناصر" : "items"})
+          </div>
+        )
+
+      case "cta":
+        return (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Phone className="w-4 h-4" />
+            {language === "ar" ? "دعوة لإجراء" : "Call-to-Action"}
+          </div>
+        )
+
+      case "contact":
+        return (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Building2 className="w-4 h-4" />
+            {language === "ar" ? "اتصل بنا" : "Contact"}
+          </div>
+        )
+
+      case "heading":
+        return <div className="font-bold text-lg">{text || (language === "ar" ? "عنوان" : "Heading")}</div>
+      case "paragraph":
+        return <div className="text-sm text-muted-foreground">{text || (language === "ar" ? "فقرة" : "Paragraph")}</div>
+      case "image":
+        return (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <ImageIcon className="w-4 h-4" />
+            {block.content.imageUrl || (language === "ar" ? "صورة" : "Image")}
           </div>
         )
       case "video":
@@ -557,115 +610,137 @@ export default function NewPageEditor() {
         )
       case "card":
         return (
-          <div className="flex flex-col gap-1 text-sm text-muted-foreground">
-            <Building2 className="w-4 h-4" />
-            {title || (language === "ar" ? "بطاقة" : "Card")}
+          <div className="flex flex-col gap-1">
+            <div className="font-medium text-sm">{title || (language === "ar" ? "بطاقة" : "Card")}</div>
+            {description && <div className="text-xs text-muted-foreground line-clamp-2">{description}</div>}
           </div>
         )
       case "icon-box":
         return (
-          <div className="flex flex-col gap-1 text-sm text-muted-foreground">
-            <Star className="w-4 h-4" />
-            {title || (language === "ar" ? "صندوق أيقونة" : "Icon Box")}
+          <div className="flex items-center gap-2 text-sm">
+            <Star className="w-4 h-4 text-primary" />
+            <div>
+              <div className="font-medium">{title || (language === "ar" ? "صندوق أيقونة" : "Icon Box")}</div>
+              {description && <div className="text-xs text-muted-foreground line-clamp-1">{description}</div>}
+            </div>
           </div>
         )
       case "hero-slider":
         return (
-          <div className="text-sm text-muted-foreground">
-            {title || (language === "ar" ? "سلايدر رئيسي" : "Hero Slider")} ({block.content.slides?.length || 0}{" "}
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Presentation className="w-4 h-4" />
+            {language === "ar" ? "سلايدر رئيسي" : "Hero Slider"} ({block.content.slides?.length || 0}{" "}
             {language === "ar" ? "شرائح" : "slides"})
           </div>
         )
       case "statistics":
         return (
-          <div className="text-sm text-muted-foreground">
-            {title || (language === "ar" ? "قسم الإحصائيات" : "Statistics Section")} ({block.content.stats?.length || 0}{" "}
-            stats)
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <BarChart3 className="w-4 h-4" />
+            {language === "ar" ? "إحصائيات" : "Statistics"} ({block.content.stats?.length || 0}{" "}
+            {language === "ar" ? "عناصر" : "items"})
           </div>
         )
       case "features":
         return (
-          <div className="text-sm text-muted-foreground">
-            {title || (language === "ar" ? "قسم المميزات" : "Features Section")} ({block.content.features?.length || 0}{" "}
-            features)
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Star className="w-4 h-4" />
+            {language === "ar" ? "مميزات" : "Features"} ({block.content.features?.length || 0}{" "}
+            {language === "ar" ? "عناصر" : "items"})
           </div>
         )
       case "accordion":
         return (
-          <div className="text-sm text-muted-foreground">
-            <Info className="w-4 h-4 inline-block mr-1" />
-            {title || (language === "ar" ? "أكورديون" : "Accordion")} ({block.content.items?.length || 0} items)
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Info className="w-4 h-4" />
+            {language === "ar" ? "أكورديون" : "Accordion"} ({block.content.items?.length || 0}{" "}
+            {language === "ar" ? "عناصر" : "items"})
           </div>
         )
       case "tabs":
         return (
-          <div className="text-sm text-muted-foreground">
-            <Columns className="w-4 h-4 inline-block mr-1" />
-            {title || (language === "ar" ? "تبويبات" : "Tabs")} ({block.content.tabs?.length || 0} tabs)
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Columns className="w-4 h-4" />
+            {language === "ar" ? "تبويبات" : "Tabs"} ({block.content.tabs?.length || 0}{" "}
+            {language === "ar" ? "عناصر" : "items"})
           </div>
         )
       case "alert":
         return (
-          <div className="text-sm text-muted-foreground">
-            <Info className="w-4 h-4 inline-block mr-1" />
-            {block.content.alertType || "info"} ({title || (language === "ar" ? "تنبيه" : "Alert")})
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Info className="w-4 h-4" />
+            {title || (language === "ar" ? "تنبيه" : "Alert")} - {block.content.alertType || "info"}
           </div>
         )
       case "testimonial-card":
         return (
-          <div className="flex flex-col gap-1 text-sm text-muted-foreground">
-            <MessageSquare className="w-4 h-4" />
-            {block.content.name || (language === "ar" ? "بطاقة رأي" : "Testimonial Card")}
+          <div className="flex items-center gap-2 text-sm">
+            <MessageSquare className="w-4 h-4 text-primary" />
+            <div>
+              <div className="font-medium">{block.content.name || (language === "ar" ? "شهادة" : "Testimonial")}</div>
+              {block.content.position && <div className="text-xs text-muted-foreground">{block.content.position}</div>}
+            </div>
           </div>
         )
       case "team-member":
         return (
-          <div className="flex flex-col gap-1 text-sm text-muted-foreground">
-            <Building2 className="w-4 h-4" />
-            {block.content.name || (language === "ar" ? "عضو فريق" : "Team Member")}
+          <div className="flex items-center gap-2 text-sm">
+            <Building2 className="w-4 h-4 text-primary" />
+            <div>
+              <div className="font-medium">
+                {block.content.name || (language === "ar" ? "عضو فريق" : "Team Member")}
+              </div>
+              {block.content.position && <div className="text-xs text-muted-foreground">{block.content.position}</div>}
+            </div>
           </div>
         )
       case "pricing-card":
         return (
-          <div className="flex flex-col gap-1 text-sm text-muted-foreground">
-            <BarChart3 className="w-4 h-4" />
-            {title || (language === "ar" ? "بطاقة سعر" : "Pricing Card")}
+          <div className="flex items-center gap-2 text-sm">
+            <BarChart3 className="w-4 h-4 text-primary" />
+            <div>
+              <div className="font-medium">{title || (language === "ar" ? "بطاقة سعر" : "Pricing")}</div>
+              <div className="text-xs text-muted-foreground">
+                {block.content.currency || "$"}
+                {block.content.price || "0"}
+              </div>
+            </div>
           </div>
         )
       case "cta":
         return (
-          <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Phone className="w-4 h-4" />
-            {block.content.textAr || block.content.textEn || (language === "ar" ? "دعوة لإجراء" : "Call-to-Action")}
+            {language === "ar" ? "دعوة لإجراء" : "Call-to-Action"}
           </div>
         )
       case "form":
         return (
-          <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Phone className="w-4 h-4" />
             {title || (language === "ar" ? "نموذج" : "Form")}
           </div>
         )
       case "map":
         return (
-          <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Building2 className="w-4 h-4" />
-            {language === "ar" ? "خريطة" : "Map"}
+            {title || (language === "ar" ? "خريطة" : "Map")}
           </div>
         )
       case "social-links":
         return (
-          <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <LinkIcon className="w-4 h-4" />
-            {language === "ar" ? "روابط اجتماعية" : "Social Links"}
+            {language === "ar" ? "روابط اجتماعية" : "Social Links"} ({block.content.links?.length || 0}{" "}
+            {language === "ar" ? "روابط" : "links"})
           </div>
         )
       default:
-        return <div className="text-sm text-muted-foreground capitalize">{block.type}</div>
+        return <div className="text-sm text-muted-foreground">{block.type}</div>
     }
   }
 
-  // Helper function to duplicate a block and its children
   const duplicateBlock = (blockToDuplicate: PageBlock) => {
     const duplicate: PageBlock = JSON.parse(JSON.stringify(blockToDuplicate))
     duplicate.id = Date.now().toString() + Math.random().toString(36).substr(2, 9)
@@ -677,10 +752,7 @@ export default function NewPageEditor() {
       })
     }
 
-    // The `parentId` variable was undeclared in the original `duplicateBlock` function.
-    // It's being added here for the recursive cloning logic to work correctly.
-    // In a real-world scenario, this might indicate a need to refactor how `parentId` is managed.
-    const parentId = undefined // Placeholder for undeclared parentId
+    const parentId = undefined
 
     if (parentId) {
       setBlocks((prevBlocks) =>
@@ -753,7 +825,7 @@ export default function NewPageEditor() {
                         size="sm"
                         className="w-full mt-2 bg-transparent"
                         onClick={() => {
-                          setShowBlockMenu(true)
+                          setShowBlockModal(true)
                           setActiveContainer({ blockId: block.id, columnIndex: colIndex })
                         }}
                       >
@@ -777,7 +849,7 @@ export default function NewPageEditor() {
         const clonedChild: PageBlock = JSON.parse(JSON.stringify(blockToClone))
         clonedChild.id = Date.now().toString() + Math.random().toString(36).substr(2, 9)
         if (clonedChild.type === "row" && clonedChild.children) {
-          clonedChild.children = cloneNestedChildren(clonedChild.children, blockToClone) // Recursive call for nested rows
+          clonedChild.children = cloneNestedChildren(clonedChild.children, blockToClone)
         }
         return clonedChild
       }
@@ -786,6 +858,1974 @@ export default function NewPageEditor() {
       }
       return child
     })
+  }
+
+  const renderBlockForPreview = (block: PageBlock, language: "ar" | "en") => {
+    const text = language === "ar" ? block.content.textAr : block.content.textEn
+    const quote = language === "ar" ? block.content.quoteAr : block.content.quoteEn
+    const buttonText = language === "ar" ? block.content.buttonTextAr : block.content.buttonTextEn
+    const title = language === "ar" ? block.content.titleAr : block.content.titleEn
+    const subtitle = language === "ar" ? block.content.subtitleAr : block.content.subtitleEn
+    const description = language === "ar" ? block.content.descriptionAr : block.content.descriptionEn
+    const author = language === "ar" ? block.content.authorAr : block.content.authorEn
+
+    const blockStyles = block.styles || {}
+    const combinedStyleClasses = [
+      blockStyles.backgroundColor,
+      blockStyles.textColor,
+      blockStyles.gradientFrom,
+      blockStyles.gradientVia,
+      blockStyles.gradientTo,
+      blockStyles.padding,
+      blockStyles.margin,
+      blockStyles.borderRadius,
+      blockStyles.borderWidth,
+      blockStyles.borderColor,
+      blockStyles.shadow,
+      blockStyles.animation,
+      blockStyles.animationDelay,
+      blockStyles.animationDuration,
+      blockStyles.hoverScale,
+      blockStyles.hoverRotate,
+      blockStyles.hoverTranslate,
+      blockStyles.hoverShadow,
+      blockStyles.textAlign,
+      blockStyles.maxWidth,
+      blockStyles.backdropBlur,
+      blockStyles.opacity,
+    ]
+      .filter(Boolean)
+      .join(" ")
+
+    switch (block.type) {
+      // Rendering editable components
+      case "hero":
+        return <EditableHeroSlider slides={block.content.slides || []} language={contentLanguage} />
+
+      case "text":
+        return (
+          <EditableTextSection
+            title={block.content.title || {}}
+            subtitle={block.content.subtitle || {}}
+            description={block.content.description || {}}
+            features={block.content.features || []}
+            language={contentLanguage}
+            styles={block.styles}
+          />
+        )
+
+      case "cards":
+        return (
+          <EditableCardsSection
+            title={block.content.title || {}}
+            subtitle={block.content.subtitle || {}}
+            cards={block.content.cards || []}
+            language={contentLanguage}
+            styles={block.styles}
+          />
+        )
+
+      case "heading":
+        const HeadingTag = (block.content.headingLevel || "h2") as keyof JSX.IntrinsicElements
+        return (
+          <HeadingTag
+            key={block.id}
+            className={`font-bold text-2xl md:text-3xl lg:text-4xl mb-4 ${combinedStyleClasses}`}
+          >
+            {text || (language === "ar" ? "عنوان" : "Heading")}
+          </HeadingTag>
+        )
+
+      case "paragraph":
+        return (
+          <p key={block.id} className={`text-base leading-relaxed text-muted-foreground mb-4 ${combinedStyleClasses}`}>
+            {text || (language === "ar" ? "فقرة نصية" : "Paragraph text")}
+          </p>
+        )
+
+      case "image":
+        return block.content.imageUrl ? (
+          <div key={block.id} className={`my-6 ${combinedStyleClasses}`}>
+            <img
+              src={block.content.imageUrl || "/placeholder.svg"}
+              alt={block.content.altText || ""}
+              className="w-full h-auto rounded-lg shadow-md"
+            />
+            {block.content.altText && (
+              <p className="text-sm text-center text-muted-foreground mt-2">{block.content.altText}</p>
+            )}
+          </div>
+        ) : (
+          <div
+            key={block.id}
+            className={`w-full h-64 bg-muted rounded-lg flex items-center justify-center my-6 ${combinedStyleClasses}`}
+          >
+            <ImageIcon className="w-12 h-12 text-muted-foreground" />
+          </div>
+        )
+
+      case "gallery":
+        return (
+          <div
+            key={block.id}
+            className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 my-6 ${combinedStyleClasses}`}
+          >
+            {(block.content.images || []).map((img: string, idx: number) => (
+              <div key={idx} className="aspect-square rounded-lg overflow-hidden shadow-md">
+                <img src={img || "/placeholder.svg"} alt="" className="w-full h-full object-cover" />
+              </div>
+            ))}
+          </div>
+        )
+
+      case "video":
+        return block.content.videoUrl ? (
+          <div key={block.id} className={`my-6 ${combinedStyleClasses}`}>
+            {title && <h3 className="text-xl font-bold mb-4">{title}</h3>}
+            <AspectRatio ratio={16 / 9} className="bg-muted rounded-lg overflow-hidden">
+              <iframe src={block.content.videoUrl} className="w-full h-full" allowFullScreen title={title || "Video"} />
+            </AspectRatio>
+          </div>
+        ) : null
+
+      case "quote":
+        return (
+          <blockquote
+            key={block.id}
+            className={`border-l-4 border-primary pl-6 py-4 my-6 italic text-lg ${combinedStyleClasses}`}
+          >
+            <p className="mb-2">"{quote || text || (language === "ar" ? "اقتباس" : "Quote")}"</p>
+            {author && <footer className="text-sm text-muted-foreground font-normal not-italic">— {author}</footer>}
+          </blockquote>
+        )
+
+      case "button":
+        return (
+          <div key={block.id} className={`my-6 ${combinedStyleClasses}`}>
+            <Button asChild size="lg">
+              <a href={block.content.buttonUrl || "#"}>{buttonText || (language === "ar" ? "زر" : "Button")}</a>
+            </Button>
+          </div>
+        )
+
+      case "divider":
+        const dividerClass =
+          block.content.dividerStyle === "dashed"
+            ? "border-dashed"
+            : block.content.dividerStyle === "dotted"
+              ? "border-dotted"
+              : ""
+        return <hr key={block.id} className={`my-8 border-t ${dividerClass} ${combinedStyleClasses}`} />
+
+      case "spacer":
+        return (
+          <div
+            key={block.id}
+            className={`${combinedStyleClasses}`}
+            style={{ height: `${block.content.height || 20}px` }}
+          />
+        )
+
+      case "html":
+        return block.content.html ? (
+          <div
+            key={block.id}
+            className={`my-6 ${combinedStyleClasses}`}
+            dangerouslySetInnerHTML={{ __html: block.content.html }}
+          />
+        ) : null
+
+      case "row":
+        const columns = block.content.columns || 2
+        return block.children && block.children.length > 0 ? (
+          <div key={block.id} className={`grid grid-cols-1 md:grid-cols-${columns} gap-6 my-6 ${combinedStyleClasses}`}>
+            {block.children.map((child) => (
+              <div key={child.id}>{renderBlockForPreview(child, language)}</div>
+            ))}
+          </div>
+        ) : null
+
+      case "card":
+        return (
+          <Card key={block.id} className={`p-6 my-6 ${combinedStyleClasses}`}>
+            {block.content.imageUrl && (
+              <img
+                src={block.content.imageUrl || "/placeholder.svg"}
+                alt=""
+                className="w-full h-48 object-cover rounded-lg mb-4"
+              />
+            )}
+            {title && <h3 className="text-xl font-bold mb-2">{title}</h3>}
+            {description && <p className="text-muted-foreground mb-4">{description}</p>}
+            {block.content.buttonUrl && (
+              <Button asChild>
+                <a href={block.content.buttonUrl}>{buttonText || (language === "ar" ? "اقرأ المزيد" : "Read More")}</a>
+              </Button>
+            )}
+          </Card>
+        )
+
+      case "icon-box":
+        return (
+          <div key={block.id} className={`flex gap-4 p-6 rounded-lg bg-muted/50 my-6 ${combinedStyleClasses}`}>
+            <div className="flex-shrink-0">
+              <Star className="w-8 h-8 text-primary" />
+            </div>
+            <div>
+              {title && <h3 className="text-lg font-bold mb-2">{title}</h3>}
+              {description && <p className="text-muted-foreground">{description}</p>}
+            </div>
+          </div>
+        )
+
+      case "hero-slider":
+        return (
+          <div
+            key={block.id}
+            className={`relative w-full h-96 rounded-lg overflow-hidden my-6 ${combinedStyleClasses}`}
+          >
+            {(block.content.slides || [])[0] ? (
+              <div className="w-full h-full">
+                <img
+                  src={(block.content.slides[0].imageUrl as string) || "/placeholder.svg"}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white p-8">
+                  <h2 className="text-4xl font-bold mb-4">{block.content.slides[0].title}</h2>
+                  <p className="text-lg mb-4">{block.content.slides[0].description}</p>
+                  {block.content.slides[0].link && (
+                    <Button asChild size="lg" variant="secondary">
+                      <a href={block.content.slides[0].link as string}>
+                        {language === "ar" ? "اعرف المزيد" : "Learn More"}
+                      </a>
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="w-full h-full bg-muted flex items-center justify-center">
+                <Presentation className="w-16 h-16 text-muted-foreground" />
+              </div>
+            )}
+          </div>
+        )
+
+      case "statistics":
+        return (
+          <div key={block.id} className={`my-8 ${combinedStyleClasses}`}>
+            {title && <h2 className="text-2xl font-bold text-center mb-8">{title}</h2>}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {(block.content.stats || []).map((stat: any, idx: number) => (
+                <div key={idx} className="text-center p-6 rounded-lg bg-muted/50">
+                  <div className="text-4xl font-bold text-primary mb-2">{stat.value}</div>
+                  <div className="text-sm text-muted-foreground">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+
+      case "features":
+        return (
+          <div key={block.id} className={`my-8 ${combinedStyleClasses}`}>
+            {title && <h2 className="text-2xl font-bold text-center mb-8">{title}</h2>}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {(block.content.features || []).map((feature: any, idx: number) => (
+                <div key={idx} className="p-6 rounded-lg bg-muted/50">
+                  <Star className="w-8 h-8 text-primary mb-4" />
+                  <h3 className="text-lg font-bold mb-2">{feature.title}</h3>
+                  <p className="text-muted-foreground">{feature.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+
+      case "accordion":
+        return (
+          <div key={block.id} className={`my-6 space-y-2 ${combinedStyleClasses}`}>
+            {title && <h2 className="text-2xl font-bold mb-4">{title}</h2>}
+            {(block.content.items || []).map((item: any, idx: number) => (
+              <Card key={idx} className="p-4">
+                <div className="font-bold mb-2">{item.title}</div>
+                <p className="text-muted-foreground text-sm">{item.content}</p>
+              </Card>
+            ))}
+          </div>
+        )
+
+      case "tabs":
+        return (
+          <div key={block.id} className={`my-6 ${combinedStyleClasses}`}>
+            {title && <h2 className="text-2xl font-bold mb-4">{title}</h2>}
+            {(block.content.tabs || [])[0] && (
+              <Card className="p-6">
+                <h3 className="font-bold mb-4">{block.content.tabs[0].title}</h3>
+                <p className="text-muted-foreground">{block.content.tabs[0].content}</p>
+              </Card>
+            )}
+          </div>
+        )
+
+      case "alert":
+        const alertColors = {
+          info: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+          success: "bg-green-500/10 text-green-600 border-green-500/20",
+          warning: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
+          error: "bg-red-500/10 text-red-600 border-red-500/20",
+        }
+        const alertType = block.content.alertType || "info"
+        return (
+          <div
+            key={block.id}
+            className={`p-4 rounded-lg border my-6 ${alertColors[alertType as keyof typeof alertColors]} ${combinedStyleClasses}`}
+          >
+            {title && <div className="font-bold mb-2">{title}</div>}
+            {description && <p>{description}</p>}
+          </div>
+        )
+
+      case "testimonial-card":
+        return (
+          <Card key={block.id} className={`p-6 my-6 ${combinedStyleClasses}`}>
+            <div className="flex gap-4">
+              {block.content.imageUrl && (
+                <img
+                  src={block.content.imageUrl || "/placeholder.svg"}
+                  alt={block.content.name || ""}
+                  className="w-16 h-16 rounded-full object-cover"
+                />
+              )}
+              <div className="flex-1">
+                <blockquote className="italic mb-4">"{quote || text}"</blockquote>
+                <div className="font-bold">{block.content.name}</div>
+                {block.content.position && (
+                  <div className="text-sm text-muted-foreground">{block.content.position}</div>
+                )}
+              </div>
+            </div>
+          </Card>
+        )
+
+      case "team-member":
+        return (
+          <Card key={block.id} className={`p-6 text-center my-6 ${combinedStyleClasses}`}>
+            {block.content.imageUrl && (
+              <img
+                src={block.content.imageUrl || "/placeholder.svg"}
+                alt={block.content.name || ""}
+                className="w-32 h-32 rounded-full mx-auto mb-4 object-cover"
+              />
+            )}
+            <h3 className="text-xl font-bold mb-1">{block.content.name}</h3>
+            {block.content.position && <p className="text-sm text-primary mb-2">{block.content.position}</p>}
+            {description && <p className="text-sm text-muted-foreground">{description}</p>}
+          </Card>
+        )
+
+      case "pricing-card":
+        return (
+          <Card key={block.id} className={`p-6 text-center my-6 ${combinedStyleClasses}`}>
+            {title && <h3 className="text-2xl font-bold mb-4">{title}</h3>}
+            <div className="text-4xl font-bold text-primary mb-6">
+              {block.content.currency || "$"}
+              {block.content.price || "0"}
+            </div>
+            {description && <p className="text-muted-foreground mb-6 whitespace-pre-line">{description}</p>}
+            {block.content.buttonUrl && (
+              <Button asChild className="w-full">
+                <a href={block.content.buttonUrl}>{buttonText || (language === "ar" ? "اشترك" : "Subscribe")}</a>
+              </Button>
+            )}
+          </Card>
+        )
+
+      case "cta":
+        return (
+          <div
+            key={block.id}
+            className={`bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-12 text-center my-8 ${combinedStyleClasses}`}
+          >
+            <p className="text-2xl mb-6">{text}</p>
+            {block.content.buttonUrl && (
+              <Button asChild size="lg">
+                <a href={block.content.buttonUrl}>{buttonText || (language === "ar" ? "ابدأ الآن" : "Get Started")}</a>
+              </Button>
+            )}
+          </div>
+        )
+
+      case "form":
+        return (
+          <Card key={block.id} className={`p-8 my-6 ${combinedStyleClasses}`}>
+            {title && <h2 className="text-2xl font-bold mb-2">{title}</h2>}
+            {description && <p className="text-muted-foreground mb-6">{description}</p>}
+            <div className="space-y-4">
+              <Input placeholder={language === "ar" ? "الاسم" : "Name"} />
+              <Input type="email" placeholder={language === "ar" ? "البريد الإلكتروني" : "Email"} />
+              <Textarea placeholder={language === "ar" ? "الرسالة" : "Message"} rows={4} />
+              <Button className="w-full">{language === "ar" ? "إرسال" : "Submit"}</Button>
+            </div>
+          </Card>
+        )
+
+      case "map":
+        return (
+          <div key={block.id} className={`my-6 ${combinedStyleClasses}`}>
+            {title && <h2 className="text-2xl font-bold mb-4">{title}</h2>}
+            <div
+              className="w-full bg-muted rounded-lg flex items-center justify-center"
+              style={{ height: `${block.content.height || 400}px` }}
+            >
+              <Building2 className="w-16 h-16 text-muted-foreground" />
+              <span className="ml-4 text-muted-foreground">
+                {block.content.address || (language === "ar" ? "خريطة" : "Map")}
+              </span>
+            </div>
+          </div>
+        )
+
+      case "social-links":
+        return (
+          <div key={block.id} className={`flex justify-center gap-4 my-6 ${combinedStyleClasses}`}>
+            {(block.content.links || []).map((link: any, idx: number) => (
+              <Button key={idx} variant="outline" size="icon" asChild>
+                <a href={link.url} target="_blank" rel="noopener noreferrer">
+                  <LinkIcon className="w-4 h-4" />
+                </a>
+              </Button>
+            ))}
+          </div>
+        )
+
+      default:
+        return null
+    }
+  }
+
+  const renderBlockSettings = (block: PageBlock, lang: "ar" | "en") => {
+    // Use workingBlock to reflect temporary changes before saving
+    const workingBlock = tempBlockChanges
+      ? {
+          ...block,
+          ...tempBlockChanges,
+          content: { ...block.content, ...(tempBlockChanges.content || {}) },
+          styles: { ...block.styles, ...(tempBlockChanges.styles || {}) },
+        }
+      : block
+
+    const currentLanguageText = lang === "ar" ? workingBlock.content.textAr : workingBlock.content.textEn
+    const currentLanguageQuote = lang === "ar" ? workingBlock.content.quoteAr : workingBlock.content.quoteEn
+    const currentLanguageAuthor = lang === "ar" ? workingBlock.content.authorAr : workingBlock.content.authorEn
+    const currentLanguageButtonText =
+      lang === "ar" ? workingBlock.content.buttonTextAr : workingBlock.content.buttonTextEn
+    const currentLanguageTitle = lang === "ar" ? workingBlock.content.titleAr : workingBlock.content.titleEn
+    const currentLanguageSubtitle = lang === "ar" ? workingBlock.content.subtitleAr : workingBlock.content.subtitleEn
+    const currentLanguageDescription =
+      lang === "ar" ? workingBlock.content.descriptionAr : workingBlock.content.descriptionEn
+
+    const handleContentChange = (field: keyof PageBlock["content"], value: any) => {
+      setTempBlockChanges((prev) => ({
+        ...prev,
+        content: {
+          ...(prev?.content || {}),
+          [field]: value,
+        },
+      }))
+    }
+
+    const handleStyleChange = (field: keyof PageBlock["styles"], value: string) => {
+      setTempBlockChanges((prev) => ({
+        ...prev,
+        styles: {
+          ...(prev?.styles || {}),
+          [field]: value,
+        },
+      }))
+    }
+
+    const renderStyleTab = () => {
+      return (
+        <div className="space-y-6">
+          {/* Background & Colors */}
+          <div className="space-y-4">
+            <h4 className="font-semibold text-sm border-b pb-2">
+              {lang === "ar" ? "الخلفية والألوان" : "Background & Colors"}
+            </h4>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">{lang === "ar" ? "لون الخلفية" : "Background Color"}</Label>
+                <select
+                  value={workingBlock.styles?.backgroundColor || ""}
+                  onChange={(e) => handleStyleChange("backgroundColor", e.target.value)}
+                  className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs"
+                >
+                  <option value="">Default</option>
+                  <option value="bg-transparent">Transparent</option>
+                  <option value="bg-background">Background</option>
+                  <option value="bg-card">Card</option>
+                  <option value="bg-muted">Muted</option>
+                  <option value="bg-primary">Primary</option>
+                  <option value="bg-secondary">Secondary</option>
+                  <option value="bg-accent">Accent</option>
+                  <option value="bg-primary/10">Primary Light</option>
+                  <option value="bg-accent/10">Accent Light</option>
+                  <option value="bg-muted/50">Muted 50%</option>
+                </select>
+              </div>
+
+              <div>
+                <Label className="text-xs">{lang === "ar" ? "لون النص" : "Text Color"}</Label>
+                <select
+                  value={workingBlock.styles?.textColor || ""}
+                  onChange={(e) => handleStyleChange("textColor", e.target.value)}
+                  className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs"
+                >
+                  <option value="">Default</option>
+                  <option value="text-foreground">Foreground</option>
+                  <option value="text-muted-foreground">Muted</option>
+                  <option value="text-primary">Primary</option>
+                  <option value="text-secondary">Secondary</option>
+                  <option value="text-accent">Accent</option>
+                  <option value="text-white">White</option>
+                  <option value="text-black">Black</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-xs">{lang === "ar" ? "تدرج الخلفية" : "Background Gradient"}</Label>
+              <select
+                value={workingBlock.styles?.gradientFrom || ""}
+                onChange={(e) => {
+                  const value = e.target.value
+                  if (value) {
+                    handleStyleChange("gradientFrom", value)
+                    // Auto-set gradient direction
+                    if (!workingBlock.styles?.backgroundColor?.includes("gradient")) {
+                      handleStyleChange("backgroundColor", "bg-gradient-to-br")
+                    }
+                  } else {
+                    handleStyleChange("gradientFrom", "")
+                  }
+                }}
+                className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs"
+              >
+                <option value="">No Gradient</option>
+                <option value="from-primary">From Primary</option>
+                <option value="from-accent">From Accent</option>
+                <option value="from-secondary">From Secondary</option>
+                <option value="from-primary/20">From Primary Light</option>
+                <option value="from-accent/20">From Accent Light</option>
+                <option value="from-muted">From Muted</option>
+              </select>
+            </div>
+
+            {workingBlock.styles?.gradientFrom && (
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">{lang === "ar" ? "عبر" : "Via"}</Label>
+                  <select
+                    value={workingBlock.styles?.gradientVia || ""}
+                    onChange={(e) => handleStyleChange("gradientVia", e.target.value)}
+                    className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs"
+                  >
+                    <option value="">Skip</option>
+                    <option value="via-primary">Via Primary</option>
+                    <option value="via-accent">Via Accent</option>
+                    <option value="via-secondary">Via Secondary</option>
+                    <option value="via-muted">Via Muted</option>
+                  </select>
+                </div>
+
+                <div>
+                  <Label className="text-xs">{lang === "ar" ? "إلى" : "To"}</Label>
+                  <select
+                    value={workingBlock.styles?.gradientTo || ""}
+                    onChange={(e) => handleStyleChange("gradientTo", e.target.value)}
+                    className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs"
+                  >
+                    <option value="">Transparent</option>
+                    <option value="to-primary">To Primary</option>
+                    <option value="to-accent">To Accent</option>
+                    <option value="to-secondary">To Secondary</option>
+                    <option value="to-primary/20">To Primary Light</option>
+                    <option value="to-accent/20">To Accent Light</option>
+                    <option value="to-transparent">To Transparent</option>
+                  </select>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Spacing */}
+          <div className="space-y-4">
+            <h4 className="font-semibold text-sm border-b pb-2">{lang === "ar" ? "التباعد" : "Spacing"}</h4>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">{lang === "ar" ? "الحشو (Padding)" : "Padding"}</Label>
+                <select
+                  value={workingBlock.styles?.padding || ""}
+                  onChange={(e) => handleStyleChange("padding", e.target.value)}
+                  className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs"
+                >
+                  <option value="">Default</option>
+                  <option value="p-0">None</option>
+                  <option value="p-2">XS (8px)</option>
+                  <option value="p-4">SM (16px)</option>
+                  <option value="p-6">MD (24px)</option>
+                  <option value="p-8">LG (32px)</option>
+                  <option value="p-10">XL (40px)</option>
+                  <option value="p-12">2XL (48px)</option>
+                  <option value="p-16">3XL (64px)</option>
+                  <option value="p-20">4XL (80px)</option>
+                </select>
+              </div>
+
+              <div>
+                <Label className="text-xs">{lang === "ar" ? "الهامش (Margin)" : "Margin"}</Label>
+                <select
+                  value={workingBlock.styles?.margin || ""}
+                  onChange={(e) => handleStyleChange("margin", e.target.value)}
+                  className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs"
+                >
+                  <option value="">Default</option>
+                  <option value="m-0">None</option>
+                  <option value="my-2">Y-XS (8px)</option>
+                  <option value="my-4">Y-SM (16px)</option>
+                  <option value="my-6">Y-MD (24px)</option>
+                  <option value="my-8">Y-LG (32px)</option>
+                  <option value="my-12">Y-XL (48px)</option>
+                  <option value="my-16">Y-2XL (64px)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Border & Shadow */}
+          <div className="space-y-4">
+            <h4 className="font-semibold text-sm border-b pb-2">
+              {lang === "ar" ? "الحدود والظلال" : "Border & Shadow"}
+            </h4>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">{lang === "ar" ? "الحواف المستديرة" : "Border Radius"}</Label>
+                <select
+                  value={workingBlock.styles?.borderRadius || ""}
+                  onChange={(e) => handleStyleChange("borderRadius", e.target.value)}
+                  className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs"
+                >
+                  <option value="">Default</option>
+                  <option value="rounded-none">None</option>
+                  <option value="rounded-sm">SM</option>
+                  <option value="rounded">MD</option>
+                  <option value="rounded-lg">LG</option>
+                  <option value="rounded-xl">XL</option>
+                  <option value="rounded-2xl">2XL</option>
+                  <option value="rounded-3xl">3XL</option>
+                  <option value="rounded-full">Full</option>
+                </select>
+              </div>
+
+              <div>
+                <Label className="text-xs">{lang === "ar" ? "سمك الحدود" : "Border Width"}</Label>
+                <select
+                  value={workingBlock.styles?.borderWidth || ""}
+                  onChange={(e) => handleStyleChange("borderWidth", e.target.value)}
+                  className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs"
+                >
+                  <option value="">None</option>
+                  <option value="border">1px</option>
+                  <option value="border-2">2px</option>
+                  <option value="border-4">4px</option>
+                  <option value="border-8">8px</option>
+                </select>
+              </div>
+            </div>
+
+            {workingBlock.styles?.borderWidth && (
+              <div>
+                <Label className="text-xs">{lang === "ar" ? "لون الحدود" : "Border Color"}</Label>
+                <select
+                  value={workingBlock.styles?.borderColor || ""}
+                  onChange={(e) => handleStyleChange("borderColor", e.target.value)}
+                  className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs"
+                >
+                  <option value="">Default</option>
+                  <option value="border-border">Border</option>
+                  <option value="border-primary">Primary</option>
+                  <option value="border-secondary">Secondary</option>
+                  <option value="border-accent">Accent</option>
+                  <option value="border-primary/20">Primary Light</option>
+                  <option value="border-accent/20">Accent Light</option>
+                  <option value="border-muted">Muted</option>
+                </select>
+              </div>
+            )}
+
+            <div>
+              <Label className="text-xs">{lang === "ar" ? "الظل" : "Shadow"}</Label>
+              <select
+                value={workingBlock.styles?.shadow || ""}
+                onChange={(e) => handleStyleChange("shadow", e.target.value)}
+                className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs"
+              >
+                <option value="">None</option>
+                <option value="shadow-sm">SM</option>
+                <option value="shadow">MD</option>
+                <option value="shadow-md">MD+</option>
+                <option value="shadow-lg">LG</option>
+                <option value="shadow-xl">XL</option>
+                <option value="shadow-2xl">2XL</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Animation */}
+          <div className="space-y-4">
+            <h4 className="font-semibold text-sm border-b pb-2">{lang === "ar" ? "الحركة" : "Animation"}</h4>
+
+            <div>
+              <Label className="text-xs">{lang === "ar" ? "نوع الحركة" : "Animation Type"}</Label>
+              <select
+                value={workingBlock.styles?.animation || "none"}
+                onChange={(e) => handleStyleChange("animation", e.target.value)}
+                className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs"
+              >
+                <option value="none">None</option>
+                <option value="animate-fade-in">Fade In</option>
+                <option value="animate-fade-in-up">Fade In Up</option>
+                <option value="animate-scale-in">Scale In</option>
+                <option value="animate-float">Float</option>
+                <option value="animate-pulse">Pulse</option>
+                <option value="animate-bounce">Bounce</option>
+                <option value="animate-pulse-slow">Pulse Slow</option>
+                <option value="animate-gradient-x">Gradient X</option>
+              </select>
+            </div>
+
+            {workingBlock.styles?.animation && workingBlock.styles.animation !== "none" && (
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">{lang === "ar" ? "تأخير الحركة" : "Animation Delay"}</Label>
+                  <select
+                    value={workingBlock.styles?.animationDelay || ""}
+                    onChange={(e) => handleStyleChange("animationDelay", e.target.value)}
+                    className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs"
+                  >
+                    <option value="">None</option>
+                    <option value="animation-delay-150">150ms</option>
+                    <option value="animation-delay-300">300ms</option>
+                    <option value="animation-delay-500">500ms</option>
+                    <option value="animation-delay-1000">1s</option>
+                    <option value="animation-delay-2000">2s</option>
+                  </select>
+                </div>
+
+                <div>
+                  <Label className="text-xs">{lang === "ar" ? "مدة الحركة" : "Animation Duration"}</Label>
+                  <select
+                    value={workingBlock.styles?.animationDuration || ""}
+                    onChange={(e) => handleStyleChange("animationDuration", e.target.value)}
+                    className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs"
+                  >
+                    <option value="">Default</option>
+                    <option value="duration-300">300ms</option>
+                    <option value="duration-500">500ms</option>
+                    <option value="duration-700">700ms</option>
+                    <option value="duration-1000">1s</option>
+                  </select>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Hover Effects */}
+          <div className="space-y-4">
+            <h4 className="font-semibold text-sm border-b pb-2">
+              {lang === "ar" ? "تأثيرات التمرير" : "Hover Effects"}
+            </h4>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">{lang === "ar" ? "تكبير عند التمرير" : "Hover Scale"}</Label>
+                <select
+                  value={workingBlock.styles?.hoverScale || ""}
+                  onChange={(e) => handleStyleChange("hoverScale", e.target.value)}
+                  className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs"
+                >
+                  <option value="">None</option>
+                  <option value="hover:scale-105">105%</option>
+                  <option value="hover:scale-110">110%</option>
+                  <option value="hover:scale-125">125%</option>
+                </select>
+              </div>
+
+              <div>
+                <Label className="text-xs">{lang === "ar" ? "دوران عند التمرير" : "Hover Rotate"}</Label>
+                <select
+                  value={workingBlock.styles?.hoverRotate || ""}
+                  onChange={(e) => handleStyleChange("hoverRotate", e.target.value)}
+                  className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs"
+                >
+                  <option value="">None</option>
+                  <option value="hover:rotate-6">6°</option>
+                  <option value="hover:rotate-12">12°</option>
+                  <option value="hover:-rotate-6">-6°</option>
+                  <option value="hover:-rotate-12">-12°</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">{lang === "ar" ? "إزاحة عند التمرير" : "Hover Translate"}</Label>
+                <select
+                  value={workingBlock.styles?.hoverTranslate || ""}
+                  onChange={(e) => handleStyleChange("hoverTranslate", e.target.value)}
+                  className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs"
+                >
+                  <option value="">None</option>
+                  <option value="hover:-translate-y-1">Up Small</option>
+                  <option value="hover:-translate-y-2">Up Medium</option>
+                  <option value="hover:-translate-y-4">Up Large</option>
+                  <option value="hover:translate-x-2">Right</option>
+                </select>
+              </div>
+
+              <div>
+                <Label className="text-xs">{lang === "ar" ? "ظل عند التمرير" : "Hover Shadow"}</Label>
+                <select
+                  value={workingBlock.styles?.hoverShadow || ""}
+                  onChange={(e) => handleStyleChange("hoverShadow", e.target.value)}
+                  className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs"
+                >
+                  <option value="">None</option>
+                  <option value="hover:shadow-lg">LG</option>
+                  <option value="hover:shadow-xl">XL</option>
+                  <option value="hover:shadow-2xl">2XL</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Advanced */}
+          <div className="space-y-4">
+            <h4 className="font-semibold text-sm border-b pb-2">{lang === "ar" ? "متقدم" : "Advanced"}</h4>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">{lang === "ar" ? "محاذاة النص" : "Text Align"}</Label>
+                <select
+                  value={workingBlock.styles?.textAlign || ""}
+                  onChange={(e) => handleStyleChange("textAlign", e.target.value as any)}
+                  className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs"
+                >
+                  <option value="">Default</option>
+                  <option value="left">Left</option>
+                  <option value="center">Center</option>
+                  <option value="right">Right</option>
+                </select>
+              </div>
+
+              <div>
+                <Label className="text-xs">{lang === "ar" ? "العرض الأقصى" : "Max Width"}</Label>
+                <select
+                  value={workingBlock.styles?.maxWidth || ""}
+                  onChange={(e) => handleStyleChange("maxWidth", e.target.value)}
+                  className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs"
+                >
+                  <option value="">Full</option>
+                  <option value="max-w-sm">SM (384px)</option>
+                  <option value="max-w-md">MD (448px)</option>
+                  <option value="max-w-lg">LG (512px)</option>
+                  <option value="max-w-xl">XL (576px)</option>
+                  <option value="max-w-2xl">2XL (672px)</option>
+                  <option value="max-w-4xl">4XL (896px)</option>
+                  <option value="max-w-6xl">6XL (1152px)</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">{lang === "ar" ? "ضبابية الخلفية" : "Backdrop Blur"}</Label>
+                <select
+                  value={workingBlock.styles?.backdropBlur || ""}
+                  onChange={(e) => handleStyleChange("backdropBlur", e.target.value)}
+                  className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs"
+                >
+                  <option value="">None</option>
+                  <option value="backdrop-blur-sm">SM</option>
+                  <option value="backdrop-blur">MD</option>
+                  <option value="backdrop-blur-md">MD+</option>
+                  <option value="backdrop-blur-lg">LG</option>
+                  <option value="backdrop-blur-xl">XL</option>
+                </select>
+              </div>
+
+              <div>
+                <Label className="text-xs">{lang === "ar" ? "الشفافية" : "Opacity"}</Label>
+                <select
+                  value={workingBlock.styles?.opacity || ""}
+                  onChange={(e) => handleStyleChange("opacity", e.target.value)}
+                  className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs"
+                >
+                  <option value="">100%</option>
+                  <option value="opacity-90">90%</option>
+                  <option value="opacity-80">80%</option>
+                  <option value="opacity-70">70%</option>
+                  <option value="opacity-60">60%</option>
+                  <option value="opacity-50">50%</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <Tabs defaultValue="content" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="content" className="text-xs">
+            {lang === "ar" ? "المحتوى" : "Content"}
+          </TabsTrigger>
+          <TabsTrigger value="style" className="text-xs">
+            {lang === "ar" ? "التصميم" : "Style"}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="content" className="space-y-4 mt-4">
+          {/* Original content settings */}
+          <>
+            {(block.type === "heading" || block.type === "paragraph" || block.type === "quote") && (
+              <>
+                <Label className="text-sm font-medium">
+                  {lang === "ar" ? "النص" : "Text"}
+                  <span className="text-destructive">*</span>
+                </Label>
+                <Textarea
+                  value={currentLanguageText || ""}
+                  onChange={(e) => handleContentChange(lang === "ar" ? "textAr" : "textEn", e.target.value)}
+                  rows={5}
+                  placeholder={lang === "ar" ? "أدخل النص هنا..." : "Enter text here..."}
+                />
+                {block.type === "quote" && (
+                  <>
+                    <Label className="text-sm font-medium mt-4">{lang === "ar" ? "الاقتباس" : "Quote"}</Label>
+                    <Textarea
+                      value={currentLanguageQuote || ""}
+                      onChange={(e) => handleContentChange(lang === "ar" ? "quoteAr" : "quoteEn", e.target.value)}
+                      rows={3}
+                      placeholder={lang === "ar" ? "أدخل الاقتباس هنا..." : "Enter quote here..."}
+                    />
+                    <Label className="text-sm font-medium mt-4">{lang === "ar" ? "اسم الكاتب" : "Author Name"}</Label>
+                    <Input
+                      value={currentLanguageAuthor || ""}
+                      onChange={(e) => handleContentChange(lang === "ar" ? "authorAr" : "authorEn", e.target.value)}
+                      placeholder={lang === "ar" ? "اسم الكاتب" : "Author name"}
+                    />
+                  </>
+                )}
+                {block.type === "heading" && (
+                  <>
+                    <Label className="text-sm font-medium mt-4">
+                      {lang === "ar" ? "مستوى العنوان" : "Heading Level"}
+                    </Label>
+                    <select
+                      value={workingBlock.content.headingLevel || "h2"}
+                      onChange={(e) => handleContentChange("headingLevel", e.target.value)}
+                      className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="h1">H1</option>
+                      <option value="h2">H2</option>
+                      <option value="h3">H3</option>
+                      <option value="h4">H4</option>
+                      <option value="h5">H5</option>
+                      <option value="h6">H6</option>
+                    </select>
+                  </>
+                )}
+              </>
+            )}
+
+            {block.type === "image" && (
+              <>
+                <Label className="text-sm font-medium">
+                  {lang === "ar" ? "رابط الصورة" : "Image URL"}
+                  <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  value={workingBlock.content.imageUrl || ""}
+                  onChange={(e) => handleContentChange("imageUrl", e.target.value)}
+                  placeholder={lang === "ar" ? "https://example.com/image.jpg" : "https://example.com/image.jpg"}
+                />
+                <Label className="text-sm font-medium mt-4">{lang === "ar" ? "نص بديل (Alt Text)" : "Alt Text"}</Label>
+                <Input
+                  value={workingBlock.content.altText || ""}
+                  onChange={(e) => handleContentChange("altText", e.target.value)}
+                  placeholder={lang === "ar" ? "وصف للصورة" : "Description for the image"}
+                />
+              </>
+            )}
+
+            {block.type === "gallery" && (
+              <>
+                <Label className="text-sm font-medium">{lang === "ar" ? "الصور" : "Images"}</Label>
+                <div className="space-y-2">
+                  {(workingBlock.content.images || []).map((img: string, index: number) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <Input
+                        value={img}
+                        onChange={(e) => {
+                          const updatedImages = [...(workingBlock.content.images || [])]
+                          updatedImages[index] = e.target.value
+                          handleContentChange("images", updatedImages)
+                        }}
+                        placeholder={lang === "ar" ? "رابط الصورة" : "Image URL"}
+                      />
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          const updatedImages = [...(workingBlock.content.images || [])]
+                          updatedImages.splice(index, 1)
+                          handleContentChange("images", updatedImages)
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 w-full bg-transparent"
+                  onClick={() => {
+                    handleContentChange("images", [...(workingBlock.content.images || []), ""])
+                  }}
+                >
+                  <Plus className="w-4 h-4 ml-2" />
+                  {lang === "ar" ? "إضافة صورة" : "Add Image"}
+                </Button>
+              </>
+            )}
+
+            {block.type === "video" && (
+              <>
+                <Label className="text-sm font-medium">
+                  {lang === "ar" ? "عنوان الفيديو" : "Video Title"}
+                  <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  value={currentLanguageTitle || ""}
+                  onChange={(e) => handleContentChange(lang === "ar" ? "titleAr" : "titleEn", e.target.value)}
+                  placeholder={lang === "ar" ? "عنوان الفيديو" : "Video title"}
+                />
+                <Label className="text-sm font-medium mt-4">
+                  {lang === "ar" ? "رابط الفيديو (YouTube/Vimeo)" : "Video URL (YouTube/Vimeo)"}
+                  <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  value={workingBlock.content.videoUrl || ""}
+                  onChange={(e) => handleContentChange("videoUrl", e.target.value)}
+                  placeholder={
+                    lang === "ar" ? "https://www.youtube.com/watch?v=..." : "https://www.youtube.com/watch?v=..."
+                  }
+                />
+              </>
+            )}
+
+            {block.type === "button" && (
+              <>
+                <Label className="text-sm font-medium">
+                  {lang === "ar" ? "نص الزر" : "Button Text"}
+                  <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  value={currentLanguageButtonText || ""}
+                  onChange={(e) => handleContentChange(lang === "ar" ? "buttonTextAr" : "buttonTextEn", e.target.value)}
+                  placeholder={lang === "ar" ? "نص الزر" : "Button text"}
+                />
+                <Label className="text-sm font-medium mt-4">
+                  {lang === "ar" ? "رابط الزر" : "Button URL"}
+                  <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  value={workingBlock.content.buttonUrl || ""}
+                  onChange={(e) => handleContentChange("buttonUrl", e.target.value)}
+                  placeholder={lang === "ar" ? "https://example.com" : "https://example.com"}
+                />
+              </>
+            )}
+
+            {block.type === "divider" && (
+              <>
+                <Label className="text-sm font-medium">{lang === "ar" ? "نمط الفاصل" : "Divider Style"}</Label>
+                <select
+                  value={workingBlock.content.dividerStyle || "solid"}
+                  onChange={(e) => handleContentChange("dividerStyle", e.target.value)}
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="solid">Solid</option>
+                  <option value="dashed">Dashed</option>
+                  <option value="dotted">Dotted</option>
+                </select>
+              </>
+            )}
+
+            {block.type === "spacer" && (
+              <>
+                <Label className="text-sm font-medium">
+                  {lang === "ar" ? "الارتفاع (px)" : "Height (px)"}
+                  <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  type="number"
+                  value={workingBlock.content.height || 20}
+                  onChange={(e) => handleContentChange("height", Number.parseInt(e.target.value, 10))}
+                  placeholder="20"
+                />
+              </>
+            )}
+
+            {block.type === "row" && (
+              <>
+                <Label className="text-sm font-medium">
+                  {lang === "ar" ? "عدد الأعمدة" : "Number of Columns"}
+                  <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  type="number"
+                  min="1"
+                  max="6"
+                  value={workingBlock.content.columns || 2}
+                  onChange={(e) => {
+                    const newColumns = Number.parseInt(e.target.value, 10)
+                    handleContentChange("columns", newColumns)
+                    // Adjust children's order if columns change
+                    if (workingBlock.children) {
+                      const updatedChildren = workingBlock.children.map((child) => {
+                        if (child.order >= newColumns) {
+                          child.order = newColumns - 1
+                        }
+                        return child
+                      })
+                      // Using tempBlockChanges to update the children array within the current block's context
+                      setTempBlockChanges((prev) => ({
+                        ...prev,
+                        children: updatedChildren,
+                      }))
+                    }
+                  }}
+                  placeholder="2"
+                />
+              </>
+            )}
+
+            {block.type === "card" && (
+              <>
+                <Label className="text-sm font-medium">{lang === "ar" ? "العنوان" : "Title"}</Label>
+                <Input
+                  value={currentLanguageTitle || ""}
+                  onChange={(e) => handleContentChange(lang === "ar" ? "titleAr" : "titleEn", e.target.value)}
+                  placeholder={lang === "ar" ? "عنوان البطاقة" : "Card title"}
+                />
+                <Label className="text-sm font-medium mt-4">{lang === "ar" ? "النص" : "Text"}</Label>
+                <Textarea
+                  value={currentLanguageDescription || ""}
+                  onChange={(e) =>
+                    handleContentChange(lang === "ar" ? "descriptionAr" : "descriptionEn", e.target.value)
+                  }
+                  rows={4}
+                  placeholder={lang === "ar" ? "وصف البطاقة" : "Card description"}
+                />
+                <Label className="text-sm font-medium mt-4">
+                  {lang === "ar" ? "رابط الزر (اختياري)" : "Button Link (Optional)"}
+                </Label>
+                <Input
+                  value={workingBlock.content.buttonUrl || ""}
+                  onChange={(e) => handleContentChange("buttonUrl", e.target.value)}
+                  placeholder={lang === "ar" ? "https://example.com" : "https://example.com"}
+                />
+                <Label className="text-sm font-medium mt-4">
+                  {lang === "ar" ? "نص الزر (اختياري)" : "Button Text (Optional)"}
+                </Label>
+                <Input
+                  value={currentLanguageButtonText || ""}
+                  onChange={(e) => handleContentChange(lang === "ar" ? "buttonTextAr" : "buttonTextEn", e.target.value)}
+                  placeholder={lang === "ar" ? "اقرأ المزيد" : "Read More"}
+                />
+                <Label className="text-sm font-medium mt-4">
+                  {lang === "ar" ? "الصورة (اختياري)" : "Image (Optional)"}
+                </Label>
+                <ImageUpload
+                  value={workingBlock.content.imageUrl || ""}
+                  onChange={(url) => handleContentChange("imageUrl", url)}
+                  language={lang}
+                />
+              </>
+            )}
+
+            {block.type === "icon-box" && (
+              <>
+                <Label className="text-sm font-medium">{lang === "ar" ? "العنوان" : "Title"}</Label>
+                <Input
+                  value={currentLanguageTitle || ""}
+                  onChange={(e) => handleContentChange(lang === "ar" ? "titleAr" : "titleEn", e.target.value)}
+                  placeholder={lang === "ar" ? "عنوان الصندوق" : "Icon box title"}
+                />
+                <Label className="text-sm font-medium mt-4">{lang === "ar" ? "الوصف" : "Description"}</Label>
+                <Textarea
+                  value={currentLanguageDescription || ""}
+                  onChange={(e) =>
+                    handleContentChange(lang === "ar" ? "descriptionAr" : "descriptionEn", e.target.value)
+                  }
+                  rows={3}
+                  placeholder={lang === "ar" ? "وصف الصندوق" : "Icon box description"}
+                />
+                <Label className="text-sm font-medium mt-4">{lang === "ar" ? "الأيقونة" : "Icon"}</Label>
+                <Input
+                  value={workingBlock.content.iconClass || ""}
+                  onChange={(e) => handleContentChange("iconClass", e.target.value)}
+                  placeholder="e.g., fas fa-star"
+                />
+              </>
+            )}
+
+            {block.type === "hero-slider" && (
+              <>
+                <Label className="text-sm font-medium">{lang === "ar" ? "عنوان السلايدر" : "Slider Title"}</Label>
+                <Input
+                  value={currentLanguageTitle || ""}
+                  onChange={(e) => handleContentChange(lang === "ar" ? "titleAr" : "titleEn", e.target.value)}
+                  placeholder={lang === "ar" ? "عنوان السلايدر" : "Hero slider title"}
+                />
+                <div className="mt-4">
+                  <Label className="text-sm font-medium">{lang === "ar" ? "الشرائح" : "Slides"}</Label>
+                  <div className="space-y-2">
+                    {(workingBlock.content.slides || []).map((slide, index) => (
+                      <Card key={index} className="p-4">
+                        <div className="flex justify-end">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              const updatedSlides = [...(workingBlock.content.slides || [])]
+                              updatedSlides.splice(index, 1)
+                              handleContentChange("slides", updatedSlides)
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
+                        <Label className="text-xs font-medium">{lang === "ar" ? "صورة الشريحة" : "Slide Image"}</Label>
+                        <ImageUpload
+                          value={slide.imageUrl || ""}
+                          onChange={(url) => {
+                            const updatedSlides = [...(workingBlock.content.slides || [])]
+                            updatedSlides[index].imageUrl = url
+                            handleContentChange("slides", updatedSlides)
+                          }}
+                          language={lang}
+                        />
+                        <Label className="text-xs font-medium mt-2">
+                          {lang === "ar" ? "عنوان الشريحة" : "Slide Title"}
+                        </Label>
+                        <Input
+                          value={slide.title || ""}
+                          onChange={(e) => {
+                            const updatedSlides = [...(workingBlock.content.slides || [])]
+                            updatedSlides[index].title = e.target.value
+                            handleContentChange("slides", updatedSlides)
+                          }}
+                          placeholder={lang === "ar" ? "عنوان الشريحة" : "Slide title"}
+                        />
+                        <Label className="text-xs font-medium mt-2">
+                          {lang === "ar" ? "وصف الشريحة" : "Slide Description"}
+                        </Label>
+                        <Textarea
+                          value={slide.description || ""}
+                          onChange={(e) => {
+                            const updatedSlides = [...(workingBlock.content.slides || [])]
+                            updatedSlides[index].description = e.target.value
+                            handleContentChange("slides", updatedSlides)
+                          }}
+                          rows={2}
+                          placeholder={lang === "ar" ? "وصف الشريحة" : "Slide description"}
+                        />
+                        <Label className="text-xs font-medium mt-2">
+                          {lang === "ar" ? "رابط الشريحة" : "Slide Link"}
+                        </Label>
+                        <Input
+                          value={slide.link || ""}
+                          onChange={(e) => {
+                            const updatedSlides = [...(workingBlock.content.slides || [])]
+                            updatedSlides[index].link = e.target.value
+                            handleContentChange("slides", updatedSlides)
+                          }}
+                          placeholder={lang === "ar" ? "https://example.com" : "https://example.com"}
+                        />
+                      </Card>
+                    ))}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 w-full bg-transparent"
+                    onClick={() => {
+                      handleContentChange("slides", [
+                        ...(workingBlock.content.slides || []),
+                        { title: "", description: "", imageUrl: "", link: "" },
+                      ])
+                    }}
+                  >
+                    <Plus className="w-4 h-4 ml-2" />
+                    {lang === "ar" ? "إضافة شريحة" : "Add Slide"}
+                  </Button>
+                </div>
+              </>
+            )}
+
+            {block.type === "statistics" && (
+              <>
+                <Label className="text-sm font-medium">{lang === "ar" ? "عنوان القسم" : "Section Title"}</Label>
+                <Input
+                  value={currentLanguageTitle || ""}
+                  onChange={(e) => handleContentChange(lang === "ar" ? "titleAr" : "titleEn", e.target.value)}
+                  placeholder={lang === "ar" ? "عنوان قسم الإحصائيات" : "Statistics section title"}
+                />
+                <div className="mt-4">
+                  <Label className="text-sm font-medium">{lang === "ar" ? "الإحصائيات" : "Statistics"}</Label>
+                  <div className="space-y-2">
+                    {(workingBlock.content.stats || []).map((stat, index) => (
+                      <Card key={index} className="p-4">
+                        <div className="flex justify-end">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              const updatedStats = [...(workingBlock.content.stats || [])]
+                              updatedStats.splice(index, 1)
+                              handleContentChange("stats", updatedStats)
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
+                        <Label className="text-xs font-medium">{lang === "ar" ? "الرقم" : "Number"}</Label>
+                        <Input
+                          type="number"
+                          value={stat.value || 0}
+                          onChange={(e) => {
+                            const updatedStats = [...(workingBlock.content.stats || [])]
+                            updatedStats[index].value = Number.parseInt(e.target.value, 10)
+                            handleContentChange("stats", updatedStats)
+                          }}
+                          placeholder="100"
+                        />
+                        <Label className="text-xs font-medium mt-2">{lang === "ar" ? "التسمية" : "Label"}</Label>
+                        <Input
+                          value={stat.label || ""}
+                          onChange={(e) => {
+                            const updatedStats = [...(workingBlock.content.stats || [])]
+                            updatedStats[index].label = e.target.value
+                            handleContentChange("stats", updatedStats)
+                          }}
+                          placeholder={lang === "ar" ? "عملاء سعداء" : "Happy Clients"}
+                        />
+                      </Card>
+                    ))}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 w-full bg-transparent"
+                    onClick={() => {
+                      handleContentChange("stats", [...(workingBlock.content.stats || []), { value: 0, label: "" }])
+                    }}
+                  >
+                    <Plus className="w-4 h-4 ml-2" />
+                    {lang === "ar" ? "إضافة إحصائية" : "Add Statistic"}
+                  </Button>
+                </div>
+              </>
+            )}
+
+            {block.type === "features" && (
+              <>
+                <Label className="text-sm font-medium">{lang === "ar" ? "عنوان القسم" : "Section Title"}</Label>
+                <Input
+                  value={currentLanguageTitle || ""}
+                  onChange={(e) => handleContentChange(lang === "ar" ? "titleAr" : "titleEn", e.target.value)}
+                  placeholder={lang === "ar" ? "عنوان قسم المميزات" : "Features section title"}
+                />
+                <div className="mt-4">
+                  <Label className="text-sm font-medium">{lang === "ar" ? "المميزات" : "Features"}</Label>
+                  <div className="space-y-2">
+                    {(workingBlock.content.features || []).map((feature, index) => (
+                      <Card key={index} className="p-4">
+                        <div className="flex justify-end">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              const updatedFeatures = [...(workingBlock.content.features || [])]
+                              updatedFeatures.splice(index, 1)
+                              handleContentChange("features", updatedFeatures)
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
+                        <Label className="text-xs font-medium">{lang === "ar" ? "العنوان" : "Title"}</Label>
+                        <Input
+                          value={feature.title || ""}
+                          onChange={(e) => {
+                            const updatedFeatures = [...(workingBlock.content.features || [])]
+                            updatedFeatures[index].title = e.target.value
+                            handleContentChange("features", updatedFeatures)
+                          }}
+                          placeholder={lang === "ar" ? "عنوان الميزة" : "Feature title"}
+                        />
+                        <Label className="text-xs font-medium mt-2">{lang === "ar" ? "الوصف" : "Description"}</Label>
+                        <Textarea
+                          value={feature.description || ""}
+                          onChange={(e) => {
+                            const updatedFeatures = [...(workingBlock.content.features || [])]
+                            updatedFeatures[index].description = e.target.value
+                            handleContentChange("features", updatedFeatures)
+                          }}
+                          rows={3}
+                          placeholder={lang === "ar" ? "وصف الميزة" : "Feature description"}
+                        />
+                        <Label className="text-xs font-medium mt-2">{lang === "ar" ? "الأيقونة" : "Icon"}</Label>
+                        <Input
+                          value={feature.iconClass || ""}
+                          onChange={(e) => {
+                            const updatedFeatures = [...(workingBlock.content.features || [])]
+                            updatedFeatures[index].iconClass = e.target.value
+                            handleContentChange("features", updatedFeatures)
+                          }}
+                          placeholder="e.g., fas fa-star"
+                        />
+                      </Card>
+                    ))}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 w-full bg-transparent"
+                    onClick={() => {
+                      handleContentChange("features", [
+                        ...(workingBlock.content.features || []),
+                        { title: "", description: "", iconClass: "" },
+                      ])
+                    }}
+                  >
+                    <Plus className="w-4 h-4 ml-2" />
+                    {lang === "ar" ? "إضافة ميزة" : "Add Feature"}
+                  </Button>
+                </div>
+              </>
+            )}
+
+            {block.type === "accordion" && (
+              <>
+                <Label className="text-sm font-medium">{lang === "ar" ? "عنوان الأكورديون" : "Accordion Title"}</Label>
+                <Input
+                  value={currentLanguageTitle || ""}
+                  onChange={(e) => handleContentChange(lang === "ar" ? "titleAr" : "titleEn", e.target.value)}
+                  placeholder={lang === "ar" ? "عنوان الأكورديون" : "Accordion title"}
+                />
+                <div className="mt-4">
+                  <Label className="text-sm font-medium">{lang === "ar" ? "العناصر" : "Items"}</Label>
+                  <div className="space-y-2">
+                    {(workingBlock.content.items || []).map((item, index) => (
+                      <Card key={index} className="p-4">
+                        <div className="flex justify-end">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              const updatedItems = [...(workingBlock.content.items || [])]
+                              updatedItems.splice(index, 1)
+                              handleContentChange("items", updatedItems)
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
+                        <Label className="text-xs font-medium">{lang === "ar" ? "عنوان العنصر" : "Item Title"}</Label>
+                        <Input
+                          value={item.title || ""}
+                          onChange={(e) => {
+                            const updatedItems = [...(workingBlock.content.items || [])]
+                            updatedItems[index].title = e.target.value
+                            handleContentChange("items", updatedItems)
+                          }}
+                          placeholder={lang === "ar" ? "عنوان العنصر" : "Item title"}
+                        />
+                        <Label className="text-xs font-medium mt-2">
+                          {lang === "ar" ? "محتوى العنصر" : "Item Content"}
+                        </Label>
+                        <Textarea
+                          value={item.content || ""}
+                          onChange={(e) => {
+                            const updatedItems = [...(workingBlock.content.items || [])]
+                            updatedItems[index].content = e.target.value
+                            handleContentChange("items", updatedItems)
+                          }}
+                          rows={3}
+                          placeholder={lang === "ar" ? "محتوى العنصر" : "Item content"}
+                        />
+                      </Card>
+                    ))}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 w-full bg-transparent"
+                    onClick={() => {
+                      handleContentChange("items", [...(workingBlock.content.items || []), { title: "", content: "" }])
+                    }}
+                  >
+                    <Plus className="w-4 h-4 ml-2" />
+                    {lang === "ar" ? "إضافة عنصر" : "Add Item"}
+                  </Button>
+                </div>
+              </>
+            )}
+
+            {block.type === "tabs" && (
+              <>
+                <Label className="text-sm font-medium">{lang === "ar" ? "عنوان التبويبات" : "Tabs Title"}</Label>
+                <Input
+                  value={currentLanguageTitle || ""}
+                  onChange={(e) => handleContentChange(lang === "ar" ? "titleAr" : "titleEn", e.target.value)}
+                  placeholder={lang === "ar" ? "عنوان التبويبات" : "Tabs title"}
+                />
+                <div className="mt-4">
+                  <Label className="text-sm font-medium">{lang === "ar" ? "التبويبات" : "Tabs"}</Label>
+                  <div className="space-y-2">
+                    {(workingBlock.content.tabs || []).map((tab, index) => (
+                      <Card key={index} className="p-4">
+                        <div className="flex justify-end">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              const updatedTabs = [...(workingBlock.content.tabs || [])]
+                              updatedTabs.splice(index, 1)
+                              handleContentChange("tabs", updatedTabs)
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
+                        <Label className="text-xs font-medium">{lang === "ar" ? "عنوان التبويب" : "Tab Title"}</Label>
+                        <Input
+                          value={tab.title || ""}
+                          onChange={(e) => {
+                            const updatedTabs = [...(workingBlock.content.tabs || [])]
+                            updatedTabs[index].title = e.target.value
+                            handleContentChange("tabs", updatedTabs)
+                          }}
+                          placeholder={lang === "ar" ? "عنوان التبويب" : "Tab title"}
+                        />
+                        <Label className="text-xs font-medium mt-2">
+                          {lang === "ar" ? "محتوى التبويب" : "Tab Content"}
+                        </Label>
+                        <Textarea
+                          value={tab.content || ""}
+                          onChange={(e) => {
+                            const updatedTabs = [...(workingBlock.content.tabs || [])]
+                            updatedTabs[index].content = e.target.value
+                            handleContentChange("tabs", updatedTabs)
+                          }}
+                          rows={3}
+                          placeholder={lang === "ar" ? "محتوى التبويب" : "Tab content"}
+                        />
+                      </Card>
+                    ))}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 w-full bg-transparent"
+                    onClick={() => {
+                      handleContentChange("tabs", [...(workingBlock.content.tabs || []), { title: "", content: "" }])
+                    }}
+                  >
+                    <Plus className="w-4 h-4 ml-2" />
+                    {lang === "ar" ? "إضافة تبويب" : "Add Tab"}
+                  </Button>
+                </div>
+              </>
+            )}
+
+            {block.type === "alert" && (
+              <>
+                <Label className="text-sm font-medium">{lang === "ar" ? "عنوان التنبيه" : "Alert Title"}</Label>
+                <Input
+                  value={currentLanguageTitle || ""}
+                  onChange={(e) => handleContentChange(lang === "ar" ? "titleAr" : "titleEn", e.target.value)}
+                  placeholder={lang === "ar" ? "عنوان التنبيه" : "Alert title"}
+                />
+                <Label className="text-sm font-medium mt-4">{lang === "ar" ? "نوع التنبيه" : "Alert Type"}</Label>
+                <select
+                  value={workingBlock.content.alertType || "info"}
+                  onChange={(e) => handleContentChange("alertType", e.target.value)}
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="info">Info</option>
+                  <option value="success">Success</option>
+                  <option value="warning">Warning</option>
+                  <option value="error">Error</option>
+                </select>
+                <Label className="text-sm font-medium mt-4">{lang === "ar" ? "نص التنبيه" : "Alert Message"}</Label>
+                <Textarea
+                  value={currentLanguageDescription || ""}
+                  onChange={(e) =>
+                    handleContentChange(lang === "ar" ? "descriptionAr" : "descriptionEn", e.target.value)
+                  }
+                  rows={3}
+                  placeholder={lang === "ar" ? "رسالة التنبيه" : "Alert message"}
+                />
+              </>
+            )}
+
+            {block.type === "testimonial-card" && (
+              <>
+                <Label className="text-sm font-medium">{lang === "ar" ? "اسم العميل" : "Customer Name"}</Label>
+                <Input
+                  value={workingBlock.content.name || ""}
+                  onChange={(e) => handleContentChange("name", e.target.value)}
+                  placeholder={lang === "ar" ? "اسم عضو الفريق" : "Team member name"}
+                />
+                <Label className="text-sm font-medium mt-4">
+                  {lang === "ar" ? "المنصب/الشركة" : "Position/Company"}
+                </Label>
+                <Input
+                  value={workingBlock.content.position || ""}
+                  onChange={(e) => handleContentChange("position", e.target.value)}
+                  placeholder={lang === "ar" ? "منصب العميل أو شركته" : "Customer position or company"}
+                />
+                <Label className="text-sm font-medium mt-4">
+                  {lang === "ar" ? "رأي العميل" : "Customer Testimonial"}
+                </Label>
+                <Textarea
+                  value={currentLanguageQuote || ""}
+                  onChange={(e) => handleContentChange(lang === "ar" ? "quoteAr" : "quoteEn", e.target.value)}
+                  rows={4}
+                  placeholder={lang === "ar" ? "رأي العميل" : "Customer testimonial"}
+                />
+                <Label className="text-sm font-medium mt-4">{lang === "ar" ? "صورة العميل" : "Customer Image"}</Label>
+                <ImageUpload
+                  value={workingBlock.content.imageUrl || ""}
+                  onChange={(url) => handleContentChange("imageUrl", url)}
+                  language={lang}
+                />
+              </>
+            )}
+
+            {block.type === "team-member" && (
+              <>
+                <Label className="text-sm font-medium">{lang === "ar" ? "اسم العضو" : "Member Name"}</Label>
+                <Input
+                  value={workingBlock.content.name || ""}
+                  onChange={(e) => handleContentChange("name", e.target.value)}
+                  placeholder={lang === "ar" ? "اسم عضو الفريق" : "Team member name"}
+                />
+                <Label className="text-sm font-medium mt-4">{lang === "ar" ? "المنصب" : "Position"}</Label>
+                <Input
+                  value={workingBlock.content.position || ""}
+                  onChange={(e) => handleContentChange("position", e.target.value)}
+                  placeholder={lang === "ar" ? "منصب عضو الفريق" : "Team member position"}
+                />
+                <Label className="text-sm font-medium mt-4">{lang === "ar" ? "نبذة مختصرة" : "Short Bio"}</Label>
+                <Textarea
+                  value={currentLanguageDescription || ""}
+                  onChange={(e) =>
+                    handleContentChange(lang === "ar" ? "descriptionAr" : "descriptionEn", e.target.value)
+                  }
+                  rows={3}
+                  placeholder={lang === "ar" ? "نبذة مختصرة عن عضو الفريق" : "Short bio about the team member"}
+                />
+                <Label className="text-sm font-medium mt-4">{lang === "ar" ? "صورة العضو" : "Member Image"}</Label>
+                <ImageUpload
+                  value={workingBlock.content.imageUrl || ""}
+                  onChange={(url) => handleContentChange("imageUrl", url)}
+                  language={lang}
+                />
+                <div className="mt-4">
+                  <Label className="text-sm font-medium">
+                    {lang === "ar" ? "روابط التواصل الاجتماعي" : "Social Media Links"}
+                  </Label>
+                  <div className="space-y-2">
+                    {(workingBlock.content.socialLinks || []).map((link, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <Input
+                          value={link.url || ""}
+                          onChange={(e) => {
+                            const updatedSocialLinks = [...(workingBlock.content.socialLinks || [])]
+                            updatedSocialLinks[index].url = e.target.value
+                            handleContentChange("socialLinks", updatedSocialLinks)
+                          }}
+                          placeholder="URL"
+                        />
+                        <select
+                          value={link.platform || "facebook"}
+                          onChange={(e) => {
+                            const updatedSocialLinks = [...(workingBlock.content.socialLinks || [])]
+                            updatedSocialLinks[index].platform = e.target.value
+                            handleContentChange("socialLinks", updatedSocialLinks)
+                          }}
+                          className="flex h-10 w-[120px] items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <option value="facebook">Facebook</option>
+                          <option value="twitter">Twitter</option>
+                          <option value="linkedin">LinkedIn</option>
+                          <option value="instagram">Instagram</option>
+                          <option value="website">Website</option>
+                        </select>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            const updatedSocialLinks = [...(workingBlock.content.socialLinks || [])]
+                            updatedSocialLinks.splice(index, 1)
+                            handleContentChange("socialLinks", updatedSocialLinks)
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 w-full bg-transparent"
+                    onClick={() => {
+                      handleContentChange("socialLinks", [
+                        ...(workingBlock.content.socialLinks || []),
+                        { platform: "facebook", url: "" },
+                      ])
+                    }}
+                  >
+                    <Plus className="w-4 h-4 ml-2" />
+                    {lang === "ar" ? "إضافة رابط" : "Add Link"}
+                  </Button>
+                </div>
+              </>
+            )}
+
+            {block.type === "pricing-card" && (
+              <>
+                <Label className="text-sm font-medium">{lang === "ar" ? "عنوان البطاقة" : "Card Title"}</Label>
+                <Input
+                  value={currentLanguageTitle || ""}
+                  onChange={(e) => handleContentChange(lang === "ar" ? "titleAr" : "titleEn", e.target.value)}
+                  placeholder={lang === "ar" ? "اسم الباقة" : "Plan name"}
+                />
+                <Label className="text-sm font-medium mt-4">{lang === "ar" ? "السعر" : "Price"}</Label>
+                <Input
+                  value={workingBlock.content.price || ""}
+                  onChange={(e) => handleContentChange("price", e.target.value)}
+                  placeholder="99.99"
+                />
+                <Label className="text-sm font-medium mt-4">{lang === "ar" ? "العملة" : "Currency"}</Label>
+                <Input
+                  value={workingBlock.content.currency || "$"}
+                  onChange={(e) => handleContentChange("currency", e.target.value)}
+                  placeholder="$"
+                />
+                <Label className="text-sm font-medium mt-4">
+                  {lang === "ar" ? "الوصف/المميزات" : "Description/Features"}
+                </Label>
+                <Textarea
+                  value={currentLanguageDescription || ""}
+                  onChange={(e) =>
+                    handleContentChange(lang === "ar" ? "descriptionAr" : "descriptionEn", e.target.value)
+                  }
+                  rows={4}
+                  placeholder={lang === "ar" ? "قائمة بالمميزات" : "List of features"}
+                />
+                <Label className="text-sm font-medium mt-4">{lang === "ar" ? "نص الزر" : "Button Text"}</Label>
+                <Input
+                  value={currentLanguageButtonText || ""}
+                  onChange={(e) => handleContentChange(lang === "ar" ? "buttonTextAr" : "buttonTextEn", e.target.value)}
+                  placeholder={lang === "ar" ? "اشترك الآن" : "Sign Up"}
+                />
+                <Label className="text-sm font-medium mt-4">{lang === "ar" ? "رابط الزر" : "Button Link"}</Label>
+                <Input
+                  value={workingBlock.content.buttonUrl || ""}
+                  onChange={(e) => handleContentChange("buttonUrl", e.target.value)}
+                  placeholder={lang === "ar" ? "https://example.com/signup" : "https://example.com/signup"}
+                />
+              </>
+            )}
+
+            {block.type === "cta" && (
+              <>
+                <Label className="text-sm font-medium">{lang === "ar" ? "النص الرئيسي" : "Main Text"}</Label>
+                <Textarea
+                  value={currentLanguageText || ""}
+                  onChange={(e) => handleContentChange(lang === "ar" ? "textAr" : "textEn", e.target.value)}
+                  rows={3}
+                  placeholder={lang === "ar" ? "اكتب نص الدعوة لإجراء هنا" : "Write your call-to-action text here"}
+                />
+                <Label className="text-sm font-medium mt-4">{lang === "ar" ? "نص الزر" : "Button Text"}</Label>
+                <Input
+                  value={currentLanguageButtonText || ""}
+                  onChange={(e) => handleContentChange(lang === "ar" ? "buttonTextAr" : "buttonTextEn", e.target.value)}
+                  placeholder={lang === "ar" ? "انقر هنا" : "Click Me"}
+                />
+                <Label className="text-sm font-medium mt-4">{lang === "ar" ? "رابط الزر" : "Button Link"}</Label>
+                <Input
+                  value={workingBlock.content.buttonUrl || ""}
+                  onChange={(e) => handleContentChange("buttonUrl", e.target.value)}
+                  placeholder={lang === "ar" ? "https://example.com" : "https://example.com"}
+                />
+              </>
+            )}
+
+            {block.type === "form" && (
+              <>
+                <Label className="text-sm font-medium">{lang === "ar" ? "عنوان النموذج" : "Form Title"}</Label>
+                <Input
+                  value={currentLanguageTitle || ""}
+                  onChange={(e) => handleContentChange(lang === "ar" ? "titleAr" : "titleEn", e.target.value)}
+                  placeholder={lang === "ar" ? "عنوان النموذج" : "Form title"}
+                />
+                <Label className="text-sm font-medium mt-4">{lang === "ar" ? "وصف النموذج" : "Form Description"}</Label>
+                <Textarea
+                  value={currentLanguageDescription || ""}
+                  onChange={(e) =>
+                    handleContentChange(lang === "ar" ? "descriptionAr" : "descriptionEn", e.target.value)
+                  }
+                  rows={3}
+                  placeholder={lang === "ar" ? "وصف مختصر للنموذج" : "Short description of the form"}
+                />
+                {/* Add more form field configurations here if needed */}
+              </>
+            )}
+
+            {block.type === "map" && (
+              <>
+                <Label className="text-sm font-medium">{lang === "ar" ? "عنوان الخريطة" : "Map Title"}</Label>
+                <Input
+                  value={currentLanguageTitle || ""}
+                  onChange={(e) => handleContentChange(lang === "ar" ? "titleAr" : "titleEn", e.target.value)}
+                  placeholder={lang === "ar" ? "عنوان الخريطة" : "Map title"}
+                />
+                <Label className="text-sm font-medium mt-4">
+                  {lang === "ar" ? "عنوان أو إحداثيات" : "Address or Coordinates"}
+                </Label>
+                <Input
+                  value={workingBlock.content.address || ""}
+                  onChange={(e) => handleContentChange("address", e.target.value)}
+                  placeholder={
+                    lang === "ar"
+                      ? "عنوان أو خطوط الطول والعرض (e.g., 34.0522, -118.2437)"
+                      : "Address or Lat/Lng (e.g., 34.0522, -118.2437)"
+                  }
+                />
+                <Label className="text-sm font-medium mt-4">
+                  {lang === "ar" ? "ارتفاع الخريطة (px)" : "Map Height (px)"}
+                </Label>
+                <Input
+                  type="number"
+                  value={workingBlock.content.height || 400}
+                  onChange={(e) => handleContentChange("height", Number.parseInt(e.target.value, 10))}
+                  placeholder="400"
+                />
+                <Label className="text-sm font-medium mt-4">{lang === "ar" ? "مستوى التكبير" : "Zoom Level"}</Label>
+                <Input
+                  type="number"
+                  value={workingBlock.content.zoom || 12}
+                  onChange={(e) => handleContentChange("zoom", Number.parseInt(e.target.value, 10))}
+                  placeholder="12"
+                />
+              </>
+            )}
+
+            {block.type === "social-links" && (
+              <>
+                <Label className="text-sm font-medium">{lang === "ar" ? "روابط" : "Links"}</Label>
+                <div className="space-y-2">
+                  {(workingBlock.content.links || []).map((link, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <Input
+                        value={link.url || ""}
+                        onChange={(e) => {
+                          const updatedLinks = [...(workingBlock.content.links || [])]
+                          updatedLinks[index].url = e.target.value
+                          handleContentChange("links", updatedLinks)
+                        }}
+                        placeholder="URL"
+                      />
+                      <select
+                        value={link.platform || "facebook"}
+                        onChange={(e) => {
+                          const updatedLinks = [...(workingBlock.content.links || [])]
+                          updatedLinks[index].platform = e.target.value
+                          handleContentChange("links", updatedLinks)
+                        }}
+                        className="flex h-10 w-[120px] items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="facebook">Facebook</option>
+                        <option value="twitter">Twitter</option>
+                        <option value="linkedin">LinkedIn</option>
+                        <option value="instagram">Instagram</option>
+                        <option value="youtube">YouTube</option>
+                        <option value="website">Website</option>
+                      </select>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          const updatedLinks = [...(workingBlock.content.links || [])]
+                          updatedLinks.splice(index, 1)
+                          handleContentChange("links", updatedLinks)
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 w-full bg-transparent"
+                  onClick={() => {
+                    handleContentChange("links", [
+                      ...(workingBlock.content.links || []),
+                      { platform: "facebook", url: "" },
+                    ])
+                  }}
+                >
+                  <Plus className="w-4 h-4 ml-2" />
+                  {lang === "ar" ? "إضافة رابط" : "Add Link"}
+                </Button>
+              </>
+            )}
+          </>
+        </TabsContent>
+
+        <TabsContent value="style" className="mt-4">
+          {renderStyleTab()}
+        </TabsContent>
+      </Tabs>
+    )
   }
 
   return (
@@ -813,9 +2853,18 @@ export default function NewPageEditor() {
                 <Eye className="w-4 h-4 ml-2" />
                 {language === "ar" ? "معاينة" : "Preview"}
               </Button>
-              <Button onClick={handleSave} size="sm" className="bg-violet-600 hover:bg-violet-700">
-                <Save className="w-4 h-4 ml-2" />
-                {language === "ar" ? "حفظ" : "Save"}
+              <Button onClick={handleSave} size="sm" className="bg-violet-600 hover:bg-violet-700" disabled={isSaving}>
+                {isSaving ? (
+                  <>
+                    <div className="w-4 h-4 ml-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    {language === "ar" ? "جاري الحفظ..." : "Saving..."}
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 ml-2" />
+                    {language === "ar" ? "حفظ" : "Save"}
+                  </>
+                )}
               </Button>
             </div>
           </div>
@@ -884,7 +2933,12 @@ export default function NewPageEditor() {
                           </Label>
                           <Input
                             value={pageData.titleEn}
-                            onChange={(e) => setPageData({ ...pageData, titleEn: e.target.value })}
+                            onChange={(e) =>
+                              setPageData({
+                                ...pageData,
+                                titleEn: e.target.value,
+                              })
+                            }
                             placeholder="Enter title"
                           />
                         </div>
@@ -979,7 +3033,7 @@ export default function NewPageEditor() {
                         )}
                         <Button
                           onClick={() => {
-                            setShowBlockMenu(true)
+                            setShowBlockModal(true)
                             setActiveContainer(null)
                           }}
                           size="sm"
@@ -1005,7 +3059,7 @@ export default function NewPageEditor() {
                           </p>
                           <Button
                             onClick={() => {
-                              setShowBlockMenu(true)
+                              setShowBlockModal(true)
                               setActiveContainer(null)
                             }}
                             variant="outline"
@@ -1027,7 +3081,7 @@ export default function NewPageEditor() {
                           <p className="text-muted-foreground mb-4">Click 'Add Block' to build your page</p>
                           <Button
                             onClick={() => {
-                              setShowBlockMenu(true)
+                              setShowBlockModal(true)
                               setActiveContainer(null)
                             }}
                             variant="outline"
@@ -1065,2615 +3119,163 @@ export default function NewPageEditor() {
           <div className="space-y-6 py-4">
             {/* Basic Blocks */}
             <div>
-              <h3 className="text-sm font-semibold mb-3 text-muted-foreground">
-                {language === "ar" ? "عناصر أساسية" : "Basic Blocks"}
-              </h3>
-              <div className="grid grid-cols-4 gap-3">
-                {basicBlocks.map((blockType) => (
-                  <Button
-                    key={blockType.type}
-                    onClick={() => handleContainerAdd(blockType.type as PageBlock["type"], activeContainer)}
-                    variant="outline"
-                    className="flex flex-col items-center gap-2 h-auto py-4 hover:bg-primary/10 hover:border-primary transition-all"
-                  >
-                    <blockType.icon className="w-6 h-6" />
-                    <span className="text-xs font-medium">{blockType.label}</span>
-                  </Button>
-                ))}
+              <h3 className="text-lg font-bold mb-2">{language === "ar" ? "عناصر أساسية" : "Basic Blocks"}</h3>
+              <div className="grid grid-cols-2 gap-4">
+                {basicBlocks.map((blockType) => {
+                  const IconComponent = blockType.icon
+                  return (
+                    <Button
+                      key={blockType.type}
+                      onClick={() => {
+                        addBlock(blockType.type, activeContainer?.blockId, activeContainer?.columnIndex)
+                      }}
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                    >
+                      <IconComponent className="w-4 h-4 ml-2" />
+                      {blockType.label}
+                    </Button>
+                  )
+                })}
               </div>
             </div>
 
-            {/* Layout Blocks - Only show when not adding to a container */}
-            {!activeContainer && (
-              <div>
-                <h3 className="text-sm font-semibold mb-3 text-muted-foreground">
-                  {language === "ar" ? "عناصر التخطيط" : "Layout Blocks"}
-                </h3>
-                <div className="grid grid-cols-4 gap-3">
-                  {layoutBlocks.map((blockType) => (
+            {/* Layout Blocks */}
+            <div>
+              <h3 className="text-lg font-bold mb-2">{language === "ar" ? "عناصر التخطيط" : "Layout Blocks"}</h3>
+              <div className="grid grid-cols-2 gap-4">
+                {layoutBlocks.map((blockType) => {
+                  const IconComponent = blockType.icon
+                  return (
                     <Button
                       key={blockType.type}
-                      onClick={() => handleContainerAdd(blockType.type as PageBlock["type"], null)}
+                      onClick={() => {
+                        addBlock(blockType.type, activeContainer?.blockId, activeContainer?.columnIndex)
+                      }}
                       variant="outline"
-                      className="flex flex-col items-center gap-2 h-auto py-4 hover:bg-primary/10 hover:border-primary transition-all"
+                      size="sm"
+                      className="w-full"
                     >
-                      <blockType.icon className="w-6 h-6" />
-                      <span className="text-xs font-medium">{blockType.label}</span>
+                      <IconComponent className="w-4 h-4 ml-2" />
+                      {blockType.label}
                     </Button>
-                  ))}
-                </div>
+                  )
+                })}
               </div>
-            )}
+            </div>
 
             {/* Component Blocks */}
             <div>
-              <h3 className="text-sm font-semibold mb-3 text-muted-foreground">
-                {language === "ar" ? "مكونات" : "Components"}
-              </h3>
-              <div className="grid grid-cols-3 gap-3">
-                {componentBlocks.map((blockType) => (
-                  <Button
-                    key={blockType.type}
-                    onClick={() => handleContainerAdd(blockType.type as PageBlock["type"], activeContainer)}
-                    variant="outline"
-                    className="flex flex-col items-center gap-2 h-auto py-4 hover:bg-primary/10 hover:border-primary transition-all"
-                  >
-                    <blockType.icon className="w-6 h-6" />
-                    <span className="text-xs font-medium">{blockType.label}</span>
-                  </Button>
-                ))}
+              <h3 className="text-lg font-bold mb-2">{language === "ar" ? "عناصر المكونات" : "Component Blocks"}</h3>
+              <div className="grid grid-cols-2 gap-4">
+                {componentBlocks.map((blockType) => {
+                  const IconComponent = blockType.icon
+                  return (
+                    <Button
+                      key={blockType.type}
+                      onClick={() => {
+                        addBlock(blockType.type, activeContainer?.blockId, activeContainer?.columnIndex)
+                      }}
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                    >
+                      <IconComponent className="w-4 h-4 ml-2" />
+                      {blockType.label}
+                    </Button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Home Blocks */}
+            <div>
+              <h3 className="text-lg font-bold mb-2">{language === "ar" ? "الصفحات الرئيسية" : "Home Blocks"}</h3>
+              <div className="grid grid-cols-2 gap-4">
+                {homeBlocks.map((blockType) => {
+                  const IconComponent = blockType.icon
+                  return (
+                    <Button
+                      key={blockType.type}
+                      onClick={() => {
+                        addBlock(blockType.type, activeContainer?.blockId, activeContainer?.columnIndex)
+                      }}
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                    >
+                      <IconComponent className="w-4 h-4 ml-2" />
+                      {blockType.label}
+                    </Button>
+                  )
+                })}
               </div>
             </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Block Settings Modal */}
-      {editingBlock && (
-        <Dialog open={!!editingBlock} onOpenChange={() => setEditingBlock(null)}>
-          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {language === "ar" ? "تعديل العنصر" : "Edit Block"} - {editingBlock.type}
-              </DialogTitle>
-            </DialogHeader>
-            <BlockSettingsEditor
-              block={editingBlock}
-              language={language}
-              onUpdate={(content, styles) => {
-                updateBlock(editingBlock.id, content, styles)
-                // Update local state immediately for responsiveness
-                setEditingBlock((prev) =>
-                  prev
-                    ? {
-                        ...prev,
-                        content: { ...prev.content, ...content },
-                        styles: { ...prev.styles, ...styles },
-                      }
-                    : null,
-                )
-              }}
-              onClose={() => setEditingBlock(null)}
-            />
-          </DialogContent>
-        </Dialog>
-      )}
-    </div>
-  )
-}
+      <Dialog
+        open={!!editingBlock}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingBlock(null)
+            setTempBlockChanges(null)
+          }
+        }}
+      >
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {language === "ar" ? "إعدادات العنصر" : "Block Settings"} -{" "}
+              {blockTypes.find((b) => b.type === editingBlock?.type)?.label || editingBlock?.type}
+            </DialogTitle>
+          </DialogHeader>
 
-// Helper function to render block content for preview mode
-const renderBlockForPreview = (block: PageBlock, lang: "ar" | "en"): React.ReactNode => {
-  const text = lang === "ar" ? block.content.textAr : block.content.textEn
-  const title = lang === "ar" ? block.content.titleAr : block.content.titleEn
-  const description = lang === "ar" ? block.content.descriptionAr : block.content.descriptionEn
-  const quote = lang === "ar" ? block.content.quoteAr : block.content.quoteEn
-  const buttonText = lang === "ar" ? block.content.buttonTextAr : block.content.buttonTextEn
-  const imageUrl = block.content.imageUrl
+          {editingBlock && (
+            <div className="space-y-6 py-4">
+              <Tabs value={contentLanguage} onValueChange={(v) => setContentLanguage(v as "ar" | "en")}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="ar">العربية</TabsTrigger>
+                  <TabsTrigger value="en">English</TabsTrigger>
+                </TabsList>
 
-  // Apply styles
-  const className = cn(
-    block.styles?.animation,
-    block.styles?.textAlign,
-    block.styles?.padding,
-    block.styles?.margin,
-    block.styles?.borderRadius,
-    block.styles?.shadow,
-    block.styles?.hoverScale,
-    block.styles?.hoverRotate,
-    block.styles?.gradientFrom,
-    block.styles?.gradientVia,
-    block.styles?.gradientTo,
-  )
+                <TabsContent value="ar" className="space-y-4 mt-4">
+                  {renderBlockSettings(editingBlock, "ar")}
+                </TabsContent>
 
-  const style: React.CSSProperties = {
-    backgroundColor: block.styles?.backgroundColor,
-    color: block.styles?.textColor,
-    borderColor: block.styles?.borderColor,
-    animationDuration: block.styles?.animationDuration,
-    animationDelay: block.styles?.animationDelay,
-    backgroundImage:
-      block.styles?.gradientFrom && block.styles?.gradientTo
-        ? `linear-gradient(to right, ${block.styles?.gradientFrom}, ${block.styles?.gradientTo})`
-        : undefined,
-  }
+                <TabsContent value="en" className="space-y-4 mt-4">
+                  {renderBlockSettings(editingBlock, "en")}
+                </TabsContent>
+              </Tabs>
 
-  switch (block.type) {
-    case "heading":
-      const HeadingTag = (block.content.level || "h2") as keyof JSX.IntrinsicElements
-      return (
-        <HeadingTag key={block.id} className={cn("font-bold", className)} style={style}>
-          {text}
-        </HeadingTag>
-      )
-    case "paragraph":
-      return (
-        <p key={block.id} className={className} style={style}>
-          {text}
-        </p>
-      )
-    case "image":
-      return (
-        <div key={block.id} className={cn("relative", className)} style={style}>
-          {imageUrl && (
-            <img
-              src={imageUrl || "/placeholder.svg"}
-              alt={lang === "ar" ? block.content.altAr : block.content.altEn}
-              className="w-full h-auto rounded-lg"
-            />
-          )}
-          {block.content.captionAr || block.content.captionEn ? (
-            <p className="text-xs text-muted-foreground text-center mt-2">
-              {lang === "ar" ? block.content.captionAr : block.content.captionEn}
-            </p>
-          ) : null}
-        </div>
-      )
-    case "gallery":
-      return (
-        <div key={block.id} className={cn("grid grid-cols-3 gap-4", className)} style={style}>
-          {(block.content.images || []).map((image, index) => (
-            <div key={index} className="overflow-hidden rounded-lg">
-              <img src={image.url || "/placeholder.svg"} alt={image.alt} className="w-full h-auto object-cover" />
-              {image.caption && <p className="text-xs text-muted-foreground text-center mt-1">{image.caption}</p>}
-            </div>
-          ))}
-        </div>
-      )
-    case "video":
-      return (
-        <div key={block.id} className={className} style={style}>
-          <iframe
-            className="w-full aspect-video rounded-lg"
-            src={block.content.videoUrl?.replace("watch?v=", "embed/")}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          ></iframe>
-          {title && <h3 className="font-bold mt-2">{title}</h3>}
-        </div>
-      )
-    case "quote":
-      return (
-        <blockquote key={block.id} className={cn("border-l-4 pl-4 italic", className)} style={style}>
-          <p>{quote}</p>
-          {block.content.authorAr || block.content.authorEn ? (
-            <footer className="text-xs text-muted-foreground mt-2">
-              - {lang === "ar" ? block.content.authorAr : block.content.authorEn}
-            </footer>
-          ) : null}
-        </blockquote>
-      )
-    case "button":
-      return (
-        <Button key={block.id} variant={block.content.buttonStyle as any} className={cn(className)} style={style}>
-          {buttonText}
-        </Button>
-      )
-    case "divider":
-      return <hr key={block.id} className={className} style={style} />
-    case "html":
-      return (
-        <div
-          key={block.id}
-          className={className}
-          style={style}
-          dangerouslySetInnerHTML={{ __html: block.content.htmlCode || "" }}
-        />
-      )
-    case "spacer":
-      return <div key={block.id} style={{ height: `${block.content.height || 20}px` }} />
-    case "row":
-      const columns = block.content.columns || 2
-      const gridGap = block.content.gap || 4
-      return (
-        <div key={block.id} className={cn(`grid grid-cols-${columns} gap-${gridGap}`, className)} style={style}>
-          {block.children
-            ?.sort((a, b) => (a.order || 0) - (b.order || 0))
-            .map((child) => (
-              <div key={child.id}>{renderBlockForPreview(child, lang)}</div>
-            ))}
-        </div>
-      )
-    case "card":
-      return (
-        <Card key={block.id} className={cn(className)} style={style}>
-          {block.content.imageUrl && (
-            <img
-              src={block.content.imageUrl || "/placeholder.svg"}
-              alt=""
-              className="w-full h-auto object-cover rounded-t-lg"
-            />
-          )}
-          <CardHeader>
-            <CardTitle>{title}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>{description}</p>
-            {block.content.buttonTextAr || block.content.buttonTextEn ? (
-              <Button variant={block.content.buttonStyle as any} className="mt-4">
-                {lang === "ar" ? block.content.buttonTextAr : block.content.buttonTextEn}
-              </Button>
-            ) : null}
-          </CardContent>
-        </Card>
-      )
-    case "icon-box":
-      const IconComponent = (block.content.icon && LucideIcons[block.content.icon]) || Star // Use LucideIcons
-      return (
-        <div key={block.id} className={cn("flex flex-col items-center text-center", className)} style={style}>
-          <IconComponent
-            className={cn(block.content.iconSize || "w-8 h-8", `text-[${block.content.iconColor || "#3b82f6"}]`)}
-          />
-          <h3 className="font-bold mt-3">{title}</h3>
-          <p className="text-sm text-muted-foreground mt-2">
-            {lang === "ar" ? block.content.cardDescriptionAr : block.content.cardDescriptionEn}
-          </p>
-        </div>
-      )
-    case "hero-slider":
-      return (
-        <div key={block.id} className={className} style={style}>
-          {/* Basic slider implementation for preview */}
-          <div className="relative w-full h-96 overflow-hidden rounded-lg">
-            {(block.content.slides || []).map((slide, index) => (
-              <div
-                key={slide.id}
-                className={`absolute inset-0 transition-opacity duration-500 ${index === 0 ? "opacity-100" : "opacity-0"}`}
-                style={{
-                  backgroundImage: `url(${slide.imageUrl || "/placeholder.svg"})`,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                }}
-              >
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                  <div className="text-center text-white p-6">
-                    {slide.titleAr || slide.titleEn ? (
-                      <h2 className="text-4xl font-bold mb-2">{lang === "ar" ? slide.titleAr : slide.titleEn}</h2>
-                    ) : null}
-                    {slide.subtitleAr || slide.subtitleEn ? (
-                      <p className="text-xl mb-4">{lang === "ar" ? slide.subtitleAr : slide.subtitleEn}</p>
-                    ) : null}
-                    {slide.descriptionAr || slide.descriptionEn ? (
-                      <p className="text-lg">{lang === "ar" ? slide.descriptionAr : slide.descriptionEn}</p>
-                    ) : null}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )
-    case "statistics":
-      return (
-        <div key={block.id} className={cn("grid grid-cols-4 gap-4 text-center", className)} style={style}>
-          {(block.content.stats || []).map((stat) => (
-            <div key={stat.id}>
-              <p className="text-4xl font-bold">{stat.number}</p>
-              <p className="text-muted-foreground">{lang === "ar" ? stat.labelAr : stat.labelEn}</p>
-            </div>
-          ))}
-        </div>
-      )
-    case "features":
-      return (
-        <div key={block.id} className={cn("grid grid-cols-3 gap-6", className)} style={style}>
-          {(block.content.features || []).map((feature) => {
-            const FeatureIcon = (feature.icon && LucideIcons[feature.icon]) || Star // Use LucideIcons
-            return (
-              <div key={feature.id} className="text-center">
-                <FeatureIcon className="w-12 h-12 mx-auto mb-4 text-primary" />
-                <h4 className="font-bold mb-2">{lang === "ar" ? feature.titleAr : feature.titleEn}</h4>
-                <p className="text-sm text-muted-foreground">
-                  {lang === "ar" ? feature.descriptionAr : feature.descriptionEn}
-                </p>
-              </div>
-            )
-          })}
-        </div>
-      )
-    case "accordion":
-      return (
-        <div key={block.id} className={cn("space-y-3", className)} style={style}>
-          {(block.content.items || []).map((item) => (
-            <Card key={item.id} className="overflow-hidden">
-              <CardHeader className="bg-muted/50 p-4 cursor-pointer">
-                <CardTitle className="text-lg">{lang === "ar" ? item.titleAr : item.titleEn}</CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 pt-0">
-                <p className="text-muted-foreground">{lang === "ar" ? item.descriptionAr : item.descriptionEn}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )
-    case "tabs":
-      return (
-        <Tabs
-          key={block.id}
-          defaultValue={(block.content.tabs?.[0]?.id).toString()}
-          className={cn(className)}
-          style={style}
-        >
-          <TabsList>
-            {(block.content.tabs || []).map((tab) => (
-              <TabsTrigger key={tab.id} value={tab.id}>
-                {lang === "ar" ? tab.titleAr : tab.titleEn}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          {(block.content.tabs || []).map((tab) => (
-            <TabsContent key={tab.id} value={tab.id} className="mt-4 p-4 border rounded-lg">
-              {lang === "ar" ? tab.contentAr : tab.contentEn}
-            </TabsContent>
-          ))}
-        </Tabs>
-      )
-    case "alert":
-      const alertVariant = block.content.alertType || "info"
-      return (
-        <Alert key={block.id} variant={alertVariant as any} className={cn(className)} style={style}>
-          {block.content.titleAr || block.content.titleEn ? (
-            <AlertTitle>{lang === "ar" ? block.content.titleAr : block.content.titleEn}</AlertTitle>
-          ) : null}
-          <AlertDescription>
-            {lang === "ar" ? block.content.descriptionAr : block.content.descriptionEn}
-          </AlertDescription>
-        </Alert>
-      )
-    case "testimonial-card":
-      return (
-        <Card key={block.id} className={cn("text-center p-6", className)} style={style}>
-          {block.content.imageUrl && (
-            <img
-              src={block.content.imageUrl || "/placeholder.svg"}
-              alt=""
-              className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
-            />
-          )}
-          <blockquote className="italic text-muted-foreground mb-4">
-            "{lang === "ar" ? block.content.quoteAr : block.content.quoteEn}"
-          </blockquote>
-          <div className="font-bold">{lang === "ar" ? block.content.nameAr : block.content.nameEn}</div>
-          <div className="text-sm text-muted-foreground">
-            {lang === "ar" ? block.content.titleAr : block.content.titleEn}
-          </div>
-        </Card>
-      )
-    case "team-member":
-      return (
-        <Card key={block.id} className={cn("text-center p-6", className)} style={style}>
-          {block.content.imageUrl && (
-            <img
-              src={block.content.imageUrl || "/placeholder.svg"}
-              alt=""
-              className="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-primary/20"
-            />
-          )}
-          <h4 className="font-bold text-lg">{lang === "ar" ? block.content.nameAr : block.content.nameEn}</h4>
-          <div className="text-sm text-muted-foreground mb-4">
-            {lang === "ar" ? block.content.titleAr : block.content.titleEn}
-          </div>
-          <div className="flex justify-center space-x-4">
-            {block.content.linkedinUrl && (
-              <a href={block.content.linkedinUrl} target="_blank" rel="noopener noreferrer">
-                <img src="/icons/linkedin.svg" alt="LinkedIn" className="w-6 h-6" />
-              </a>
-            )}
-            {block.content.twitterUrl && (
-              <a href={block.content.twitterUrl} target="_blank" rel="noopener noreferrer">
-                <img src="/icons/twitter.svg" alt="Twitter" className="w-6 h-6" />
-              </a>
-            )}
-            {block.content.facebookUrl && (
-              <a href={block.content.facebookUrl} target="_blank" rel="noopener noreferrer">
-                <img src="/icons/facebook.svg" alt="Facebook" className="w-6 h-6" />
-              </a>
-            )}
-          </div>
-        </Card>
-      )
-    case "pricing-card":
-      return (
-        <Card key={block.id} className={cn("p-6 text-center", className)} style={style}>
-          <CardTitle className="text-2xl font-bold mb-2">
-            {lang === "ar" ? block.content.titleAr : block.content.titleEn}
-          </CardTitle>
-          <p className="text-5xl font-bold mb-4">{block.content.price}</p>
-          <CardContent className="p-0 mb-6">
-            <p className="text-muted-foreground mb-2">
-              {lang === "ar" ? block.content.descriptionAr : block.content.descriptionEn}
-            </p>
-            <ul className="space-y-2 text-left">
-              {(block.content.features || []).map((feature, index) => (
-                <li key={index} className="flex items-center text-muted-foreground">
-                  <Check className="w-5 h-5 mr-2 text-green-500" /> {feature.text}
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-          {(block.content.buttonTextAr || block.content.buttonUrl) && (
-            <Button className="w-full">
-              {lang === "ar" ? block.content.buttonTextAr : block.content.buttonTextEn}
-            </Button>
-          )}
-        </Card>
-      )
-    case "cta":
-      return (
-        <div
-          key={block.id}
-          className={cn("relative text-center text-white py-16 px-8 rounded-lg", className)}
-          style={{ ...style, backgroundImage: block.content.imageUrl ? `url(${block.content.imageUrl})` : undefined }}
-        >
-          {block.content.imageUrl && <div className="absolute inset-0 bg-black/50 rounded-lg"></div>}
-          <div className="relative z-10">
-            {title && <h2 className="text-4xl font-bold mb-4">{title}</h2>}
-            {description && <p className="text-lg mb-8">{description}</p>}
-            {(block.content.buttonTextAr || block.content.buttonUrl) && (
-              <Button size="lg">{lang === "ar" ? block.content.buttonTextAr : block.content.buttonTextEn}</Button>
-            )}
-          </div>
-        </div>
-      )
-    case "form":
-      return (
-        <div key={block.id} className={cn("p-8 rounded-lg", className)} style={style}>
-          {(block.content.titleAr || block.content.titleEn) && (
-            <h3 className="text-2xl font-bold mb-2">{lang === "ar" ? block.content.titleAr : block.content.titleEn}</h3>
-          )}
-          {(block.content.descriptionAr || block.content.descriptionEn) && (
-            <p className="text-muted-foreground mb-6">
-              {lang === "ar" ? block.content.descriptionAr : block.content.descriptionEn}
-            </p>
-          )}
-          <form className="space-y-4">
-            <Input placeholder={lang === "ar" ? "اسمك" : "Your Name"} />
-            <Input placeholder={lang === "ar" ? "بريدك الإلكتروني" : "Your Email"} />
-            <Textarea rows={4} placeholder={lang === "ar" ? "رسالتك" : "Your Message"} />
-            <Button type="submit" className="w-full">
-              {lang === "ar" ? block.content.buttonTextAr || "Submit" : block.content.buttonTextEn || "Submit"}
-            </Button>
-          </form>
-        </div>
-      )
-    case "map":
-      const latitude = block.content.latitude || "31.5204"
-      const longitude = block.content.longitude || "74.3587"
-      const zoom = block.content.zoom || 12
-      const markerText = lang === "ar" ? block.content.markerTextAr : block.content.markerTextEn
-
-      return (
-        <div key={block.id} className={cn("w-full rounded-lg overflow-hidden", className)} style={style}>
-          <iframe
-            src={`https://maps.google.com/maps?q=${latitude},${longitude}&z=${zoom}&output=embed&markers=${latitude},${longitude},${markerText || ""}`}
-            width="100%"
-            height="400"
-            style={{ border: 0 }}
-            allowFullScreen
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-          ></iframe>
-        </div>
-      )
-    case "social-links":
-      return (
-        <div key={block.id} className={cn("flex justify-center space-x-4", className)} style={style}>
-          {(block.content.links || []).map((link) => {
-            let iconSrc = "/icons/default.svg" // Default icon
-            if (link.platform.toLowerCase().includes("facebook")) iconSrc = "/icons/facebook.svg"
-            else if (link.platform.toLowerCase().includes("twitter")) iconSrc = "/icons/twitter.svg"
-            else if (link.platform.toLowerCase().includes("linkedin")) iconSrc = "/icons/linkedin.svg"
-            else if (link.platform.toLowerCase().includes("instagram")) iconSrc = "/icons/instagram.svg"
-            else if (link.platform.toLowerCase().includes("youtube")) iconSrc = "/icons/youtube.svg"
-
-            return (
-              <a
-                key={link.id}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:opacity-80 transition-opacity"
-              >
-                <img src={iconSrc || "/placeholder.svg"} alt={link.platform || "Social Icon"} className="w-6 h-6" />
-              </a>
-            )
-          })}
-        </div>
-      )
-
-    // Section blocks (now treated as components but with specific editors if needed)
-    case "about-section":
-    case "departments-section":
-    case "gallery-section":
-    case "testimonials-section":
-    case "jobs-section":
-    case "contact-section":
-      return (
-        <div key={block.id} className={cn("p-6 bg-muted rounded-lg text-center", className)} style={style}>
-          <Info className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-          <h3 className="font-semibold mb-2">{lang === "ar" ? "قسم متقدم" : "Advanced Section Block"}</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            {lang === "ar"
-              ? "هذا القسم يحتوي على محتوى معقد. يمكنك تعديله من لوحة التحكم الرئيسية."
-              : "This section contains complex content. You can edit it from the main dashboard."}
-          </p>
-          <Button variant="outline" size="sm" asChild>
-            <a href="/dashboard">{lang === "ar" ? "الذهاب للوحة التحكم" : "Go to Dashboard"}</a>
-          </Button>
-        </div>
-      )
-
-    default:
-      return null
-  }
-}
-
-// BlockSettingsEditor Component (No changes needed in its structure, only imports were updated)
-function BlockSettingsEditor({
-  block,
-  language,
-  onUpdate,
-  onClose,
-}: {
-  block: PageBlock
-  language: string
-  onUpdate: (content: Partial<PageBlock["content"]>, styles?: Partial<PageBlock["styles"]>) => void
-  onClose: () => void
-}) {
-  const router = useRouter()
-  const [activeTab, setActiveTab] = React.useState<"content" | "style">("content")
-
-  const updateStyles = (styleUpdates: Partial<PageBlock["styles"]>) => {
-    onUpdate({}, { ...block.styles, ...styleUpdates })
-  }
-
-  const renderStyleEditor = () => (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label>{language === "ar" ? "لون الخلفية" : "Background Color"}</Label>
-          <Input
-            type="color"
-            value={block.styles?.backgroundColor || "#ffffff"}
-            onChange={(e) => updateStyles({ backgroundColor: e.target.value })}
-          />
-        </div>
-        <div>
-          <Label>{language === "ar" ? "لون النص" : "Text Color"}</Label>
-          <Input
-            type="color"
-            value={block.styles?.textColor || "#000000"}
-            onChange={(e) => updateStyles({ textColor: e.target.value })}
-          />
-        </div>
-      </div>
-
-      <div>
-        <Label>{language === "ar" ? "تدرج الخلفية" : "Background Gradient"}</Label>
-        <div className="grid grid-cols-3 gap-2">
-          <Input
-            type="color"
-            placeholder="From"
-            value={block.styles?.gradientFrom || ""}
-            onChange={(e) => updateStyles({ gradientFrom: e.target.value })}
-          />
-          <Input
-            type="color"
-            placeholder="Via"
-            value={block.styles?.gradientVia || ""}
-            onChange={(e) => updateStyles({ gradientVia: e.target.value })}
-          />
-          <Input
-            type="color"
-            placeholder="To"
-            value={block.styles?.gradientTo || ""}
-            onChange={(e) => updateStyles({ gradientTo: e.target.value })}
-          />
-        </div>
-      </div>
-
-      <div>
-        <Label>{language === "ar" ? "الحركة" : "Animation"}</Label>
-        <Select
-          value={block.styles?.animation || "none"}
-          onValueChange={(value: any) => updateStyles({ animation: value })}
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">{language === "ar" ? "بدون" : "None"}</SelectItem>
-            <SelectItem value="fade-in">{language === "ar" ? "تلاشي" : "Fade In"}</SelectItem>
-            <SelectItem value="slide-up">{language === "ar" ? "انزلاق لأعلى" : "Slide Up"}</SelectItem>
-            <SelectItem value="slide-down">{language === "ar" ? "انزلاق لأسفل" : "Slide Down"}</SelectItem>
-            <SelectItem value="slide-left">{language === "ar" ? "انزلاق لليسار" : "Slide Left"}</SelectItem>
-            <SelectItem value="slide-right">{language === "ar" ? "انزلاق لليمين" : "Slide Right"}</SelectItem>
-            <SelectItem value="zoom-in">{language === "ar" ? "تكبير" : "Zoom In"}</SelectItem>
-            <SelectItem value="zoom-out">{language === "ar" ? "تصغير" : "Zoom Out"}</SelectItem>
-            <SelectItem value="bounce">{language === "ar" ? "ارتداد" : "Bounce"}</SelectItem>
-            <SelectItem value="pulse">{language === "ar" ? "نبض" : "Pulse"}</SelectItem>
-            <SelectItem value="float">{language === "ar" ? "طفو" : "Float"}</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label>{language === "ar" ? "مدة الحركة" : "Animation Duration"}</Label>
-          <Select
-            value={block.styles?.animationDuration || "300ms"}
-            onValueChange={(value) => updateStyles({ animationDuration: value })}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="150ms">150ms</SelectItem>
-              <SelectItem value="300ms">300ms</SelectItem>
-              <SelectItem value="500ms">500ms</SelectItem>
-              <SelectItem value="700ms">700ms</SelectItem>
-              <SelectItem value="1000ms">1s</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label>{language === "ar" ? "تأخير الحركة" : "Animation Delay"}</Label>
-          <Select
-            value={block.styles?.animationDelay || "0ms"}
-            onValueChange={(value) => updateStyles({ animationDelay: value })}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="0ms">0ms</SelectItem>
-              <SelectItem value="100ms">100ms</SelectItem>
-              <SelectItem value="200ms">200ms</SelectItem>
-              <SelectItem value="300ms">300ms</SelectItem>
-              <SelectItem value="500ms">500ms</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div>
-        <Label>{language === "ar" ? "الهامش الداخلي" : "Padding"}</Label>
-        <Select value={block.styles?.padding || "p-4"} onValueChange={(value) => updateStyles({ padding: value })}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="p-0">{language === "ar" ? "بدون" : "None"}</SelectItem>
-            <SelectItem value="p-2">{language === "ar" ? "صغير" : "Small"}</SelectItem>
-            <SelectItem value="p-4">{language === "ar" ? "متوسط" : "Medium"}</SelectItem>
-            <SelectItem value="p-6">{language === "ar" ? "كبير" : "Large"}</SelectItem>
-            <SelectItem value="p-8">{language === "ar" ? "كبير جداً" : "Extra Large"}</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <Label>{language === "ar" ? "الهامش الخارجي" : "Margin"}</Label>
-        <Select value={block.styles?.margin || "m-0"} onValueChange={(value) => updateStyles({ margin: value })}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="m-0">{language === "ar" ? "بدون" : "None"}</SelectItem>
-            <SelectItem value="my-2">{language === "ar" ? "عمودي صغير" : "Vertical Small"}</SelectItem>
-            <SelectItem value="my-4">{language === "ar" ? "عمودي متوسط" : "Vertical Medium"}</SelectItem>
-            <SelectItem value="my-6">{language === "ar" ? "عمودي كبير" : "Vertical Large"}</SelectItem>
-            <SelectItem value="my-8">{language === "ar" ? "عمودي كبير جداً" : "Vertical Extra Large"}</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label>{language === "ar" ? "نصف القطر" : "Border Radius"}</Label>
-          <Select
-            value={block.styles?.borderRadius || "rounded-none"}
-            onValueChange={(value) => updateStyles({ borderRadius: value })}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="rounded-none">{language === "ar" ? "بدون" : "None"}</SelectItem>
-              <SelectItem value="rounded-sm">{language === "ar" ? "صغير" : "Small"}</SelectItem>
-              <SelectItem value="rounded-md">{language === "ar" ? "متوسط" : "Medium"}</SelectItem>
-              <SelectItem value="rounded-lg">{language === "ar" ? "كبير" : "Large"}</SelectItem>
-              <SelectItem value="rounded-xl">{language === "ar" ? "كبير جداً" : "Extra Large"}</SelectItem>
-              <SelectItem value="rounded-full">{language === "ar" ? "دائري" : "Full"}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label>{language === "ar" ? "الظل" : "Shadow"}</Label>
-          <Select
-            value={block.styles?.shadow || "shadow-none"}
-            onValueChange={(value) => updateStyles({ shadow: value })}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="shadow-none">{language === "ar" ? "بدون" : "None"}</SelectItem>
-              <SelectItem value="shadow-sm">{language === "ar" ? "صغير" : "Small"}</SelectItem>
-              <SelectItem value="shadow-md">{language === "ar" ? "متوسط" : "Medium"}</SelectItem>
-              <SelectItem value="shadow-lg">{language === "ar" ? "كبير" : "Large"}</SelectItem>
-              <SelectItem value="shadow-xl">{language === "ar" ? "كبير جداً" : "Extra Large"}</SelectItem>
-              <SelectItem value="shadow-2xl">{language === "ar" ? "ضخم" : "2X Large"}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div>
-        <Label>{language === "ar" ? "محاذاة النص" : "Text Align"}</Label>
-        <Select
-          value={block.styles?.textAlign || "left"}
-          onValueChange={(value: any) => updateStyles({ textAlign: value })}
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="left">{language === "ar" ? "يسار" : "Left"}</SelectItem>
-            <SelectItem value="center">{language === "ar" ? "وسط" : "Center"}</SelectItem>
-            <SelectItem value="right">{language === "ar" ? "يمين" : "Right"}</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <Label>{language === "ar" ? "تأثير التحويم" : "Hover Effect"}</Label>
-        <div className="grid grid-cols-2 gap-2">
-          <Select
-            value={block.styles?.hoverScale || "none"}
-            onValueChange={(value) => updateStyles({ hoverScale: value })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={language === "ar" ? "تكبير" : "Scale"} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">{language === "ar" ? "بدون" : "None"}</SelectItem>
-              <SelectItem value="scale-105">105%</SelectItem>
-              <SelectItem value="scale-110">110%</SelectItem>
-              <SelectItem value="scale-125">125%</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select
-            value={block.styles?.hoverRotate || "none"}
-            onValueChange={(value) => updateStyles({ hoverRotate: value })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={language === "ar" ? "دوران" : "Rotate"} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">{language === "ar" ? "بدون" : "None"}</SelectItem>
-              <SelectItem value="rotate-1">1°</SelectItem>
-              <SelectItem value="rotate-3">3°</SelectItem>
-              <SelectItem value="rotate-6">6°</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-    </div>
-  )
-
-  const renderEditor = () => {
-    switch (block.type) {
-      case "heading":
-        return (
-          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="content">{language === "ar" ? "المحتوى" : "Content"}</TabsTrigger>
-              <TabsTrigger value="style">{language === "ar" ? "التصميم" : "Style"}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="content" className="space-y-4">
-              <div>
-                <Label>{language === "ar" ? "المستوى" : "Level"}</Label>
-                <Select
-                  value={block.content.level?.toString() || "2"}
-                  onValueChange={(value) => onUpdate({ level: Number.parseInt(value) as 1 | 2 | 3 | 4 | 5 | 6 })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[1, 2, 3, 4, 5, 6].map((level) => (
-                      <SelectItem key={level} value={level.toString()}>
-                        {language === "ar" ? `عنوان ${level}` : `Heading ${level}`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>{language === "ar" ? "النص بالعربية" : "Text in Arabic"}</Label>
-                <Input
-                  value={block.content.textAr || ""}
-                  onChange={(e) => onUpdate({ textAr: e.target.value })}
-                  placeholder={language === "ar" ? "أدخل النص" : "Enter text"}
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "النص بالإنجليزية" : "Text in English"}</Label>
-                <Input
-                  value={block.content.textEn || ""}
-                  onChange={(e) => onUpdate({ textEn: e.target.value })}
-                  placeholder="Enter text"
-                />
-              </div>
-            </TabsContent>
-            <TabsContent value="style">{renderStyleEditor()}</TabsContent>
-          </Tabs>
-        )
-
-      case "paragraph":
-        return (
-          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="content">{language === "ar" ? "المحتوى" : "Content"}</TabsTrigger>
-              <TabsTrigger value="style">{language === "ar" ? "التصميم" : "Style"}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="content" className="space-y-4">
-              <div>
-                <Label>{language === "ar" ? "النص بالعربية" : "Text in Arabic"}</Label>
-                <Textarea
-                  value={block.content.textAr || ""}
-                  onChange={(e) => onUpdate({ textAr: e.target.value })}
-                  rows={6}
-                  placeholder={language === "ar" ? "أدخل النص" : "Enter text"}
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "النص بالإنجليزية" : "Text in English"}</Label>
-                <Textarea
-                  value={block.content.textEn || ""}
-                  onChange={(e) => onUpdate({ textEn: e.target.value })}
-                  rows={6}
-                  placeholder="Enter text"
-                />
-              </div>
-            </TabsContent>
-            <TabsContent value="style">{renderStyleEditor()}</TabsContent>
-          </Tabs>
-        )
-
-      case "image":
-        return (
-          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="content">{language === "ar" ? "المحتوى" : "Content"}</TabsTrigger>
-              <TabsTrigger value="style">{language === "ar" ? "التصميم" : "Style"}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="content" className="space-y-4">
-              <ImageUpload
-                value={block.content.imageUrl || ""}
-                onChange={(url) => onUpdate({ imageUrl: url })}
-                label={language === "ar" ? "الصورة" : "Image"}
-                language={language === "ar" ? "ar" : "en"}
-              />
-              <div>
-                <Label>{language === "ar" ? "نص بديل (عربي)" : "Alt Text (Arabic)"}</Label>
-                <Input
-                  value={block.content.altAr || ""}
-                  onChange={(e) => onUpdate({ altAr: e.target.value })}
-                  placeholder={language === "ar" ? "وصف الصورة" : "Image description"}
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "نص بديل (إنجليزي)" : "Alt Text (English)"}</Label>
-                <Input
-                  value={block.content.altEn || ""}
-                  onChange={(e) => onUpdate({ altEn: e.target.value })}
-                  placeholder="Image description"
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "تعليق (عربي)" : "Caption (Arabic)"}</Label>
-                <Input
-                  value={block.content.captionAr || ""}
-                  onChange={(e) => onUpdate({ captionAr: e.target.value })}
-                  placeholder={language === "ar" ? "تعليق اختياري" : "Optional caption"}
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "تعليق (إنجليزي)" : "Caption (English)"}</Label>
-                <Input
-                  value={block.content.captionEn || ""}
-                  onChange={(e) => onUpdate({ captionEn: e.target.value })}
-                  placeholder="Optional caption"
-                />
-              </div>
-            </TabsContent>
-            <TabsContent value="style">{renderStyleEditor()}</TabsContent>
-          </Tabs>
-        )
-
-      case "gallery":
-        return (
-          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="content">{language === "ar" ? "المحتوى" : "Content"}</TabsTrigger>
-              <TabsTrigger value="style">{language === "ar" ? "التصميم" : "Style"}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="content" className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label>{language === "ar" ? "الصور" : "Images"}</Label>
+              <div className="flex justify-end gap-2 pt-4 border-t">
                 <Button
-                  size="sm"
+                  variant="outline"
                   onClick={() => {
-                    const images = block.content.images || []
-                    onUpdate({
-                      images: [
-                        ...images,
-                        {
-                          url: "",
-                          alt: "",
-                          caption: "",
-                        },
-                      ],
-                    })
+                    setEditingBlock(null)
+                    setTempBlockChanges(null)
                   }}
                 >
-                  <Plus className="w-4 h-4 ml-2" />
-                  {language === "ar" ? "إضافة صورة" : "Add Image"}
+                  {language === "ar" ? "إلغاء" : "Cancel"}
                 </Button>
-              </div>
-              {(block.content.images || []).map((image, index) => (
-                <Card key={index} className="p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">
-                      {language === "ar" ? "صورة" : "Image"} {index + 1}
-                    </span>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        const images = block.content.images || []
-                        onUpdate({ images: images.filter((_, i) => i !== index) })
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  <ImageUpload
-                    value={image.url}
-                    onChange={(url) => {
-                      const images = block.content.images || []
-                      onUpdate({
-                        images: images.map((img, i) => (i === index ? { ...img, url } : img)),
-                      })
-                    }}
-                    label={language === "ar" ? "رابط الصورة" : "Image URL"}
-                    language={language === "ar" ? "ar" : "en"}
-                  />
-                  <Input
-                    value={image.alt}
-                    onChange={(e) => {
-                      const images = block.content.images || []
-                      onUpdate({
-                        images: images.map((img, i) => (i === index ? { ...img, alt: e.target.value } : img)),
-                      })
-                    }}
-                    placeholder={language === "ar" ? "نص بديل" : "Alt text"}
-                  />
-                  <Input
-                    value={image.caption || ""}
-                    onChange={(e) => {
-                      const images = block.content.images || []
-                      onUpdate({
-                        images: images.map((img, i) => (i === index ? { ...img, caption: e.target.value } : img)),
-                      })
-                    }}
-                    placeholder={language === "ar" ? "تعليق (اختياري)" : "Caption (optional)"}
-                  />
-                </Card>
-              ))}
-            </TabsContent>
-            <TabsContent value="style">{renderStyleEditor()}</TabsContent>
-          </Tabs>
-        )
-
-      case "video":
-        return (
-          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="content">{language === "ar" ? "المحتوى" : "Content"}</TabsTrigger>
-              <TabsTrigger value="style">{language === "ar" ? "التصميم" : "Style"}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="content" className="space-y-4">
-              <div>
-                <Label>{language === "ar" ? "رابط الفيديو" : "Video URL"}</Label>
-                <Input
-                  value={block.content.videoUrl || ""}
-                  onChange={(e) => onUpdate({ videoUrl: e.target.value })}
-                  placeholder="https://youtube.com/watch?v=..."
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "العنوان (عربي)" : "Title (Arabic)"}</Label>
-                <Input
-                  value={block.content.titleAr || ""}
-                  onChange={(e) => onUpdate({ titleAr: e.target.value })}
-                  placeholder={language === "ar" ? "عنوان الفيديو" : "Video title"}
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "العنوان (إنجليزي)" : "Title (English)"}</Label>
-                <Input
-                  value={block.content.titleEn || ""}
-                  onChange={(e) => onUpdate({ titleEn: e.target.value })}
-                  placeholder="Video title"
-                />
-              </div>
-            </TabsContent>
-            <TabsContent value="style">{renderStyleEditor()}</TabsContent>
-          </Tabs>
-        )
-
-      case "quote":
-        return (
-          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="content">{language === "ar" ? "المحتوى" : "Content"}</TabsTrigger>
-              <TabsTrigger value="style">{language === "ar" ? "التصميم" : "Style"}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="content" className="space-y-4">
-              <div>
-                <Label>{language === "ar" ? "الاقتباس (عربي)" : "Quote (Arabic)"}</Label>
-                <Textarea
-                  value={block.content.quoteAr || ""}
-                  onChange={(e) => onUpdate({ quoteAr: e.target.value })}
-                  rows={4}
-                  placeholder={language === "ar" ? "نص الاقتباس" : "Quote text"}
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "الاقتباس (إنجليزي)" : "Quote (English)"}</Label>
-                <Textarea
-                  value={block.content.quoteEn || ""}
-                  onChange={(e) => onUpdate({ quoteEn: e.target.value })}
-                  rows={4}
-                  placeholder="Quote text"
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "المؤلف (عربي)" : "Author (Arabic)"}</Label>
-                <Input
-                  value={block.content.authorAr || ""}
-                  onChange={(e) => onUpdate({ authorAr: e.target.value })}
-                  placeholder={language === "ar" ? "اسم المؤلف" : "Author name"}
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "المؤلف (إنجليزي)" : "Author (English)"}</Label>
-                <Input
-                  value={block.content.authorEn || ""}
-                  onChange={(e) => onUpdate({ authorEn: e.target.value })}
-                  placeholder="Author name"
-                />
-              </div>
-            </TabsContent>
-            <TabsContent value="style">{renderStyleEditor()}</TabsContent>
-          </Tabs>
-        )
-
-      case "button":
-        return (
-          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="content">{language === "ar" ? "المحتوى" : "Content"}</TabsTrigger>
-              <TabsTrigger value="style">{language === "ar" ? "التصميم" : "Style"}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="content" className="space-y-4">
-              <div>
-                <Label>{language === "ar" ? "نص الزر (عربي)" : "Button Text (Arabic)"}</Label>
-                <Input
-                  value={block.content.buttonTextAr || ""}
-                  onChange={(e) => onUpdate({ buttonTextAr: e.target.value })}
-                  placeholder={language === "ar" ? "اضغط هنا" : "Click here"}
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "نص الزر (إنجليزي)" : "Button Text (English)"}</Label>
-                <Input
-                  value={block.content.buttonTextEn || ""}
-                  onChange={(e) => onUpdate({ buttonTextEn: e.target.value })}
-                  placeholder="Click here"
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "الرابط" : "URL"}</Label>
-                <Input
-                  value={block.content.buttonUrl || ""}
-                  onChange={(e) => onUpdate({ buttonUrl: e.target.value })}
-                  placeholder="https://..."
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "النمط" : "Style"}</Label>
-                <Select
-                  value={block.content.buttonStyle || "default"}
-                  onValueChange={(value) => onUpdate({ buttonStyle: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="default">{language === "ar" ? "افتراضي" : "Default"}</SelectItem>
-                    <SelectItem value="outline">{language === "ar" ? "محدد" : "Outline"}</SelectItem>
-                    <SelectItem value="ghost">{language === "ar" ? "شفاف" : "Ghost"}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </TabsContent>
-            <TabsContent value="style">{renderStyleEditor()}</TabsContent>
-          </Tabs>
-        )
-
-      case "divider":
-        return (
-          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="content">{language === "ar" ? "المحتوى" : "Content"}</TabsTrigger>
-              <TabsTrigger value="style">{language === "ar" ? "التصميم" : "Style"}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="content" className="space-y-4">
-              <div>
-                <Label>{language === "ar" ? "النمط" : "Style"}</Label>
-                <Select
-                  value={block.content.dividerStyle || "solid"}
-                  onValueChange={(value) => onUpdate({ dividerStyle: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="solid">{language === "ar" ? "خط متصل" : "Solid"}</SelectItem>
-                    <SelectItem value="dashed">{language === "ar" ? "خط متقطع" : "Dashed"}</SelectItem>
-                    <SelectItem value="dotted">{language === "ar" ? "نقاط" : "Dotted"}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </TabsContent>
-            <TabsContent value="style">{renderStyleEditor()}</TabsContent>
-          </Tabs>
-        )
-
-      case "html":
-        return (
-          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="content">{language === "ar" ? "المحتوى" : "Content"}</TabsTrigger>
-              <TabsTrigger value="style">{language === "ar" ? "التصميم" : "Style"}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="content" className="space-y-4">
-              <div>
-                <Label>{language === "ar" ? "كود HTML" : "HTML Code"}</Label>
-                <Textarea
-                  value={block.content.htmlCode || ""}
-                  onChange={(e) => onUpdate({ htmlCode: e.target.value })}
-                  rows={10}
-                  placeholder="<div>...</div>"
-                  className="font-mono text-sm"
-                />
-              </div>
-            </TabsContent>
-            <TabsContent value="style">{renderStyleEditor()}</TabsContent>
-          </Tabs>
-        )
-
-      case "spacer":
-        return (
-          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="content">{language === "ar" ? "المحتوى" : "Content"}</TabsTrigger>
-              <TabsTrigger value="style">{language === "ar" ? "التصميم" : "Style"}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="content" className="space-y-4">
-              <div>
-                <Label>{language === "ar" ? "الارتفاع (بكسل)" : "Height (px)"}</Label>
-                <Input
-                  type="number"
-                  value={block.content.height || 20}
-                  onChange={(e) => onUpdate({ height: Number.parseInt(e.target.value) })}
-                  placeholder="20"
-                />
-              </div>
-            </TabsContent>
-            <TabsContent value="style">{renderStyleEditor()}</TabsContent>
-          </Tabs>
-        )
-
-      case "row":
-        return (
-          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="content">{language === "ar" ? "المحتوى" : "Content"}</TabsTrigger>
-              <TabsTrigger value="style">{language === "ar" ? "التصميم" : "Style"}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="content" className="space-y-4">
-              <div>
-                <Label>{language === "ar" ? "عدد الأعمدة" : "Number of Columns"}</Label>
-                <Select
-                  value={block.content.columns?.toString() || "2"}
-                  onValueChange={(value) => onUpdate({ columns: Number.parseInt(value) })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1</SelectItem>
-                    <SelectItem value="2">2</SelectItem>
-                    <SelectItem value="3">3</SelectItem>
-                    <SelectItem value="4">4</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {language === "ar"
-                  ? "يمكنك إضافة عناصر داخل كل عمود بعد الحفظ"
-                  : "You can add blocks inside each column after saving"}
-              </p>
-            </TabsContent>
-            <TabsContent value="style">{renderStyleEditor()}</TabsContent>
-          </Tabs>
-        )
-
-      case "card":
-        return (
-          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="content">{language === "ar" ? "المحتوى" : "Content"}</TabsTrigger>
-              <TabsTrigger value="style">{language === "ar" ? "التصميم" : "Style"}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="content" className="space-y-4">
-              <div>
-                <Label>{language === "ar" ? "العنوان بالعربية" : "Title in Arabic"}</Label>
-                <Input
-                  value={block.content.titleAr || ""}
-                  onChange={(e) => onUpdate({ titleAr: e.target.value })}
-                  placeholder={language === "ar" ? "عنوان البطاقة" : "Card title"}
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "العنوان بالإنجليزية" : "Title in English"}</Label>
-                <Input
-                  value={block.content.titleEn || ""}
-                  onChange={(e) => onUpdate({ titleEn: e.target.value })}
-                  placeholder="Card title"
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "الوصف بالعربية" : "Description in Arabic"}</Label>
-                <Textarea
-                  value={block.content.descriptionAr || ""}
-                  onChange={(e) => onUpdate({ descriptionAr: e.target.value })}
-                  rows={4}
-                  placeholder={language === "ar" ? "وصف البطاقة" : "Card description"}
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "الوصف بالإنجليزية" : "Description in English"}</Label>
-                <Textarea
-                  value={block.content.descriptionEn || ""}
-                  onChange={(e) => onUpdate({ descriptionEn: e.target.value })}
-                  rows={4}
-                  placeholder="Card description"
-                />
-              </div>
-              <ImageUpload
-                value={block.content.imageUrl || ""}
-                onChange={(url) => onUpdate({ imageUrl: url })}
-                label={language === "ar" ? "صورة البطاقة" : "Card Image"}
-                language={language === "ar" ? "ar" : "en"}
-              />
-              <div>
-                <Label>{language === "ar" ? "نص الزر (عربي)" : "Button Text (Arabic)"}</Label>
-                <Input
-                  value={block.content.buttonTextAr || ""}
-                  onChange={(e) => onUpdate({ buttonTextAr: e.target.value })}
-                  placeholder={language === "ar" ? "نص الزر" : "Button text"}
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "نص الزر (إنجليزي)" : "Button Text (English)"}</Label>
-                <Input
-                  value={block.content.buttonTextEn || ""}
-                  onChange={(e) => onUpdate({ buttonTextEn: e.target.value })}
-                  placeholder="Button text"
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "رابط الزر" : "Button URL"}</Label>
-                <Input
-                  value={block.content.buttonUrl || ""}
-                  onChange={(e) => onUpdate({ buttonUrl: e.target.value })}
-                  placeholder="https://..."
-                />
-              </div>
-            </TabsContent>
-            <TabsContent value="style">{renderStyleEditor()}</TabsContent>
-          </Tabs>
-        )
-
-      case "icon-box":
-        return (
-          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="content">{language === "ar" ? "المحتوى" : "Content"}</TabsTrigger>
-              <TabsTrigger value="style">{language === "ar" ? "التصميم" : "Style"}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="content" className="space-y-4">
-              <div>
-                <Label>{language === "ar" ? "الأيقونة" : "Icon"}</Label>
-                <Select value={block.content.icon || "Star"} onValueChange={(value) => onUpdate({ icon: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Star">Star</SelectItem>
-                    <SelectItem value="Heart">Heart</SelectItem>
-                    <SelectItem value="Check">Check</SelectItem>
-                    <SelectItem value="X">X</SelectItem>
-                    <SelectItem value="Info">Info</SelectItem>
-                    <SelectItem value="AlertCircle">Alert Circle</SelectItem>
-                    <SelectItem value="Mail">Mail</SelectItem>
-                    <SelectItem value="Phone">Phone</SelectItem>
-                    <SelectItem value="MapPin">Map Pin</SelectItem>
-                    <SelectItem value="Calendar">Calendar</SelectItem>
-                    <SelectItem value="Clock">Clock</SelectItem>
-                    <SelectItem value="User">User</SelectItem>
-                    <SelectItem value="Users">Users</SelectItem>
-                    <SelectItem value="Building2">Building</SelectItem>
-                    <SelectItem value="Home">Home</SelectItem>
-                    <SelectItem value="Zap">Zap</SelectItem>
-                    <SelectItem value="Award">Award</SelectItem>
-                    <SelectItem value="Target">Target</SelectItem>
-                    <SelectItem value="TrendingUp">Trending Up</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>{language === "ar" ? "لون الأيقونة" : "Icon Color"}</Label>
-                <Input
-                  type="color"
-                  value={block.content.iconColor || "#3b82f6"}
-                  onChange={(e) => onUpdate({ iconColor: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "حجم الأيقونة" : "Icon Size"}</Label>
-                <Select
-                  value={block.content.iconSize || "w-8 h-8"}
-                  onValueChange={(value) => onUpdate({ iconSize: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="w-6 h-6">{language === "ar" ? "صغير" : "Small"}</SelectItem>
-                    <SelectItem value="w-8 h-8">{language === "ar" ? "متوسط" : "Medium"}</SelectItem>
-                    <SelectItem value="w-10 h-10">{language === "ar" ? "كبير" : "Large"}</SelectItem>
-                    <SelectItem value="w-12 h-12">{language === "ar" ? "كبير جداً" : "Extra Large"}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>{language === "ar" ? "العنوان بالعربية" : "Title in Arabic"}</Label>
-                <Input
-                  value={block.content.titleAr || ""}
-                  onChange={(e) => onUpdate({ titleAr: e.target.value })}
-                  placeholder={language === "ar" ? "أدخل العنوان" : "Enter title"}
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "العنوان بالإنجليزية" : "Title in English"}</Label>
-                <Input
-                  value={block.content.titleEn || ""}
-                  onChange={(e) => onUpdate({ titleEn: e.target.value })}
-                  placeholder="Enter title"
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "الوصف بالعربية" : "Description in Arabic"}</Label>
-                <Textarea
-                  value={block.content.cardDescriptionAr || ""}
-                  onChange={(e) => onUpdate({ cardDescriptionAr: e.target.value })}
-                  rows={3}
-                  placeholder={language === "ar" ? "أدخل الوصف" : "Enter description"}
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "الوصف بالإنجليزية" : "Description in English"}</Label>
-                <Textarea
-                  value={block.content.cardDescriptionEn || ""}
-                  onChange={(e) => onUpdate({ cardDescriptionEn: e.target.value })}
-                  rows={3}
-                  placeholder="Enter description"
-                />
-              </div>
-            </TabsContent>
-            <TabsContent value="style">{renderStyleEditor()}</TabsContent>
-          </Tabs>
-        )
-
-      case "hero-slider":
-        return (
-          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="content">{language === "ar" ? "المحتوى" : "Content"}</TabsTrigger>
-              <TabsTrigger value="style">{language === "ar" ? "التصميم" : "Style"}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="content" className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label>{language === "ar" ? "الشرائح" : "Slides"}</Label>
                 <Button
-                  size="sm"
                   onClick={() => {
-                    const slides = block.content.slides || []
-                    onUpdate({
-                      slides: [
-                        ...slides,
-                        {
-                          id: Date.now().toString(),
-                          imageUrl: "",
-                          titleAr: "",
-                          titleEn: "",
-                          subtitleAr: "",
-                          subtitleEn: "",
-                          descriptionAr: "",
-                          descriptionEn: "",
-                        },
-                      ],
-                    })
-                  }}
-                >
-                  <Plus className="w-4 h-4 ml-2" />
-                  {language === "ar" ? "إضافة شريحة" : "Add Slide"}
-                </Button>
-              </div>
-              {(block.content.slides || []).map((slide, index) => (
-                <Card key={slide.id} className="p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">
-                      {language === "ar" ? "شريحة" : "Slide"} {index + 1}
-                    </span>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        const slides = block.content.slides || []
-                        onUpdate({ slides: slides.filter((s) => s.id !== slide.id) })
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  <ImageUpload
-                    value={slide.imageUrl}
-                    onChange={(url) => {
-                      const slides = block.content.slides || []
-                      onUpdate({
-                        slides: slides.map((s) => (s.id === slide.id ? { ...s, imageUrl: url } : s)),
-                      })
-                    }}
-                    label={language === "ar" ? "صورة الشريحة" : "Slide Image"}
-                    language={language === "ar" ? "ar" : "en"}
-                  />
-                  <Input
-                    value={slide.titleAr}
-                    onChange={(e) => {
-                      const slides = block.content.slides || []
-                      onUpdate({
-                        slides: slides.map((s) => (s.id === slide.id ? { ...s, titleAr: e.target.value } : s)),
-                      })
-                    }}
-                    placeholder={language === "ar" ? "العنوان بالعربية" : "Title in Arabic"}
-                  />
-                  <Input
-                    value={slide.titleEn}
-                    onChange={(e) => {
-                      const slides = block.content.slides || []
-                      onUpdate({
-                        slides: slides.map((s) => (s.id === slide.id ? { ...s, titleEn: e.target.value } : s)),
-                      })
-                    }}
-                    placeholder={language === "ar" ? "العنوان بالإنجليزية" : "Title in English"}
-                  />
-                  <Textarea
-                    value={slide.subtitleAr}
-                    onChange={(e) => {
-                      const slides = block.content.slides || []
-                      onUpdate({
-                        slides: slides.map((s) => (s.id === slide.id ? { ...s, subtitleAr: e.target.value } : s)),
-                      })
-                    }}
-                    placeholder={language === "ar" ? "عنوان فرعي بالعربية" : "Subtitle in Arabic"}
-                    rows={2}
-                  />
-                  <Textarea
-                    value={slide.subtitleEn}
-                    onChange={(e) => {
-                      const slides = block.content.slides || []
-                      onUpdate({
-                        slides: slides.map((s) => (s.id === slide.id ? { ...s, subtitleEn: e.target.value } : s)),
-                      })
-                    }}
-                    placeholder={language === "ar" ? "عنوان فرعي بالإنجليزية" : "Subtitle in English"}
-                    rows={2}
-                  />
-                  <Textarea
-                    value={slide.descriptionAr}
-                    onChange={(e) => {
-                      const slides = block.content.slides || []
-                      onUpdate({
-                        slides: slides.map((s) => (s.id === slide.id ? { ...s, descriptionAr: e.target.value } : s)),
-                      })
-                    }}
-                    placeholder={language === "ar" ? "الوصف بالعربية" : "Description in Arabic"}
-                    rows={3}
-                  />
-                  <Textarea
-                    value={slide.descriptionEn}
-                    onChange={(e) => {
-                      const slides = block.content.slides || []
-                      onUpdate({
-                        slides: slides.map((s) => (s.id === slide.id ? { ...s, descriptionEn: e.target.value } : s)),
-                      })
-                    }}
-                    placeholder={language === "ar" ? "الوصف بالإنجليزية" : "Description in English"}
-                    rows={3}
-                  />
-                </Card>
-              ))}
-            </TabsContent>
-            <TabsContent value="style">{renderStyleEditor()}</TabsContent>
-          </Tabs>
-        )
-
-      case "statistics":
-        return (
-          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="content">{language === "ar" ? "المحتوى" : "Content"}</TabsTrigger>
-              <TabsTrigger value="style">{language === "ar" ? "التصميم" : "Style"}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="content" className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label>{language === "ar" ? "الإحصائيات" : "Statistics"}</Label>
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    const stats = block.content.stats || []
-                    onUpdate({
-                      stats: [
-                        ...stats,
-                        {
-                          id: Date.now().toString(),
-                          number: "",
-                          labelAr: "",
-                          labelEn: "",
-                        },
-                      ],
-                    })
-                  }}
-                >
-                  <Plus className="w-4 h-4 ml-2" />
-                  {language === "ar" ? "إضافة إحصائية" : "Add Statistic"}
-                </Button>
-              </div>
-              {(block.content.stats || []).map((stat, index) => (
-                <Card key={stat.id} className="p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">
-                      {language === "ar" ? "إحصائية" : "Statistic"} {index + 1}
-                    </span>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        const stats = block.content.stats || []
-                        onUpdate({ stats: stats.filter((s) => s.id !== stat.id) })
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  <Input
-                    value={stat.number}
-                    onChange={(e) => {
-                      const stats = block.content.stats || []
-                      onUpdate({
-                        stats: stats.map((s) => (s.id === stat.id ? { ...s, number: e.target.value } : s)),
-                      })
-                    }}
-                    placeholder={language === "ar" ? "الرقم (مثال: 1000+)" : "Number (e.g., 1000+)"}
-                  />
-                  <Input
-                    value={stat.labelAr}
-                    onChange={(e) => {
-                      const stats = block.content.stats || []
-                      onUpdate({
-                        stats: stats.map((s) => (s.id === stat.id ? { ...s, labelAr: e.target.value } : s)),
-                      })
-                    }}
-                    placeholder={language === "ar" ? "التسمية بالعربية" : "Label in Arabic"}
-                  />
-                  <Input
-                    value={stat.labelEn}
-                    onChange={(e) => {
-                      const stats = block.content.stats || []
-                      onUpdate({
-                        stats: stats.map((s) => (s.id === stat.id ? { ...s, labelEn: e.target.value } : s)),
-                      })
-                    }}
-                    placeholder={language === "ar" ? "التسمية بالإنجليزية" : "Label in English"}
-                  />
-                </Card>
-              ))}
-            </TabsContent>
-            <TabsContent value="style">{renderStyleEditor()}</TabsContent>
-          </Tabs>
-        )
-
-      case "features":
-        return (
-          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="content">{language === "ar" ? "المحتوى" : "Content"}</TabsTrigger>
-              <TabsTrigger value="style">{language === "ar" ? "التصميم" : "Style"}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="content" className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label>{language === "ar" ? "المميزات" : "Features"}</Label>
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    const features = block.content.features || []
-                    onUpdate({
-                      features: [
-                        ...features,
-                        {
-                          id: Date.now().toString(),
-                          icon: "star",
-                          titleAr: "",
-                          titleEn: "",
-                          descriptionAr: "",
-                          descriptionEn: "",
-                        },
-                      ],
-                    })
-                  }}
-                >
-                  <Plus className="w-4 h-4 ml-2" />
-                  {language === "ar" ? "إضافة ميزة" : "Add Feature"}
-                </Button>
-              </div>
-              {(block.content.features || []).map((feature, index) => (
-                <Card key={feature.id} className="p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">
-                      {language === "ar" ? "ميزة" : "Feature"} {index + 1}
-                    </span>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        const features = block.content.features || []
-                        onUpdate({ features: features.filter((f) => f.id !== feature.id) })
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  <div>
-                    <Label>{language === "ar" ? "الأيقونة" : "Icon"}</Label>
-                    <Input
-                      value={feature.icon}
-                      onChange={(e) => {
-                        const features = block.content.features || []
-                        onUpdate({
-                          features: features.map((f) => (f.id === feature.id ? { ...f, icon: e.target.value } : f)),
-                        })
-                      }}
-                      placeholder="lucide-icon-name (e.g., star)"
-                    />
-                  </div>
-                  <Input
-                    value={feature.titleAr}
-                    onChange={(e) => {
-                      const features = block.content.features || []
-                      onUpdate({
-                        features: features.map((f) => (f.id === feature.id ? { ...f, titleAr: e.target.value } : f)),
-                      })
-                    }}
-                    placeholder={language === "ar" ? "العنوان بالعربية" : "Title in Arabic"}
-                  />
-                  <Input
-                    value={feature.titleEn}
-                    onChange={(e) => {
-                      const features = block.content.features || []
-                      onUpdate({
-                        features: features.map((f) => (f.id === feature.id ? { ...f, titleEn: e.target.value } : f)),
-                      })
-                    }}
-                    placeholder={language === "ar" ? "العنوان بالإنجليزية" : "Title in English"}
-                  />
-                  <Textarea
-                    value={feature.descriptionAr}
-                    onChange={(e) => {
-                      const features = block.content.features || []
-                      onUpdate({
-                        features: features.map((f) =>
-                          f.id === feature.id ? { ...f, descriptionAr: e.target.value } : f,
-                        ),
-                      })
-                    }}
-                    placeholder={language === "ar" ? "الوصف بالعربية" : "Description in Arabic"}
-                    rows={2}
-                  />
-                  <Textarea
-                    value={feature.descriptionEn}
-                    onChange={(e) => {
-                      const features = block.content.features || []
-                      onUpdate({
-                        features: features.map((f) =>
-                          f.id === feature.id ? { ...f, descriptionEn: e.target.value } : f,
-                        ),
-                      })
-                    }}
-                    placeholder={language === "ar" ? "الوصف بالإنجليزية" : "Description in English"}
-                    rows={2}
-                  />
-                </Card>
-              ))}
-            </TabsContent>
-            <TabsContent value="style">{renderStyleEditor()}</TabsContent>
-          </Tabs>
-        )
-
-      case "accordion":
-        return (
-          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="content">{language === "ar" ? "المحتوى" : "Content"}</TabsTrigger>
-              <TabsTrigger value="style">{language === "ar" ? "التصميم" : "Style"}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="content" className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label>{language === "ar" ? "العناصر" : "Items"}</Label>
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    const items = block.content.items || []
-                    onUpdate({
-                      items: [
-                        ...items,
-                        {
-                          id: Date.now().toString(),
-                          titleAr: "",
-                          titleEn: "",
-                          descriptionAr: "",
-                          descriptionEn: "",
-                        },
-                      ],
-                    })
-                  }}
-                >
-                  <Plus className="w-4 h-4 ml-2" />
-                  {language === "ar" ? "إضافة عنصر" : "Add Item"}
-                </Button>
-              </div>
-              {(block.content.items || []).map((item, index) => (
-                <Card key={item.id} className="p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">
-                      {language === "ar" ? "عنصر" : "Item"} {index + 1}
-                    </span>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        const items = block.content.items || []
-                        onUpdate({ items: items.filter((i) => i.id !== item.id) })
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  <Input
-                    value={item.titleAr}
-                    onChange={(e) => {
-                      const items = block.content.items || []
-                      onUpdate({
-                        items: items.map((i) => (i.id === item.id ? { ...i, titleAr: e.target.value } : i)),
-                      })
-                    }}
-                    placeholder={language === "ar" ? "العنوان بالعربية" : "Title in Arabic"}
-                  />
-                  <Input
-                    value={item.titleEn}
-                    onChange={(e) => {
-                      const items = block.content.items || []
-                      onUpdate({
-                        items: items.map((i) => (i.id === item.id ? { ...i, titleEn: e.target.value } : i)),
-                      })
-                    }}
-                    placeholder={language === "ar" ? "العنوان بالإنجليزية" : "Title in English"}
-                  />
-                  <Textarea
-                    value={item.descriptionAr}
-                    onChange={(e) => {
-                      const items = block.content.items || []
-                      onUpdate({
-                        items: items.map((i) => (i.id === item.id ? { ...i, descriptionAr: e.target.value } : i)),
-                      })
-                    }}
-                    placeholder={language === "ar" ? "الوصف بالعربية" : "Description in Arabic"}
-                    rows={3}
-                  />
-                  <Textarea
-                    value={item.descriptionEn}
-                    onChange={(e) => {
-                      const items = block.content.items || []
-                      onUpdate({
-                        items: items.map((i) => (i.id === item.id ? { ...i, descriptionEn: e.target.value } : i)),
-                      })
-                    }}
-                    placeholder={language === "ar" ? "الوصف بالإنجليزية" : "Description in English"}
-                    rows={3}
-                  />
-                </Card>
-              ))}
-            </TabsContent>
-            <TabsContent value="style">{renderStyleEditor()}</TabsContent>
-          </Tabs>
-        )
-
-      case "tabs":
-        return (
-          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="content">{language === "ar" ? "المحتوى" : "Content"}</TabsTrigger>
-              <TabsTrigger value="style">{language === "ar" ? "التصميم" : "Style"}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="content" className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label>{language === "ar" ? "التبويبات" : "Tabs"}</Label>
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    const tabs = block.content.tabs || []
-                    onUpdate({
-                      tabs: [
-                        ...tabs,
-                        {
-                          id: Date.now().toString(),
-                          titleAr: "",
-                          titleEn: "",
-                          contentAr: "",
-                          contentEn: "",
-                        },
-                      ],
-                    })
-                  }}
-                >
-                  <Plus className="w-4 h-4 ml-2" />
-                  {language === "ar" ? "إضافة تبويب" : "Add Tab"}
-                </Button>
-              </div>
-              {(block.content.tabs || []).map((tab, index) => (
-                <Card key={tab.id} className="p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">
-                      {language === "ar" ? "تبويب" : "Tab"} {index + 1}
-                    </span>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        const tabs = block.content.tabs || []
-                        onUpdate({ tabs: tabs.filter((t) => t.id !== tab.id) })
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  <Input
-                    value={tab.titleAr}
-                    onChange={(e) => {
-                      const tabs = block.content.tabs || []
-                      onUpdate({
-                        tabs: tabs.map((t) => (t.id === tab.id ? { ...t, titleAr: e.target.value } : t)),
-                      })
-                    }}
-                    placeholder={language === "ar" ? "عنوان التبويب بالعربية" : "Tab title in Arabic"}
-                  />
-                  <Input
-                    value={tab.titleEn}
-                    onChange={(e) => {
-                      const tabs = block.content.tabs || []
-                      onUpdate({
-                        tabs: tabs.map((t) => (t.id === tab.id ? { ...t, titleEn: e.target.value } : t)),
-                      })
-                    }}
-                    placeholder={language === "ar" ? "عنوان التبويب بالإنجليزية" : "Tab title in English"}
-                  />
-                  <Textarea
-                    value={tab.contentAr}
-                    onChange={(e) => {
-                      const tabs = block.content.tabs || []
-                      onUpdate({
-                        tabs: tabs.map((t) => (t.id === tab.id ? { ...t, contentAr: e.target.value } : t)),
-                      })
-                    }}
-                    placeholder={language === "ar" ? "محتوى التبويب بالعربية" : "Tab content in Arabic"}
-                    rows={3}
-                  />
-                  <Textarea
-                    value={tab.contentEn}
-                    onChange={(e) => {
-                      const tabs = block.content.tabs || []
-                      onUpdate({
-                        tabs: tabs.map((t) => (t.id === tab.id ? { ...t, contentEn: e.target.value } : t)),
-                      })
-                    }}
-                    placeholder={language === "ar" ? "محتوى التبويب بالإنجليزية" : "Tab content in English"}
-                    rows={3}
-                  />
-                </Card>
-              ))}
-            </TabsContent>
-            <TabsContent value="style">{renderStyleEditor()}</TabsContent>
-          </Tabs>
-        )
-
-      case "alert":
-        return (
-          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="content">{language === "ar" ? "المحتوى" : "Content"}</TabsTrigger>
-              <TabsTrigger value="style">{language === "ar" ? "التصميم" : "Style"}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="content" className="space-y-4">
-              <div>
-                <Label>{language === "ar" ? "النوع" : "Type"}</Label>
-                <Select
-                  value={block.content.alertType || "info"}
-                  onValueChange={(value) => onUpdate({ alertType: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="info">{language === "ar" ? "معلومة" : "Info"}</SelectItem>
-                    <SelectItem value="warning">{language === "ar" ? "تحذير" : "Warning"}</SelectItem>
-                    <SelectItem value="error">{language === "ar" ? "خطأ" : "Error"}</SelectItem>
-                    <SelectItem value="success">{language === "ar" ? "نجاح" : "Success"}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>{language === "ar" ? "العنوان بالعربية" : "Title in Arabic"}</Label>
-                <Input
-                  value={block.content.titleAr || ""}
-                  onChange={(e) => onUpdate({ titleAr: e.target.value })}
-                  placeholder={language === "ar" ? "عنوان التنبيه" : "Alert title"}
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "العنوان بالإنجليزية" : "Title in English"}</Label>
-                <Input
-                  value={block.content.titleEn || ""}
-                  onChange={(e) => onUpdate({ titleEn: e.target.value })}
-                  placeholder="Alert title"
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "الوصف بالعربية" : "Description in Arabic"}</Label>
-                <Textarea
-                  value={block.content.descriptionAr || ""}
-                  onChange={(e) => onUpdate({ descriptionAr: e.target.value })}
-                  rows={4}
-                  placeholder={language === "ar" ? "وصف التنبيه" : "Alert description"}
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "الوصف بالإنجليزية" : "Description in English"}</Label>
-                <Textarea
-                  value={block.content.descriptionEn || ""}
-                  onChange={(e) => onUpdate({ descriptionEn: e.target.value })}
-                  rows={4}
-                  placeholder="Alert description"
-                />
-              </div>
-            </TabsContent>
-            <TabsContent value="style">{renderStyleEditor()}</TabsContent>
-          </Tabs>
-        )
-
-      case "testimonial-card":
-        return (
-          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="content">{language === "ar" ? "المحتوى" : "Content"}</TabsTrigger>
-              <TabsTrigger value="style">{language === "ar" ? "التصميم" : "Style"}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="content" className="space-y-4">
-              <div>
-                <Label>{language === "ar" ? "اسم الشخص بالعربية" : "Name in Arabic"}</Label>
-                <Input
-                  value={block.content.nameAr || ""}
-                  onChange={(e) => onUpdate({ nameAr: e.target.value })}
-                  placeholder={language === "ar" ? "اسم العميل" : "Client's name"}
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "اسم الشخص بالإنجليزية" : "Name in English"}</Label>
-                <Input
-                  value={block.content.nameEn || ""}
-                  onChange={(e) => onUpdate({ nameEn: e.target.value })}
-                  placeholder="Client's name"
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "منصبه بالعربية" : "Title in Arabic"}</Label>
-                <Input
-                  value={block.content.titleAr || ""}
-                  onChange={(e) => onUpdate({ titleAr: e.target.value })}
-                  placeholder={language === "ar" ? "منصب العميل" : "Client's title"}
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "منصبه بالإنجليزية" : "Title in English"}</Label>
-                <Input
-                  value={block.content.titleEn || ""}
-                  onChange={(e) => onUpdate({ titleEn: e.target.value })}
-                  placeholder="Client's title"
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "الاقتباس بالعربية" : "Quote in Arabic"}</Label>
-                <Textarea
-                  value={block.content.quoteAr || ""}
-                  onChange={(e) => onUpdate({ quoteAr: e.target.value })}
-                  rows={4}
-                  placeholder={language === "ar" ? "اقتباس العميل" : "Client's quote"}
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "الاقتباس بالإنجليزية" : "Quote in English"}</Label>
-                <Textarea
-                  value={block.content.quoteEn || ""}
-                  onChange={(e) => onUpdate({ quoteEn: e.target.value })}
-                  rows={4}
-                  placeholder="Client's quote"
-                />
-              </div>
-              <ImageUpload
-                value={block.content.imageUrl || ""}
-                onChange={(url) => onUpdate({ imageUrl: url })}
-                label={language === "ar" ? "صورة العميل" : "Client Image"}
-                language={language === "ar" ? "ar" : "en"}
-              />
-            </TabsContent>
-            <TabsContent value="style">{renderStyleEditor()}</TabsContent>
-          </Tabs>
-        )
-
-      case "team-member":
-        return (
-          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="content">{language === "ar" ? "المحتوى" : "Content"}</TabsTrigger>
-              <TabsTrigger value="style">{language === "ar" ? "التصميم" : "Style"}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="content" className="space-y-4">
-              <div>
-                <Label>{language === "ar" ? "الاسم بالعربية" : "Name in Arabic"}</Label>
-                <Input
-                  value={block.content.nameAr || ""}
-                  onChange={(e) => onUpdate({ nameAr: e.target.value })}
-                  placeholder={language === "ar" ? "اسم عضو الفريق" : "Team member's name"}
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "الاسم بالإنجليزية" : "Name in English"}</Label>
-                <Input
-                  value={block.content.nameEn || ""}
-                  onChange={(e) => onUpdate({ nameEn: e.target.value })}
-                  placeholder="Team member's name"
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "المنصب بالعربية" : "Title in Arabic"}</Label>
-                <Input
-                  value={block.content.titleAr || ""}
-                  onChange={(e) => onUpdate({ titleAr: e.target.value })}
-                  placeholder={language === "ar" ? "منصب عضو الفريق" : "Team member's title"}
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "المنصب بالإنجليزية" : "Title in English"}</Label>
-                <Input
-                  value={block.content.titleEn || ""}
-                  onChange={(e) => onUpdate({ titleEn: e.target.value })}
-                  placeholder="Team member's title"
-                />
-              </div>
-              <ImageUpload
-                value={block.content.imageUrl || ""}
-                onChange={(url) => onUpdate({ imageUrl: url })}
-                label={language === "ar" ? "صورة عضو الفريق" : "Team member's image"}
-                language={language === "ar" ? "ar" : "en"}
-              />
-              <div>
-                <Label>{language === "ar" ? "روابط التواصل" : "Social Links"}</Label>
-                <div className="space-y-2">
-                  <Input
-                    value={block.content.linkedinUrl || ""}
-                    onChange={(e) => onUpdate({ linkedinUrl: e.target.value })}
-                    placeholder="LinkedIn URL"
-                  />
-                  <Input
-                    value={block.content.twitterUrl || ""}
-                    onChange={(e) => onUpdate({ twitterUrl: e.target.value })}
-                    placeholder="Twitter URL"
-                  />
-                  <Input
-                    value={block.content.facebookUrl || ""}
-                    onChange={(e) => onUpdate({ facebookUrl: e.target.value })}
-                    placeholder="Facebook URL"
-                  />
-                </div>
-              </div>
-            </TabsContent>
-            <TabsContent value="style">{renderStyleEditor()}</TabsContent>
-          </Tabs>
-        )
-
-      case "pricing-card":
-        return (
-          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="content">{language === "ar" ? "المحتوى" : "Content"}</TabsTrigger>
-              <TabsTrigger value="style">{language === "ar" ? "التصميم" : "Style"}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="content" className="space-y-4">
-              <div>
-                <Label>{language === "ar" ? "اسم الخطة بالعربية" : "Plan Name in Arabic"}</Label>
-                <Input
-                  value={block.content.titleAr || ""}
-                  onChange={(e) => onUpdate({ titleAr: e.target.value })}
-                  placeholder={language === "ar" ? "اسم الخطة" : "Plan name"}
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "اسم الخطة بالإنجليزية" : "Plan Name in English"}</Label>
-                <Input
-                  value={block.content.titleEn || ""}
-                  onChange={(e) => onUpdate({ titleEn: e.target.value })}
-                  placeholder="Plan name"
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "السعر" : "Price"}</Label>
-                <Input
-                  value={block.content.price || ""}
-                  onChange={(e) => onUpdate({ price: e.target.value })}
-                  placeholder="e.g., $19.99"
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "الوصف بالعربية" : "Description in Arabic"}</Label>
-                <Textarea
-                  value={block.content.descriptionAr || ""}
-                  onChange={(e) => onUpdate({ descriptionAr: e.target.value })}
-                  rows={3}
-                  placeholder={language === "ar" ? "وصف الخطة" : "Plan description"}
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "الوصف بالإنجليزية" : "Description in English"}</Label>
-                <Textarea
-                  value={block.content.descriptionEn || ""}
-                  onChange={(e) => onUpdate({ descriptionEn: e.target.value })}
-                  rows={3}
-                  placeholder="Plan description"
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "المميزات" : "Features"}</Label>
-                <div className="flex flex-col gap-2">
-                  {(block.content.features || []).map((feature, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <Input
-                        value={feature.text || ""}
-                        onChange={(e) => {
-                          const features = block.content.features || []
-                          onUpdate({
-                            features: features.map((f, i) => (i === index ? { ...f, text: e.target.value } : f)),
-                          })
-                        }}
-                        placeholder={language === "ar" ? "ميزة" : "Feature"}
-                      />
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          const features = block.content.features || []
-                          onUpdate({ features: features.filter((_, i) => i !== index) })
-                        }}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      const features = block.content.features || []
-                      onUpdate({ features: [...features, { text: "" }] })
-                    }}
-                  >
-                    <Plus className="w-4 h-4" /> {language === "ar" ? "إضافة ميزة" : "Add Feature"}
-                  </Button>
-                </div>
-              </div>
-              <div>
-                <Label>{language === "ar" ? "نص زر الدعوة لإجراء" : "Call-to-Action Button Text"}</Label>
-                <Input
-                  value={block.content.buttonTextAr || ""}
-                  onChange={(e) => onUpdate({ buttonTextAr: e.target.value })}
-                  placeholder={language === "ar" ? "اشترك الآن" : "Sign Up Now"}
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "رابط زر الدعوة لإجراء" : "Call-to-Action Button URL"}</Label>
-                <Input
-                  value={block.content.buttonUrl || ""}
-                  onChange={(e) => onUpdate({ buttonUrl: e.target.value })}
-                  placeholder="https://..."
-                />
-              </div>
-            </TabsContent>
-            <TabsContent value="style">{renderStyleEditor()}</TabsContent>
-          </Tabs>
-        )
-
-      case "cta":
-        return (
-          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="content">{language === "ar" ? "المحتوى" : "Content"}</TabsTrigger>
-              <TabsTrigger value="style">{language === "ar" ? "التصميم" : "Style"}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="content" className="space-y-4">
-              <div>
-                <Label>{language === "ar" ? "العنوان الرئيسي بالعربية" : "Main Title in Arabic"}</Label>
-                <Input
-                  value={block.content.titleAr || ""}
-                  onChange={(e) => onUpdate({ titleAr: e.target.value })}
-                  placeholder={language === "ar" ? "عنوان جذاب" : "Catchy title"}
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "العنوان الرئيسي بالإنجليزية" : "Main Title in English"}</Label>
-                <Input
-                  value={block.content.titleEn || ""}
-                  onChange={(e) => onUpdate({ titleEn: e.target.value })}
-                  placeholder="Catchy title"
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "الوصف بالعربية" : "Description in Arabic"}</Label>
-                <Textarea
-                  value={block.content.descriptionAr || ""}
-                  onChange={(e) => onUpdate({ descriptionAr: e.target.value })}
-                  rows={4}
-                  placeholder={language === "ar" ? "وصف قصير ومقنع" : "Short, compelling description"}
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "الوصف بالإنجليزية" : "Description in English"}</Label>
-                <Textarea
-                  value={block.content.descriptionEn || ""}
-                  onChange={(e) => onUpdate({ descriptionEn: e.target.value })}
-                  rows={4}
-                  placeholder="Short, compelling description"
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "نص زر الدعوة لإجراء" : "Call-to-Action Button Text"}</Label>
-                <Input
-                  value={block.content.buttonTextAr || ""}
-                  onChange={(e) => onUpdate({ buttonTextAr: e.target.value })}
-                  placeholder={language === "ar" ? "اضغط هنا" : "Click Here"}
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "رابط زر الدعوة لإجراء" : "Call-to-Action Button URL"}</Label>
-                <Input
-                  value={block.content.buttonUrl || ""}
-                  onChange={(e) => onUpdate({ buttonUrl: e.target.value })}
-                  placeholder="https://..."
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "صورة خلفية (اختياري)" : "Background Image (Optional)"}</Label>
-                <ImageUpload
-                  value={block.content.imageUrl || ""}
-                  onChange={(url) => onUpdate({ imageUrl: url })}
-                  language={language === "ar" ? "ar" : "en"}
-                />
-              </div>
-            </TabsContent>
-            <TabsContent value="style">{renderStyleEditor()}</TabsContent>
-          </Tabs>
-        )
-
-      case "form":
-        return (
-          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="content">{language === "ar" ? "المحتوى" : "Content"}</TabsTrigger>
-              <TabsTrigger value="style">{language === "ar" ? "التصميم" : "Style"}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="content" className="space-y-4">
-              <div>
-                <Label>{language === "ar" ? "عنوان النموذج بالعربية" : "Form Title in Arabic"}</Label>
-                <Input
-                  value={block.content.titleAr || ""}
-                  onChange={(e) => onUpdate({ titleAr: e.target.value })}
-                  placeholder={language === "ar" ? "نموذج الاتصال" : "Contact Form"}
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "عنوان النموذج بالإنجليزية" : "Form Title in English"}</Label>
-                <Input
-                  value={block.content.titleEn || ""}
-                  onChange={(e) => onUpdate({ titleEn: e.target.value })}
-                  placeholder="Contact Form"
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "وصف النموذج بالعربية" : "Form Description in Arabic"}</Label>
-                <Textarea
-                  value={block.content.descriptionAr || ""}
-                  onChange={(e) => onUpdate({ descriptionAr: e.target.value })}
-                  rows={3}
-                  placeholder={language === "ar" ? "املأ الحقول أدناه" : "Fill in the fields below"}
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "وصف النموذج بالإنجليزية" : "Form Description in English"}</Label>
-                <Textarea
-                  value={block.content.descriptionEn || ""}
-                  onChange={(e) => onUpdate({ descriptionEn: e.target.value })}
-                  rows={3}
-                  placeholder="Fill in the fields below"
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "تسمية زر الإرسال" : "Submit Button Label"}</Label>
-                <Input
-                  value={block.content.buttonTextAr || ""}
-                  onChange={(e) => onUpdate({ buttonTextAr: e.target.value })}
-                  placeholder={language === "ar" ? "إرسال" : "Submit"}
-                />
-              </div>
-            </TabsContent>
-            <TabsContent value="style">{renderStyleEditor()}</TabsContent>
-          </Tabs>
-        )
-
-      case "map":
-        return (
-          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="content">{language === "ar" ? "المحتوى" : "Content"}</TabsTrigger>
-              <TabsTrigger value="style">{language === "ar" ? "التصميم" : "Style"}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="content" className="space-y-4">
-              <div>
-                <Label>Latitude</Label>
-                <Input
-                  value={block.content.latitude || ""}
-                  onChange={(e) => onUpdate({ latitude: e.target.value })}
-                  placeholder="e.g., 31.5204"
-                />
-              </div>
-              <div>
-                <Label>Longitude</Label>
-                <Input
-                  value={block.content.longitude || ""}
-                  onChange={(e) => onUpdate({ longitude: e.target.value })}
-                  placeholder="e.g., 74.3587"
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "مستوى التكبير" : "Zoom Level"}</Label>
-                <Input
-                  type="number"
-                  value={block.content.zoom || 12}
-                  onChange={(e) => onUpdate({ zoom: Number.parseInt(e.target.value) })}
-                  placeholder="12"
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "نص علامة الخريطة (عربي)" : "Map Marker Text (Arabic)"}</Label>
-                <Input
-                  value={block.content.markerTextAr || ""}
-                  onChange={(e) => onUpdate({ markerTextAr: e.target.value })}
-                  placeholder={language === "ar" ? "موقعنا" : "Our Location"}
-                />
-              </div>
-              <div>
-                <Label>{language === "ar" ? "نص علامة الخريطة (إنجليزي)" : "Map Marker Text (English)"}</Label>
-                <Input
-                  value={block.content.markerTextEn || ""}
-                  onChange={(e) => onUpdate({ markerTextEn: e.target.value })}
-                  placeholder="Our Location"
-                />
-              </div>
-            </TabsContent>
-            <TabsContent value="style">{renderStyleEditor()}</TabsContent>
-          </Tabs>
-        )
-
-      case "social-links":
-        return (
-          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="content">{language === "ar" ? "المحتوى" : "Content"}</TabsTrigger>
-              <TabsTrigger value="style">{language === "ar" ? "التصميم" : "Style"}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="content" className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label>{language === "ar" ? "الروابط" : "Links"}</Label>
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    const links = block.content.links || []
-                    onUpdate({
-                      links: [
-                        ...links,
-                        {
-                          id: Date.now().toString(),
-                          platform: "",
-                          url: "",
-                        },
-                      ],
-                    })
-                  }}
-                >
-                  <Plus className="w-4 h-4 ml-2" />
-                  {language === "ar" ? "إضافة رابط" : "Add Link"}
-                </Button>
-              </div>
-              {(block.content.links || []).map((link, index) => (
-                <Card key={link.id} className="p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">
-                      {language === "ar" ? "رابط" : "Link"} {index + 1}
-                    </span>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        const links = block.content.links || []
-                        onUpdate({ links: links.filter((l) => l.id !== link.id) })
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  <Input
-                    value={link.platform}
-                    onChange={(e) => {
-                      const links = block.content.links || []
-                      onUpdate({
-                        links: links.map((l) => (l.id === link.id ? { ...l, platform: e.target.value } : l)),
-                      })
-                    }}
-                    placeholder={
-                      language === "ar" ? "المنصة (مثل: فيسبوك، تويتر)" : "Platform (e.g., Facebook, Twitter)"
+                    if (tempBlockChanges && editingBlock) {
+                      updateBlock(editingBlock.id, tempBlockChanges.content || {}, tempBlockChanges.styles)
                     }
-                  />
-                  <Input
-                    value={link.url}
-                    onChange={(e) => {
-                      const links = block.content.links || []
-                      onUpdate({
-                        links: links.map((l) => (l.id === link.id ? { ...l, url: e.target.value } : l)),
-                      })
-                    }}
-                    placeholder="URL"
-                  />
-                </Card>
-              ))}
-            </TabsContent>
-            <TabsContent value="style">{renderStyleEditor()}</TabsContent>
-          </Tabs>
-        )
-
-      // Section blocks (now treated as components but with specific editors if needed)
-      case "about-section":
-      case "departments-section":
-      case "gallery-section":
-      case "testimonials-section":
-      case "jobs-section":
-      case "contact-section":
-        return (
-          <div className="space-y-4">
-            <div className="p-6 bg-muted rounded-lg text-center">
-              <Info className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-              <h3 className="font-semibold mb-2">{language === "ar" ? "قسم متقدم" : "Advanced Section Block"}</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                {language === "ar"
-                  ? "هذا القسم يحتوي على محتوى معقد. يمكنك تعديله من لوحة التحكم الرئيسية."
-                  : "This section contains complex content. You can edit it from the main dashboard."}
-              </p>
-              <Button variant="outline" size="sm" onClick={() => router.push("/dashboard")}>
-                {language === "ar" ? "الذهاب للوحة التحكم" : "Go to Dashboard"}
-              </Button>
-            </div>
-          </div>
-        )
-
-      default:
-        return (
-          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="content">{language === "ar" ? "المحتوى" : "Content"}</TabsTrigger>
-              <TabsTrigger value="style">{language === "ar" ? "التصميم" : "Style"}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="content">
-              <div className="text-center py-8 text-muted-foreground">
-                {language === "ar" ? "محرر هذا العنصر قيد التطوير" : "Editor for this block type is under development"}
+                    setEditingBlock(null)
+                    setTempBlockChanges(null)
+                  }}
+                >
+                  {language === "ar" ? "حفظ" : "Save"}
+                </Button>
               </div>
-            </TabsContent>
-            <TabsContent value="style">{renderStyleEditor()}</TabsContent>
-          </Tabs>
-        )
-    }
-  }
-
-  return (
-    <div className="space-y-6">
-      {renderEditor()}
-      <div className="flex justify-end gap-2 pt-4 border-t">
-        <Button variant="outline" onClick={onClose}>
-          {language === "ar" ? "إغلاق" : "Close"}
-        </Button>
-        <Button onClick={onClose}>{language === "ar" ? "حفظ" : "Save"}</Button>
-      </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -54,7 +54,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Switch } from "@/components/ui/switch"
-import { isAuthenticated, logout, getUsername } from "@/lib/auth"
+// import { isAuthenticated, logout, getUsername } from "@/lib/auth" // REMOVED old auth imports
+import { useAuth } from "@/lib/auth-context" // ADDED Firebase auth context
 import {
   getEmploymentApplications,
   getContactMessages,
@@ -145,6 +146,8 @@ export default function DashboardPage() {
   const { language } = useLanguage()
   const t = translations[language].dashboard
 
+  const { currentUser, employee, logout: firebaseLogout } = useAuth()
+
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [activeSection, setActiveSection] = useState("overview")
   // REMOVED activeTab state - using only activeSection now
@@ -200,13 +203,17 @@ export default function DashboardPage() {
   const [isPageDialogOpen, setIsPageDialogOpen] = useState(false)
   const [editingPage, setEditingPage] = useState<DynamicPage | null>(null)
 
+  // USE FIREBASE AUTH CONTEXT INSTEAD OF LOCALSTORAGE-BASED AUTH
+  // const { currentUser, isAdmin, logout: authLogout } = useAuth()
+
   useEffect(() => {
-    if (!isAuthenticated()) {
+    // CHECK FIREBASE AUTHENTICATION STATE INSTEAD OF LOCALSTORAGE
+    if (!currentUser) {
       router.push("/login")
       return
     }
 
-    setUsername(getUsername() || "")
+    setUsername(currentUser.fullName || currentUser.email)
     loadData()
 
     getEnhancedEmploymentApplications().then(setEmploymentApplications)
@@ -255,9 +262,10 @@ export default function DashboardPage() {
     getDynamicPages().then(setDynamicPages)
 
     return () => window.removeEventListener("localStorageChange", handleStorageChange as EventListener)
-  }, [router])
+  }, [router, currentUser]) // Added currentUser to dependency array
 
   const loadData = async () => {
+    console.log("[v0] Dashboard: Loading data from Firebase...")
     setApplications(await getEmploymentApplications())
     setMessages(await getContactMessages())
     setTestimonials(await getTestimonials())
@@ -269,12 +277,15 @@ export default function DashboardPage() {
     setGalleryImages(await getGalleryImages())
     setDepartmentContents(await getDepartmentContents())
     setContactInfo(await getContactInfo())
-    setDynamicPages(await getDynamicPages())
+    const dynamicPagesData = await getDynamicPages()
+    console.log("[v0] Dashboard: Loaded pages from Firebase:", dynamicPagesData.length)
+    setDynamicPages(dynamicPagesData)
   }
 
   // Handle Logout
   const handleLogout = () => {
-    logout()
+    // logout() // REMOVED old logout
+    firebaseLogout() // USED Firebase auth context logout
     router.push("/login")
   }
 
@@ -2934,10 +2945,20 @@ export default function DashboardPage() {
                                 : "Draft"}
                           </Badge>
                           <div className="flex gap-2">
-                            <Button
+                            {/* <Button
                               onClick={() => {
                                 setEditingPage(page)
                                 setIsPageDialogOpen(true)
+                              }}
+                              variant="outline"
+                              size="sm"
+                              className="hover:bg-violet-500 hover:text-white hover:border-violet-500 transition-colors"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button> */}
+                            <Button
+                              onClick={() => {
+                                router.push(`/dashboard/pages/edit/${page.id}`)
                               }}
                               variant="outline"
                               size="sm"

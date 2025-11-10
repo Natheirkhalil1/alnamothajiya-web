@@ -7,6 +7,7 @@ import { AuthProvider } from "@/lib/auth-context"
 import { FloatingElements } from "@/components/floating-elements"
 import { ScrollProgress } from "@/components/scroll-progress"
 import { PageTransition } from "@/components/page-transition"
+import { SetupChecker } from "@/components/setup-checker"
 import "./globals.css"
 
 const cairo = Cairo({
@@ -33,9 +34,11 @@ export default function RootLayout({
         <FloatingElements />
         <AuthProvider>
           <LanguageProvider>
-            <PageTransition>
-              <Suspense fallback={null}>{children}</Suspense>
-            </PageTransition>
+            <SetupChecker>
+              <PageTransition>
+                <Suspense fallback={null}>{children}</Suspense>
+              </PageTransition>
+            </SetupChecker>
           </LanguageProvider>
         </AuthProvider>
       </body>

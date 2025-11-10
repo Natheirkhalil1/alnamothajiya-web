@@ -184,3 +184,5 @@ export function HeroSlider() {
     </section>
   )
 }
+
+export default HeroSlider

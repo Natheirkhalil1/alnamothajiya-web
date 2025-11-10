@@ -11,32 +11,70 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
-import { login } from "@/lib/auth"
+import { useAuth } from "@/lib/auth-context"
 
 export default function LoginPage() {
   const router = useRouter()
   const { toast } = useToast()
+  const { login } = useAuth()
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   })
   const [showOptions, setShowOptions] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsLoading(true)
 
-    if (login(formData.email, formData.password)) {
-      setShowOptions(true)
-      toast({
-        title: "تم تسجيل الدخول بنجاح",
-        description: "مرحباً بك في لوحة التحكم",
-      })
-    } else {
-      toast({
-        title: "خطأ في تسجيل الدخول",
-        description: "البريد الإلكتروني أو كلمة المرور غير صحيحة",
-        variant: "destructive",
-      })
+    try {
+      const success = await login(formData.email, formData.password)
+
+      setIsLoading(false)
+
+      if (success) {
+        setShowOptions(true)
+        toast({
+          title: "تم تسجيل الدخول بنجاح",
+          description: "مرحباً بك في لوحة التحكم",
+        })
+      }
+    } catch (error: any) {
+      setIsLoading(false)
+      console.log("[v0] Login page caught error:", error.message)
+
+      if (error.message === "INVALID_PASSWORD") {
+        console.log("[v0] Showing incorrect password toast")
+        toast({
+          title: "كلمة المرور غير صحيحة",
+          description: "الرجاء التحقق من كلمة المرور أو إعادة تعيينها",
+          variant: "destructive",
+          action: (
+            <Button variant="outline" size="sm" onClick={() => router.push("/reset-password")} className="bg-white">
+              إعادة تعيين
+            </Button>
+          ),
+        })
+      } else if (error.message === "USER_NOT_FOUND") {
+        toast({
+          title: "المستخدم غير موجود",
+          description: "البريد الإلكتروني غير مسجل في النظام",
+          variant: "destructive",
+        })
+      } else if (error.message === "EMPLOYEE_NOT_FOUND") {
+        toast({
+          title: "الموظف غير موجود",
+          description: "لم يتم العثور على بيانات الموظف في النظام",
+          variant: "destructive",
+        })
+      } else {
+        toast({
+          title: "خطأ في تسجيل الدخول",
+          description: "حدث خطأ أثناء تسجيل الدخول. الرجاء المحاولة مرة أخرى",
+          variant: "destructive",
+        })
+      }
     }
   }
 
@@ -99,6 +137,7 @@ export default function LoginPage() {
               required
               placeholder="admin@example.com"
               className="h-12 text-lg"
+              disabled={isLoading}
             />
           </div>
 
@@ -115,19 +154,31 @@ export default function LoginPage() {
               required
               placeholder="أدخل كلمة المرور"
               className="h-12 text-lg"
+              disabled={isLoading}
             />
           </div>
 
           <Button
             type="submit"
+            disabled={isLoading}
             className="w-full h-14 text-lg bg-gradient-to-r from-primary via-primary/95 to-accent hover:from-primary/90 hover:to-accent/90 shadow-lg hover:shadow-xl transition-all"
           >
             <LogIn className="w-5 h-5 ml-2" />
-            تسجيل الدخول
+            {isLoading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
           </Button>
         </form>
 
-        <div className="mt-6 text-center">
+        <div className="mt-4 text-center">
+          <Button
+            variant="link"
+            onClick={() => router.push("/reset-password")}
+            className="text-sm text-muted-foreground hover:text-primary"
+          >
+            نسيت كلمة المرور؟
+          </Button>
+        </div>
+
+        <div className="mt-2 text-center">
           <Button variant="link" onClick={() => router.push("/")} className="text-muted-foreground hover:text-primary">
             <Home className="w-4 h-4 ml-1" />
             العودة للصفحة الرئيسية

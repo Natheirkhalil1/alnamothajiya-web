@@ -59,13 +59,16 @@
 - **Icons**: Lucide React
 - **Forms**: React Hook Form + Zod
 - **Animations**: Framer Motion (via Tailwind)
-- **Storage**: localStorage (يمكن الترقية إلى Supabase)
+- **Database**: Firebase Firestore
+- **Authentication**: Firebase Auth
+- **Storage**: Firebase Storage
 - **Notifications**: Sonner (Toast notifications)
 
 ## المتطلبات
 
 - Node.js 18.17 أو أحدث
 - npm أو yarn أو pnpm
+- حساب Firebase (للإنتاج)
 
 ## التثبيت
 
@@ -84,14 +87,21 @@ yarn install
 pnpm install
 \`\`\`
 
-3. **إعداد المتغيرات البيئية:**
+3. **إعداد Firebase (اختياري للتطوير المحلي):**
+   - أنشئ مشروع جديد في [Firebase Console](https://console.firebase.google.com)
+   - فعّل Firestore Database
+   - فعّل Firebase Authentication
+   - فعّل Firebase Storage
+   - انسخ بيانات التكوين من Project Settings
+
+4. **إعداد المتغيرات البيئية:**
 \`\`\`bash
 cp .env.example .env.local
 \`\`\`
 
-ثم قم بتعديل ملف `.env.local` وإضافة القيم المطلوبة (اختياري للتطوير المحلي).
+ثم قم بتعديل ملف `.env.local` وإضافة بيانات Firebase (اختياري للتطوير المحلي).
 
-4. **تشغيل المشروع:**
+5. **تشغيل المشروع:**
 \`\`\`bash
 npm run dev
 # أو
@@ -100,7 +110,7 @@ yarn dev
 pnpm dev
 \`\`\`
 
-5. **فتح المتصفح:**
+6. **فتح المتصفح:**
 افتح [http://localhost:3000](http://localhost:3000) لرؤية الموقع.
 
 ## بنية المشروع
@@ -119,6 +129,7 @@ model-school/
 │   ├── ui/                       # shadcn/ui components
 │   └── ...
 ├── lib/                          # Utilities & Helpers
+│   ├── firebase.ts               # تكوين Firebase
 │   ├── storage.ts                # نظام التخزين
 │   ├── auth-context.tsx          # نظام المصادقة
 │   ├── notifications.ts          # نظام الإشعارات
@@ -148,6 +159,55 @@ model-school/
 4. املأ البيانات واختر الدور والصلاحيات
 5. احفظ البيانات وستحصل على البريد الإلكتروني وكلمة السر
 
+## التكامل مع Firebase
+
+المشروع مصمم للعمل مع Firebase:
+
+### الإعداد:
+
+1. **إنشاء مشروع Firebase:**
+   - اذهب إلى [Firebase Console](https://console.firebase.google.com)
+   - أنشئ مشروع جديد
+
+2. **تفعيل الخدمات:**
+   - **Firestore Database**: لتخزين البيانات
+   - **Authentication**: للمصادقة (Email/Password)
+   - **Storage**: لتخزين الصور والملفات
+
+3. **الحصول على بيانات التكوين:**
+   - اذهب إلى Project Settings > General
+   - انسخ بيانات Firebase Config
+
+4. **إضافة المتغيرات البيئية:**
+   أضف البيانات إلى `.env.local`:
+   \`\`\`env
+   NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
+   NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+   NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+   \`\`\`
+
+5. **قواعد Firestore (اختياري):**
+   \`\`\`javascript
+   rules_version = '2';
+   service cloud.firestore {
+     match /databases/{database}/documents {
+       match /{document=**} {
+         allow read, write: if true; // للتطوير فقط
+         // للإنتاج: استخدم قواعد أمان محددة
+       }
+     }
+   }
+   \`\`\`
+
+### التبديل بين localStorage و Firebase:
+
+المشروع يدعم الاستخدام المزدوج:
+- **التطوير المحلي**: يستخدم localStorage تلقائياً
+- **الإنتاج**: يستخدم Firebase عند توفر بيانات التكوين
+
 ## النشر على Vercel
 
 1. **ادفع الكود إلى GitHub:**
@@ -165,18 +225,7 @@ git push origin main
 
 3. **إضافة المتغيرات البيئية:**
    - في لوحة تحكم Vercel، اذهب إلى Settings > Environment Variables
-   - أضف المتغيرات من ملف `.env.example`
-
-## التكامل مع Supabase (اختياري)
-
-المشروع يدعم التكامل مع Supabase لقاعدة البيانات:
-
-1. أنشئ حساب على [supabase.com](https://supabase.com)
-2. أنشئ مشروع جديد
-3. أضف المتغيرات البيئية:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY`
+   - أضف متغيرات Firebase من `.env.example`
 
 ## المساهمة
 
@@ -200,6 +249,7 @@ git push origin main
 ## الشكر والتقدير
 
 - [Next.js](https://nextjs.org/)
+- [Firebase](https://firebase.google.com/)
 - [shadcn/ui](https://ui.shadcn.com/)
 - [Tailwind CSS](https://tailwindcss.com/)
 - [Radix UI](https://www.radix-ui.com/)

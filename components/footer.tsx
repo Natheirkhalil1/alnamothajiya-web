@@ -125,8 +125,8 @@ export function Footer() {
                   { href: "#departments", label: t.nav.departments },
                   { href: "#gallery", label: t.nav.gallery },
                   { href: "#contact", label: t.nav.contact },
-                  { href: "/privacy", label: language === "ar" ? "سياسة الخصوصية" : "Privacy Policy" },
-                  { href: "/terms", label: language === "ar" ? "الشروط والأحكام" : "Terms & Conditions" },
+                  { href: "/privacy-policy", label: language === "ar" ? "سياسة الخصوصية" : "Privacy Policy" },
+                  { href: "/terms-of-service", label: language === "ar" ? "الشروط والأحكام" : "Terms & Conditions" },
                 ].map((link, index) => (
                   <li key={link.href} className="animate-fade-in-left" style={{ animationDelay: `${index * 0.1}s` }}>
                     <Link
