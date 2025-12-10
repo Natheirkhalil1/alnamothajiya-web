@@ -1,0 +1,348 @@
+{
+  "titleAr": "قلب المدرسة",
+  "titleEn": "Heart of the School",
+  "slug": "departments-heart",
+  "descriptionAr": "قلب المدرسة هو المركز الحيوي الذي يضم جميع الأقسام التعليمية والتأهيلية والخدمية",
+  "descriptionEn": "The Heart of the School is the vital center that includes all educational, rehabilitation, and service departments",
+  "blocksAr": [
+    {
+      "id": "heart-welcome-ar",
+      "kind": "department-welcome",
+      "icon": "heart",
+      "title": "مرحباً بكم في قلب المدرسة - حيث تبدأ رحلة التميز",
+      "description": "قلب المدرسة هو المركز الحيوي الذي يضم جميع الأقسام التعليمية والتأهيلية والخدمية، حيث تتكامل الخدمات لتقديم تجربة تعليمية شاملة ومتميزة لجميع الطلاب.",
+      "imageUrl": "/special-education-teacher-creating-individualized-.jpg",
+      "stats": [
+        { "id": "stat-1", "value": "14+", "label": "قسم فرعي", "onClick": "#subsections" },
+        { "id": "stat-2", "value": "24/7", "label": "خدمة مستمرة", "onClick": "#contact" },
+        { "id": "stat-3", "value": "100%", "label": "التزام بالجودة", "onClick": "#cta" }
+      ]
+    },
+    {
+      "id": "heart-subsections-ar",
+      "kind": "department-subsections",
+      "header": {
+        "title": "الأقسام الفرعية",
+        "subtitle": "تعرف على جميع الخدمات والبرامج المتخصصة التي نقدمها",
+        "centered": true
+      },
+      "departmentColor": "from-blue-600 via-indigo-600 to-purple-600",
+      "items": [
+        {
+          "id": "subsection-special-education-ar",
+          "icon": "award",
+          "titleAr": "قسم التربية الخاصة",
+          "titleEn": "Special Education Section",
+          "descriptionAr": "يحتوي هذا القسم على صفوف دراسية ووحدات تعديل سلوك، بحيث يتم تقسيم الطلاب في الصفوف الدراسية حسب درجة إعاقتهم وأعمارهم، ويتم تدريبهم على المهارات الأكاديمية والمهارات الاستقلالية الموجودة حسب البرنامج التربوي الفردي، ويعمل هذا القسم بشكل متكامل مع جميع أقسام المدرسة.",
+          "descriptionEn": "This section contains classrooms and behavior modification units, where students are divided into classes according to their disability level and age.",
+          "image": "/special-education-teacher-creating-individualized-.jpg"
+        },
+        {
+          "id": "subsection-occupational-therapy-ar",
+          "icon": "heart",
+          "titleAr": "العلاج الوظيفي",
+          "titleEn": "Occupational Therapy",
+          "descriptionAr": "يعتبر من أهم أقسام المدرسة والذي يتناول جميع المهارات الوظيفية التي تساعد الطالب لتخطي متطلبات الحياة اليومية. يشمل قسم التسوق لتعليم مهارات ما قبل الشراء وبعدها، وقسم التكامل الحسي لتنظيم العمليات الحسية لدى الطلاب.",
+          "descriptionEn": "One of the most important school sections addressing all functional skills that help students overcome daily life requirements.",
+          "image": "/occupational-therapist-working-one-on-one-with-spe.jpg"
+        },
+        {
+          "id": "subsection-speech-language-ar",
+          "icon": "lightbulb",
+          "titleAr": "قسم النطق واللغة",
+          "titleEn": "Speech and Language Section",
+          "descriptionAr": "يعمل القسم على الاكتشاف المبكر لأية اختلالات لغوية أو لفظية لدى الطلاب بالاستعانة بأخصائيين نطق ولغة وتدريب الأشخاص حتى يتمكنوا من اكتساب المهارات اللغوية الأساسية والفردية لهم والتي تمكنهم من تطوير قدراتهم اللغوية والتعليمية.",
+          "descriptionEn": "The section works on early detection of any linguistic or verbal disorders in students with the help of speech and language specialists.",
+          "image": "/speech-therapist-working-with-special-needs-studen.jpg"
+        },
+        {
+          "id": "subsection-surveillance-ar",
+          "icon": "camera",
+          "titleAr": "قسم المراقبة والتحكم",
+          "titleEn": "Surveillance and Control Section",
+          "descriptionAr": "يحتوي هذا القسم على شاشات عرض مربوطة بكاميرات مراقبة في جميع أقسام المدرسة، تضمن مراقبة الطلاب والموظفين على مدار اليوم وبواقع 24/7.",
+          "descriptionEn": "This section contains display screens connected to surveillance cameras in all school sections.",
+          "image": "/surveillance-control-room-with-monitors-showing-sc.jpg"
+        },
+        {
+          "id": "subsection-psychological-assessment-ar",
+          "icon": "brain",
+          "titleAr": "قسم التقييم النفسي",
+          "titleEn": "Psychological Assessment Section",
+          "descriptionAr": "يقوم الأخصائي النفسي في هذا القسم على تطبيق الاختبارات والمقاييس النفسية المختلفة، ويعمل على تحليل نتائج الاختبارات والمقاييس وتفسيرها بهدف تقييم قدرات الطلبة العقلية واضطراباتهم النفسية والسلوكية ثم يقوم بإعداد التقرير التشخيصي الشامل.",
+          "descriptionEn": "The psychologist in this section applies various psychological tests and scales.",
+          "image": "/psychologist-conducting-assessment-with-special-nee.jpg"
+        },
+        {
+          "id": "subsection-plans-programs-ar",
+          "icon": "target",
+          "titleAr": "قسم الخطط والبرامج",
+          "titleEn": "Plans and Programs Section",
+          "descriptionAr": "يقوم هذا القسم بالتقييم التربوي وإعداد الخطط التربوية الفردية وخطط تعديل السلوك لكل طالب، ويقوم هذا القسم بالاجتماع مع فريق متعدد التخصصات لإعداد البرنامج التربوي الشامل.",
+          "descriptionEn": "This section conducts educational assessment and prepares individual educational plans.",
+          "image": "/educational-planning-team-meeting-with-individual-.jpg"
+        },
+        {
+          "id": "subsection-vocational-ar",
+          "icon": "wrench",
+          "titleAr": "قسم التأهيل المهني",
+          "titleEn": "Vocational Rehabilitation Section",
+          "descriptionAr": "يتم تدريب الطلاب على المهارات الرئيسية التي تهيئهم للدخول لسوق العمل. يشمل: قسم الزراعة، قسم الحاسوب والإلكترونيات، قسم الحلاقة، المشغل المهني، قسم العطور، التدريب المنزلي.",
+          "descriptionEn": "Students are trained in key skills that prepare them to enter the job market.",
+          "image": "/vocational-training-workshop-with-carpentry-and-me.jpg"
+        },
+        {
+          "id": "subsection-psychological-counseling-ar",
+          "icon": "heart",
+          "titleAr": "قسم الإرشاد النفسي",
+          "titleEn": "Psychological Counseling Section",
+          "descriptionAr": "يقوم قسم الإرشاد النفسي على وضع خطط إرشادية تأهيلية تساعد الطلاب في حل المشكلات النفسية التي تنعكس على سلوكهم، وعمل جلسات استرخاء نفسية ممنهجة لهم.",
+          "descriptionEn": "The psychological counseling section develops rehabilitative counseling plans to help students.",
+          "image": "/psychological-counseling-session-with-special-needs.jpg"
+        },
+        {
+          "id": "subsection-social-ar",
+          "icon": "users",
+          "titleAr": "القسم الاجتماعي",
+          "titleEn": "Social Section",
+          "descriptionAr": "يقوم الأخصائي الاجتماعي بعمل دراسة الحالة للطلاب لمعرفة احتياجاتهم واهتماماتهم وسلوكياتهم، ويتم وضع خطط اجتماعية وبرامج علاجية وبرامج تعديل السلوك وعمل نشاطات لا منهجية ومتابعتها وتقييمها للوصول لأعلى درجة من التكيف والدمج الاجتماعي.",
+          "descriptionEn": "The social worker conducts case studies of students to understand their needs.",
+          "image": "/social-worker-conducting-case-study-with-special-n.jpg"
+        },
+        {
+          "id": "subsection-nutrition-ar",
+          "icon": "utensils",
+          "titleAr": "قسم التغذية والمطبخ",
+          "titleEn": "Nutrition and Kitchen Section",
+          "descriptionAr": "يتم في هذا القسم إعداد الطعام تحت إشراف طاقم مختص في الطهي من حملة شهادات عليا، مع أخصائية تغذية تحدد الوجبات الغذائية للطلاب حسب حاجتهم الصحية. يشمل: المطبخ، قسم التغذية، صالة الطعام، الكافيتيريا.",
+          "descriptionEn": "Food is prepared under the supervision of specialized cooking staff with advanced degrees.",
+          "image": "/professional-kitchen-with-chef-preparing-nutritious.jpg"
+        },
+        {
+          "id": "subsection-laundry-ar",
+          "icon": "droplet",
+          "titleAr": "قسم المصبغة",
+          "titleEn": "Laundry Section",
+          "descriptionAr": "هو قسم التعقيم في المدرسة لملابس الطلاب حيث يتم غسل وكوي وتعقيم الملابس على درجات حرارة عالية تضمن نظافة عالية وترتيب مستمر لملابس الطلاب.",
+          "descriptionEn": "This is the sterilization section for students' clothes.",
+          "image": "/modern-laundry-facility-with-industrial-washing-ma.jpg"
+        },
+        {
+          "id": "subsection-cleaning-ar",
+          "icon": "sparkles",
+          "titleAr": "قسم خدمات التنظيف",
+          "titleEn": "Cleaning Services Section",
+          "descriptionAr": "يتم في هذا القسم متابعة نظافة المرافق المدرسية (الحمامات، المسرح، الصالة الرياضية، الغرف الصفية، الغرف الفردية، الأجنحة، الملعب وغيرها). ويتم العمل على تعقيم وتنظيف المرافق بشكل دوري وعلى مدار الساعة.",
+          "descriptionEn": "The cleanliness of school facilities is monitored around the clock.",
+          "image": "/cleaning-staff-maintaining-school-facilities-with-.jpg"
+        },
+        {
+          "id": "subsection-physical-therapy-ar",
+          "icon": "activity",
+          "titleAr": "قسم العلاج الطبيعي",
+          "titleEn": "Physical Therapy Section",
+          "descriptionAr": "يختص بمعالجة وتأهيل ذوي الإعاقة الحركية والجسدية لتنمية القدرات الحركية والوظيفية. يتوفر في المدرسة غرفتين علاج طبيعي غرفة للذكور وأخرى للإناث. يشمل: العلاج الفيزيائي، العلاج التنفسي، العلاج المائي (الجاكوزي والبركة المائية).",
+          "descriptionEn": "Specializes in treating and rehabilitating those with motor and physical disabilities.",
+          "image": "/physical-therapy-room-with-equipment-and-therapist.jpg"
+        },
+        {
+          "id": "subsection-sports-ar",
+          "icon": "dumbbell",
+          "titleAr": "قسم الرياضة",
+          "titleEn": "Sports Section",
+          "descriptionAr": "يعمل قسم التأهيل الرياضي لرفع مستوى الأداء البدني، وممارسة تمرينات وألعاب تسهم في تطور مختلف جوانب اللياقة البدنية. يتوفر في المدرسة صالتي أنشطة وألعاب وملعبين خارجيين. يشمل: صالة كاراتيه، صالة رياضية.",
+          "descriptionEn": "The sports rehabilitation section works to raise the level of physical performance.",
+          "image": "/sports-hall-with-karate-class-and-gym-equipment-fo.jpg"
+        }
+      ]
+    },
+    {
+      "id": "heart-cta-ar",
+      "kind": "department-cta",
+      "title": "هل لديك استفسار؟",
+      "description": "نحن هنا للإجابة على جميع استفساراتكم ومساعدتكم في اختيار البرنامج المناسب لاحتياجاتكم",
+      "primaryButtonLabel": "تواصل معنا الآن",
+      "primaryButtonHref": "/#contact",
+      "secondaryButtonLabel": "العودة للرئيسية",
+      "secondaryButtonHref": "/",
+      "contactInfo": {
+        "phone": "4122002",
+        "email": "info@namothajia.com",
+        "address": "عمان، الأردن"
+      }
+    }
+  ],
+  "blocksEn": [
+    {
+      "id": "heart-welcome-en",
+      "kind": "department-welcome",
+      "icon": "heart",
+      "title": "Welcome to the Heart of the School - Where Excellence Begins",
+      "description": "The Heart of the School is the vital center that includes all educational, rehabilitation, and service departments, where services integrate to provide a comprehensive and distinguished educational experience for all students.",
+      "imageUrl": "/special-education-teacher-creating-individualized-.jpg",
+      "stats": [
+        { "id": "stat-1", "value": "14+", "label": "Subsections", "onClick": "#subsections" },
+        { "id": "stat-2", "value": "24/7", "label": "Continuous Service", "onClick": "#contact" },
+        { "id": "stat-3", "value": "100%", "label": "Quality Commitment", "onClick": "#cta" }
+      ]
+    },
+    {
+      "id": "heart-subsections-en",
+      "kind": "department-subsections",
+      "header": {
+        "title": "Subsections",
+        "subtitle": "Discover all specialized services and programs we offer",
+        "centered": true
+      },
+      "departmentColor": "from-blue-600 via-indigo-600 to-purple-600",
+      "items": [
+        {
+          "id": "subsection-special-education-en",
+          "icon": "award",
+          "titleAr": "قسم التربية الخاصة",
+          "titleEn": "Special Education Section",
+          "descriptionAr": "يحتوي هذا القسم على صفوف دراسية ووحدات تعديل سلوك.",
+          "descriptionEn": "This section contains classrooms and behavior modification units, where students are divided into classes according to their disability level and age, trained in academic and independence skills according to the individual educational program, working in integration with all school departments.",
+          "image": "/special-education-teacher-creating-individualized-.jpg"
+        },
+        {
+          "id": "subsection-occupational-therapy-en",
+          "icon": "heart",
+          "titleAr": "العلاج الوظيفي",
+          "titleEn": "Occupational Therapy",
+          "descriptionAr": "يعتبر من أهم أقسام المدرسة.",
+          "descriptionEn": "One of the most important school sections addressing all functional skills that help students overcome daily life requirements. Includes shopping section for pre and post-purchase skills, and sensory integration section for organizing sensory processes.",
+          "image": "/occupational-therapist-working-one-on-one-with-spe.jpg"
+        },
+        {
+          "id": "subsection-speech-language-en",
+          "icon": "lightbulb",
+          "titleAr": "قسم النطق واللغة",
+          "titleEn": "Speech and Language Section",
+          "descriptionAr": "يعمل القسم على الاكتشاف المبكر لأية اختلالات لغوية.",
+          "descriptionEn": "The section works on early detection of any linguistic or verbal disorders in students with the help of speech and language specialists, training individuals to acquire basic and individual language skills that enable them to develop their linguistic and educational abilities.",
+          "image": "/speech-therapist-working-with-special-needs-studen.jpg"
+        },
+        {
+          "id": "subsection-surveillance-en",
+          "icon": "camera",
+          "titleAr": "قسم المراقبة والتحكم",
+          "titleEn": "Surveillance and Control Section",
+          "descriptionAr": "يحتوي هذا القسم على شاشات عرض مربوطة بكاميرات مراقبة.",
+          "descriptionEn": "This section contains display screens connected to surveillance cameras in all school sections, ensuring monitoring of students and staff throughout the day 24/7.",
+          "image": "/surveillance-control-room-with-monitors-showing-sc.jpg"
+        },
+        {
+          "id": "subsection-psychological-assessment-en",
+          "icon": "brain",
+          "titleAr": "قسم التقييم النفسي",
+          "titleEn": "Psychological Assessment Section",
+          "descriptionAr": "يقوم الأخصائي النفسي بتطبيق الاختبارات والمقاييس النفسية.",
+          "descriptionEn": "The psychologist in this section applies various psychological tests and scales, analyzes and interprets test results to assess students' mental abilities and psychological and behavioral disorders, then prepares a comprehensive diagnostic report.",
+          "image": "/psychologist-conducting-assessment-with-special-nee.jpg"
+        },
+        {
+          "id": "subsection-plans-programs-en",
+          "icon": "target",
+          "titleAr": "قسم الخطط والبرامج",
+          "titleEn": "Plans and Programs Section",
+          "descriptionAr": "يقوم هذا القسم بالتقييم التربوي وإعداد الخطط التربوية الفردية.",
+          "descriptionEn": "This section conducts educational assessment and prepares individual educational plans and behavior modification plans for each student, meeting with a multidisciplinary team to prepare a comprehensive educational program.",
+          "image": "/educational-planning-team-meeting-with-individual-.jpg"
+        },
+        {
+          "id": "subsection-vocational-en",
+          "icon": "wrench",
+          "titleAr": "قسم التأهيل المهني",
+          "titleEn": "Vocational Rehabilitation Section",
+          "descriptionAr": "يتم تدريب الطلاب على المهارات المهنية.",
+          "descriptionEn": "Students are trained in key skills that prepare them to enter the job market. Includes: Agriculture, Computer and Electronics, Barbering, Professional Workshop, Perfumes, Home Training.",
+          "image": "/vocational-training-workshop-with-carpentry-and-me.jpg"
+        },
+        {
+          "id": "subsection-psychological-counseling-en",
+          "icon": "heart",
+          "titleAr": "قسم الإرشاد النفسي",
+          "titleEn": "Psychological Counseling Section",
+          "descriptionAr": "يقوم قسم الإرشاد النفسي على وضع خطط إرشادية تأهيلية.",
+          "descriptionEn": "The psychological counseling section develops rehabilitative counseling plans to help students solve psychological problems that affect their behavior, and conducts systematic psychological relaxation sessions.",
+          "image": "/psychological-counseling-session-with-special-needs.jpg"
+        },
+        {
+          "id": "subsection-social-en",
+          "icon": "users",
+          "titleAr": "القسم الاجتماعي",
+          "titleEn": "Social Section",
+          "descriptionAr": "يقوم الأخصائي الاجتماعي بعمل دراسة الحالة للطلاب.",
+          "descriptionEn": "The social worker conducts case studies of students to understand their needs, interests, and behaviors, developing social plans, therapeutic programs, behavior modification programs, and extracurricular activities to achieve the highest degree of adaptation and social integration.",
+          "image": "/social-worker-conducting-case-study-with-special-n.jpg"
+        },
+        {
+          "id": "subsection-nutrition-en",
+          "icon": "utensils",
+          "titleAr": "قسم التغذية والمطبخ",
+          "titleEn": "Nutrition and Kitchen Section",
+          "descriptionAr": "يتم في هذا القسم إعداد الطعام تحت إشراف طاقم مختص.",
+          "descriptionEn": "In this section, food is prepared under the supervision of specialized cooking staff with advanced degrees, with a nutritionist who determines students' meals according to their health needs. Includes: Kitchen, Nutrition Section, Dining Hall, Cafeteria.",
+          "image": "/professional-kitchen-with-chef-preparing-nutritious.jpg"
+        },
+        {
+          "id": "subsection-laundry-en",
+          "icon": "droplet",
+          "titleAr": "قسم المصبغة",
+          "titleEn": "Laundry Section",
+          "descriptionAr": "قسم التعقيم لملابس الطلاب.",
+          "descriptionEn": "This is the sterilization section in the school for students' clothes where clothes are washed, ironed, and sterilized at high temperatures ensuring high cleanliness and continuous organization of students' clothes.",
+          "image": "/modern-laundry-facility-with-industrial-washing-ma.jpg"
+        },
+        {
+          "id": "subsection-cleaning-en",
+          "icon": "sparkles",
+          "titleAr": "قسم خدمات التنظيف",
+          "titleEn": "Cleaning Services Section",
+          "descriptionAr": "متابعة نظافة المرافق المدرسية.",
+          "descriptionEn": "In this section, the cleanliness of school facilities is monitored (bathrooms, theater, gym, classrooms, individual rooms, wings, playground, etc.). Facilities are sterilized and cleaned periodically and around the clock.",
+          "image": "/cleaning-staff-maintaining-school-facilities-with-.jpg"
+        },
+        {
+          "id": "subsection-physical-therapy-en",
+          "icon": "activity",
+          "titleAr": "قسم العلاج الطبيعي",
+          "titleEn": "Physical Therapy Section",
+          "descriptionAr": "يختص بمعالجة وتأهيل ذوي الإعاقة الحركية والجسدية.",
+          "descriptionEn": "Specializes in treating and rehabilitating those with motor and physical disabilities to develop motor and functional abilities. The school has two physical therapy rooms, one for males and one for females. Includes: Physical Therapy, Respiratory Therapy, Hydrotherapy (Jacuzzi and water pool).",
+          "image": "/physical-therapy-room-with-equipment-and-therapist.jpg"
+        },
+        {
+          "id": "subsection-sports-en",
+          "icon": "dumbbell",
+          "titleAr": "قسم الرياضة",
+          "titleEn": "Sports Section",
+          "descriptionAr": "قسم التأهيل الرياضي لرفع مستوى الأداء البدني.",
+          "descriptionEn": "The sports rehabilitation section works to raise the level of physical performance, practicing exercises and games that contribute to the development of various aspects of physical fitness. The school has two activity and game halls and two outdoor playgrounds. Includes: Karate Hall, Gym.",
+          "image": "/sports-hall-with-karate-class-and-gym-equipment-fo.jpg"
+        }
+      ]
+    },
+    {
+      "id": "heart-cta-en",
+      "kind": "department-cta",
+      "title": "Have a Question?",
+      "description": "We are here to answer all your questions and help you choose the right program for your needs",
+      "primaryButtonLabel": "Contact Us Now",
+      "primaryButtonHref": "/#contact",
+      "secondaryButtonLabel": "Back to Home",
+      "secondaryButtonHref": "/",
+      "contactInfo": {
+        "phone": "4122002",
+        "email": "info@namothajia.com",
+        "address": "Amman, Jordan"
+      }
+    }
+  ],
+  "metadata": {
+    "icon": "heart",
+    "color": "from-blue-600 via-indigo-600 to-purple-600",
+    "type": "heart"
+  }
+}

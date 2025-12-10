@@ -1,3 +1,8 @@
+// LocalStorage-only implementation for v0 development (active)
+// This script is designed to run in the browser console or as a client-side function
+
+// FIREBASE: Original Firebase Admin implementation (preserved for future production use)
+/*
 import { initializeApp, getApps, cert } from "firebase-admin/app"
 import { getFirestore } from "firebase-admin/firestore"
 
@@ -13,337 +18,235 @@ if (!getApps().length) {
 }
 
 const db = getFirestore()
+*/
+
+import { saveDynamicPage } from "@/lib/storage"
+import type { DynamicPage, PageBlock } from "@/lib/storage"
 
 const homePageTemplate = {
   id: `page_${Date.now()}`,
   title: "Home Page Template",
   slug: "home-template",
-  language: "ar",
-  status: "draft",
+  language: "ar" as const,
+  status: "draft" as const,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   blocks: [
     // Hero Slider Block
     {
       id: "block_1",
-      type: "hero",
+      type: "hero-slider" as const,
       content: {
         slides: [
           {
-            title: "مرحباً بكم في مدرستنا",
-            subtitle: "نحن نقدم أفضل التجارب التعليمية",
-            image: "/school-building-exterior.png",
-            cta: { text: "اكتشف المزيد", link: "/about" },
+            id: "slide_1",
+            imageUrl: "/school-building-exterior.png",
+            titleAr: "مرحباً بكم في مدرستنا",
+            titleEn: "Welcome to Our School",
+            subtitleAr: "نحن نقدم أفضل التجارب التعليمية",
+            subtitleEn: "We provide the best educational experiences",
+            descriptionAr: "",
+            descriptionEn: "",
           },
           {
-            title: "التميز الأكاديمي",
-            subtitle: "برامج تعليمية متقدمة",
-            image: "/diverse-students-classroom.png",
-            cta: { text: "تعرف على البرامج", link: "/programs" },
+            id: "slide_2",
+            imageUrl: "/diverse-students-classroom.png",
+            titleAr: "التميز الأكاديمي",
+            titleEn: "Academic Excellence",
+            subtitleAr: "برامج تعليمية متقدمة",
+            subtitleEn: "Advanced educational programs",
+            descriptionAr: "",
+            descriptionEn: "",
           },
           {
-            title: "بيئة تعليمية حديثة",
-            subtitle: "مرافق متطورة وتقنيات حديثة",
-            image: "/modern-school-facilities.png",
-            cta: { text: "جولة افتراضية", link: "/tour" },
+            id: "slide_3",
+            imageUrl: "/modern-school-facilities.png",
+            titleAr: "بيئة تعليمية حديثة",
+            titleEn: "Modern Learning Environment",
+            subtitleAr: "مرافق متطورة وتقنيات حديثة",
+            subtitleEn: "Advanced facilities and modern technologies",
+            descriptionAr: "",
+            descriptionEn: "",
           },
         ],
       },
       styles: {
-        animation: "fade-in",
-        animationDelay: 0,
-        animationDuration: 1000,
+        animation: "fade-in" as const,
+        animationDelay: "0s",
+        animationDuration: "1s",
         backgroundColor: "transparent",
         textColor: "white",
-        padding: { top: 0, right: 0, bottom: 0, left: 0 },
-        margin: { top: 0, right: 0, bottom: 0, left: 0 },
+        padding: "0",
+        margin: "0",
       },
       order: 0,
-    },
+    } as PageBlock,
 
     // About Section Block
     {
       id: "block_2",
-      type: "text",
+      type: "paragraph" as const,
       content: {
-        title: "من نحن",
-        text: "نحن مؤسسة تعليمية رائدة نسعى لتقديم أفضل الخدمات التعليمية لأبنائنا الطلاب. نؤمن بأن التعليم هو المفتاح لبناء مستقبل أفضل، ونعمل على توفير بيئة تعليمية محفزة وداعمة للإبداع والتميز.",
-        alignment: "center",
+        textAr:
+          "نحن مؤسسة تعليمية رائدة نسعى لتقديم أفضل الخدمات التعليمية لأبنائنا الطلاب. نؤمن بأن التعليم هو المفتاح لبناء مستقبل أفضل، ونعمل على توفير بيئة تعليمية محفزة وداعمة للإبداع والتميز.",
+        textEn:
+          "We are a leading educational institution striving to provide the best educational services to our students. We believe that education is the key to building a better future.",
       },
       styles: {
-        animation: "slide-up",
-        animationDelay: 200,
-        animationDuration: 800,
-        backgroundColor: "from-blue-50 to-white",
-        backgroundType: "gradient",
-        gradientDirection: "to-b",
-        textColor: "gray-800",
-        padding: { top: 80, right: 20, bottom: 80, left: 20 },
-        margin: { top: 0, right: 0, bottom: 0, left: 0 },
-        borderRadius: 0,
-        shadow: "none",
+        animation: "slide-up" as const,
+        animationDelay: "0.2s",
+        animationDuration: "0.8s",
+        backgroundColor: "bg-gradient-to-b from-blue-50 to-white",
+        textColor: "text-gray-800",
+        padding: "py-20 px-5",
+        margin: "0",
+        textAlign: "center" as const,
       },
       order: 1,
-    },
+    } as PageBlock,
 
     // Features Cards Block
     {
       id: "block_3",
-      type: "cards",
+      type: "features" as const,
       content: {
-        title: "مميزاتنا",
-        cards: [
+        features: [
           {
-            title: "تعليم متميز",
-            description: "منهج تعليمي حديث ومتطور",
-            icon: "📚",
-            link: "",
+            id: "feature_1",
+            icon: "BookOpen",
+            titleAr: "تعليم متميز",
+            titleEn: "Distinguished Education",
+            descriptionAr: "منهج تعليمي حديث ومتطور",
+            descriptionEn: "Modern and advanced curriculum",
           },
           {
-            title: "معلمون مؤهلون",
-            description: "كادر تعليمي على أعلى مستوى",
-            icon: "👨‍🏫",
-            link: "",
+            id: "feature_2",
+            icon: "Users",
+            titleAr: "معلمون مؤهلون",
+            titleEn: "Qualified Teachers",
+            descriptionAr: "كادر تعليمي على أعلى مستوى",
+            descriptionEn: "Teaching staff at the highest level",
           },
           {
-            title: "مرافق حديثة",
-            description: "بنية تحتية متطورة",
-            icon: "🏫",
-            link: "",
+            id: "feature_3",
+            icon: "Building",
+            titleAr: "مرافق حديثة",
+            titleEn: "Modern Facilities",
+            descriptionAr: "بنية تحتية متطورة",
+            descriptionEn: "Advanced infrastructure",
           },
           {
-            title: "أنشطة متنوعة",
-            description: "برامج لا صفية شاملة",
-            icon: "⚽",
-            link: "",
+            id: "feature_4",
+            icon: "Activity",
+            titleAr: "أنشطة متنوعة",
+            titleEn: "Diverse Activities",
+            descriptionAr: "برامج لا صفية شاملة",
+            descriptionEn: "Comprehensive extracurricular programs",
           },
         ],
-        columns: 4,
       },
       styles: {
-        animation: "slide-up",
-        animationDelay: 400,
-        animationDuration: 800,
+        animation: "slide-up" as const,
+        animationDelay: "0.4s",
+        animationDuration: "0.8s",
         backgroundColor: "white",
-        textColor: "gray-800",
-        padding: { top: 60, right: 20, bottom: 60, left: 20 },
-        margin: { top: 0, right: 0, bottom: 0, left: 0 },
-        borderRadius: 0,
-        shadow: "none",
-        hoverEffect: {
-          scale: 1.05,
-          shadow: "xl",
-          translateY: -8,
-        },
+        textColor: "text-gray-800",
+        padding: "py-16 px-5",
+        margin: "0",
       },
       order: 2,
-    },
-
-    // Departments Section Block
-    {
-      id: "block_4",
-      type: "cards",
-      content: {
-        title: "الأقسام",
-        cards: [
-          {
-            title: "القسم الطبي",
-            description: "برامج تعليمية في المجال الطبي والعلوم الصحية",
-            image: "/medical-department.jpg",
-            link: "/departments/medical",
-          },
-          {
-            title: "القسم العلمي",
-            description: "برامج متقدمة في العلوم والتكنولوجيا",
-            image: "/science-laboratory.png",
-            link: "/departments/science",
-          },
-          {
-            title: "القسم التجريبي",
-            description: "برامج تجريبية ومبتكرة للطلاب المتميزين",
-            image: "/experimental-lab.jpg",
-            link: "/departments/experimental",
-          },
-        ],
-        columns: 3,
-      },
-      styles: {
-        animation: "slide-up",
-        animationDelay: 200,
-        animationDuration: 1000,
-        backgroundColor: "from-gray-50 to-blue-50",
-        backgroundType: "gradient",
-        gradientDirection: "to-br",
-        textColor: "gray-800",
-        padding: { top: 80, right: 20, bottom: 80, left: 20 },
-        margin: { top: 0, right: 0, bottom: 0, left: 0 },
-        borderRadius: 16,
-        shadow: "lg",
-        hoverEffect: {
-          scale: 1.05,
-          shadow: "2xl",
-          translateY: -8,
-        },
-      },
-      order: 3,
-    },
+    } as PageBlock,
 
     // Gallery Block
     {
       id: "block_5",
-      type: "gallery",
+      type: "gallery" as const,
       content: {
-        title: "معرض الصور",
         images: [
-          { url: "/vibrant-school-campus.png", alt: "الحرم المدرسي" },
-          { url: "/diverse-students-studying.png", alt: "طلاب يدرسون" },
-          { url: "/science-lab.png", alt: "مختبر العلوم" },
-          { url: "/generic-sports-field.png", alt: "الملاعب الرياضية" },
-          { url: "/grand-library.png", alt: "المكتبة" },
-          { url: "/classroom-technology.jpg", alt: "التقنية في الصف" },
+          { url: "/vibrant-school-campus.png", alt: "الحرم المدرسي", caption: "" },
+          { url: "/diverse-students-studying.png", alt: "طلاب يدرسون", caption: "" },
+          { url: "/science-lab.png", alt: "مختبر العلوم", caption: "" },
+          { url: "/generic-sports-field.png", alt: "الملاعب الرياضية", caption: "" },
+          { url: "/grand-library.png", alt: "المكتبة", caption: "" },
+          { url: "/classroom-technology.jpg", alt: "التقنية في الصف", caption: "" },
         ],
-        columns: 3,
       },
       styles: {
-        animation: "fade-in",
-        animationDelay: 300,
-        animationDuration: 1000,
+        animation: "fade-in" as const,
+        animationDelay: "0.3s",
+        animationDuration: "1s",
         backgroundColor: "white",
-        textColor: "gray-800",
-        padding: { top: 80, right: 20, bottom: 80, left: 20 },
-        margin: { top: 0, right: 0, bottom: 0, left: 0 },
-        borderRadius: 0,
-        shadow: "none",
-        hoverEffect: {
-          scale: 1.1,
-          shadow: "2xl",
-        },
+        textColor: "text-gray-800",
+        padding: "py-20 px-5",
+        margin: "0",
       },
       order: 4,
-    },
+    } as PageBlock,
 
-    // Testimonials Block
-    {
-      id: "block_6",
-      type: "testimonials",
-      content: {
-        title: "آراء أولياء الأمور",
-        testimonials: [
-          {
-            name: "أحمد محمد",
-            role: "ولي أمر",
-            content: "مدرسة رائعة بكل المقاييس. أبنائي سعداء جداً بالتعليم والمعاملة الطيبة.",
-            rating: 5,
-            image: "/parent-testimonial-man.jpg",
-          },
-          {
-            name: "فاطمة أحمد",
-            role: "ولية أمر",
-            content: "تطور ملحوظ في مستوى ابنتي الدراسي. شكراً للكادر التعليمي المتميز.",
-            rating: 5,
-            image: "/parent-testimonial-woman.jpg",
-          },
-          {
-            name: "محمد علي",
-            role: "ولي أمر",
-            content: "المرافق ممتازة والأنشطة متنوعة. بيئة مثالية لتنمية مهارات الأطفال.",
-            rating: 5,
-            image: "/parent-testimonial-man-2.jpg",
-          },
-        ],
-      },
-      styles: {
-        animation: "slide-up",
-        animationDelay: 200,
-        animationDuration: 800,
-        backgroundColor: "from-blue-600 to-purple-600",
-        backgroundType: "gradient",
-        gradientDirection: "to-br",
-        textColor: "white",
-        padding: { top: 80, right: 20, bottom: 80, left: 20 },
-        margin: { top: 0, right: 0, bottom: 0, left: 0 },
-        borderRadius: 0,
-        shadow: "none",
-      },
-      order: 5,
-    },
-
-    // Jobs/Career Section Block
+    // CTA Block
     {
       id: "block_7",
-      type: "cta",
+      type: "cta" as const,
       content: {
-        title: "انضم إلى فريقنا",
-        description: "نبحث عن معلمين وموظفين متميزين للانضمام إلى عائلتنا التعليمية",
-        primaryButton: { text: "التقدم للوظائف", link: "/jobs/employment" },
-        secondaryButton: { text: "طلب خدمة", link: "/jobs/service-request" },
+        ctaTitleAr: "انضم إلى فريقنا",
+        ctaTitleEn: "Join Our Team",
+        ctaDescriptionAr: "نبحث عن معلمين وموظفين متميزين للانضمام إلى عائلتنا التعليمية",
+        ctaDescriptionEn: "We are looking for distinguished teachers and staff to join our educational family",
+        ctaButtonTextAr: "التقدم للوظائف",
+        ctaButtonTextEn: "Apply for Jobs",
+        ctaButtonUrl: "/jobs/employment",
       },
       styles: {
-        animation: "fade-in",
-        animationDelay: 300,
-        animationDuration: 1000,
-        backgroundColor: "gray-900",
-        textColor: "white",
-        padding: { top: 60, right: 20, bottom: 60, left: 20 },
-        margin: { top: 0, right: 0, bottom: 0, left: 0 },
-        borderRadius: 0,
-        shadow: "none",
+        animation: "fade-in" as const,
+        animationDelay: "0.3s",
+        animationDuration: "1s",
+        backgroundColor: "bg-gray-900",
+        textColor: "text-white",
+        padding: "py-16 px-5",
+        margin: "0",
       },
       order: 6,
-    },
-
-    // Contact Form Block
-    {
-      id: "block_8",
-      type: "contact",
-      content: {
-        title: "اتصل بنا",
-        description: "نسعد بالرد على استفساراتكم",
-        fields: [
-          { name: "name", label: "الاسم", type: "text", required: true },
-          { name: "email", label: "البريد الإلكتروني", type: "email", required: true },
-          { name: "phone", label: "رقم الهاتف", type: "tel", required: false },
-          { name: "message", label: "الرسالة", type: "textarea", required: true },
-        ],
-        submitText: "إرسال",
-        contactInfo: {
-          phone: "+966 50 123 4567",
-          email: "info@school.edu.sa",
-          address: "الرياض، المملكة العربية السعودية",
-        },
-      },
-      styles: {
-        animation: "slide-up",
-        animationDelay: 200,
-        animationDuration: 800,
-        backgroundColor: "from-gray-50 to-white",
-        backgroundType: "gradient",
-        gradientDirection: "to-b",
-        textColor: "gray-800",
-        padding: { top: 80, right: 20, bottom: 80, left: 20 },
-        margin: { top: 0, right: 0, bottom: 0, left: 0 },
-        borderRadius: 0,
-        shadow: "none",
-      },
-      order: 7,
-    },
+    } as PageBlock,
   ],
 }
 
 async function importTemplate() {
   try {
-    console.log("[v0] Starting home page template import...")
+    console.log("[v0] Starting home page template import to localStorage...")
 
-    // Add the page to Firestore
-    await db.collection("pages").doc(homePageTemplate.id).set(homePageTemplate)
+    // LocalStorage implementation (active)
+    const pageData: Omit<DynamicPage, "id" | "createdAt" | "updatedAt"> = {
+      slug: homePageTemplate.slug,
+      titleAr: homePageTemplate.title,
+      titleEn: "Home Page Template",
+      descriptionAr: "صفحة رئيسية قالب",
+      descriptionEn: "Home page template",
+      contentAr: "",
+      contentEn: "",
+      blocks: homePageTemplate.blocks,
+      isPublished: false,
+    }
 
-    console.log("[v0] Successfully imported home page template!")
-    console.log("[v0] Page ID:", homePageTemplate.id)
+    await saveDynamicPage(pageData)
+
+    console.log("[v0] Successfully imported home page template to localStorage!")
+    console.log("[v0] Page slug:", homePageTemplate.slug)
     console.log("[v0] Go to your dashboard to view and edit the page.")
+
+    // FIREBASE: Original Firebase implementation
+    // await db.collection("pages").doc(homePageTemplate.id).set(homePageTemplate)
+    // console.log("[v0] Successfully imported home page template!")
+    // console.log("[v0] Page ID:", homePageTemplate.id)
   } catch (error) {
     console.error("[v0] Error importing template:", error)
     throw error
   }
 }
 
-importTemplate()
+// Export the function for use in browser or Node environment
+export { importTemplate }
+
+// Auto-run if in Node environment (for npm run scripts)
+if (typeof window === "undefined" && typeof process !== "undefined") {
+  importTemplate()
+}

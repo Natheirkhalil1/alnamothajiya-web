@@ -1,0 +1,150 @@
+{
+  "titleAr": "القسم الطبي",
+  "titleEn": "Medical Department",
+  "slug": "departments-medical",
+  "descriptionAr": "يتميز القسم الطبي بكوادر طبية ذوي كفاءات عالية من أطباء وممرضين متواجدين على مدار الساعة",
+  "descriptionEn": "The Medical Department features highly qualified medical staff of doctors and nurses available 24/7",
+  "blocksAr": [
+    {
+      "id": "medical-welcome-ar",
+      "kind": "department-welcome",
+      "icon": "stethoscope",
+      "title": "مرحباً بكم في القسم الطبي - صحة طلابنا أولويتنا",
+      "description": "يتميز القسم الطبي بكوادر طبية ذوي كفاءات عالية من أطباء وممرضين متواجدين على مدار الساعة، مع معدات طبية شاملة لجميع الحالات الطارئة واليومية، وسيارة إسعاف مجهزة بكامل لوازم الإسعافات الأولية.",
+      "imageUrl": "/modern-medical-clinic-for-special-needs-school-wit.jpg",
+      "stats": [
+        { "id": "stat-1", "value": "3+", "label": "قسم فرعي", "onClick": "#subsections" },
+        { "id": "stat-2", "value": "24/7", "label": "خدمة مستمرة", "onClick": "#contact" },
+        { "id": "stat-3", "value": "100%", "label": "التزام بالجودة", "onClick": "#cta" }
+      ]
+    },
+    {
+      "id": "medical-subsections-ar",
+      "kind": "department-subsections",
+      "header": {
+        "title": "الأقسام الفرعية",
+        "subtitle": "تعرف على جميع الخدمات والبرامج المتخصصة التي نقدمها",
+        "centered": true
+      },
+      "departmentColor": "from-red-600 via-rose-600 to-pink-600",
+      "items": [
+        {
+          "id": "subsection-clinic-ar",
+          "icon": "stethoscope",
+          "titleAr": "العيادة",
+          "titleEn": "Clinic",
+          "descriptionAr": "تتميز العيادة بقسم طبي مجهز بكوادر طبية ذوي كفاءات (أطباء وممرضين متواجدين على مدار الساعة)، وفيها معدات طبية شاملة لجميع الحالات الطارئة واليومية، ويتوفر فيها سيارة إسعاف مجهزة بكامل لوازم الإسعافات الأولية على مدار الساعة.",
+          "descriptionEn": "The clinic features a medical section equipped with qualified medical staff (doctors and nurses available 24/7), comprehensive medical equipment for all emergency and daily cases, and an ambulance equipped with complete first aid supplies available 24/7.",
+          "image": "/modern-medical-clinic-for-special-needs-school-wit.jpg"
+        },
+        {
+          "id": "subsection-pharmacy-ar",
+          "icon": "pill",
+          "titleAr": "الصيدلية",
+          "titleEn": "Pharmacy",
+          "descriptionAr": "تحتوي الصيدلية على جميع الأدوية التي يحتاجها الطلاب، مصنفة حسب اسم الطالب، ومحفوظة إلكترونياً.",
+          "descriptionEn": "The pharmacy contains all medications needed by students, classified by student name, and stored electronically.",
+          "image": "/school-pharmacy-with-organized-medications-and-pha.jpg"
+        },
+        {
+          "id": "subsection-monitoring-ar",
+          "icon": "activity",
+          "titleAr": "المتابعة الصحية",
+          "titleEn": "Health Monitoring",
+          "descriptionAr": "تعتبر هذه الوحدة بمثابة العناية المركزة في المدرسة حيث يتم وضع الطلاب الذين يحتاجون للمتابعة والمراقبة الصحية على مدار الساعة بإشراف العيادة الطبية وكوادرها.",
+          "descriptionEn": "This unit serves as the intensive care unit in the school where students who need health monitoring and follow-up are placed 24/7 under the supervision of the medical clinic and its staff.",
+          "image": "/medical-monitoring-room-with-nurse-caring-for-spec.jpg"
+        }
+      ]
+    },
+    {
+      "id": "medical-cta-ar",
+      "kind": "department-cta",
+      "title": "هل لديك استفسار؟",
+      "description": "نحن هنا للإجابة على جميع استفساراتكم ومساعدتكم في اختيار البرنامج المناسب لاحتياجاتكم",
+      "primaryButtonLabel": "تواصل معنا الآن",
+      "primaryButtonHref": "/#contact",
+      "secondaryButtonLabel": "العودة للرئيسية",
+      "secondaryButtonHref": "/",
+      "contactInfo": {
+        "phone": "4122002",
+        "email": "info@namothajia.com",
+        "address": "عمان، الأردن"
+      }
+    }
+  ],
+  "blocksEn": [
+    {
+      "id": "medical-welcome-en",
+      "kind": "department-welcome",
+      "icon": "stethoscope",
+      "title": "Welcome to Medical Department - Our Students' Health is Our Priority",
+      "description": "The Medical Department features highly qualified medical staff of doctors and nurses available 24/7, with comprehensive medical equipment for all emergency and daily cases, and an ambulance equipped with complete first aid supplies.",
+      "imageUrl": "/modern-medical-clinic-for-special-needs-school-wit.jpg",
+      "stats": [
+        { "id": "stat-1", "value": "3+", "label": "Subsections", "onClick": "#subsections" },
+        { "id": "stat-2", "value": "24/7", "label": "Continuous Service", "onClick": "#contact" },
+        { "id": "stat-3", "value": "100%", "label": "Quality Commitment", "onClick": "#cta" }
+      ]
+    },
+    {
+      "id": "medical-subsections-en",
+      "kind": "department-subsections",
+      "header": {
+        "title": "Subsections",
+        "subtitle": "Discover all specialized services and programs we offer",
+        "centered": true
+      },
+      "departmentColor": "from-red-600 via-rose-600 to-pink-600",
+      "items": [
+        {
+          "id": "subsection-clinic-en",
+          "icon": "stethoscope",
+          "titleAr": "العيادة",
+          "titleEn": "Clinic",
+          "descriptionAr": "تتميز العيادة بقسم طبي مجهز بكوادر طبية ذوي كفاءات (أطباء وممرضين متواجدين على مدار الساعة)، وفيها معدات طبية شاملة لجميع الحالات الطارئة واليومية، ويتوفر فيها سيارة إسعاف مجهزة بكامل لوازم الإسعافات الأولية على مدار الساعة.",
+          "descriptionEn": "The clinic features a medical section equipped with qualified medical staff (doctors and nurses available 24/7), comprehensive medical equipment for all emergency and daily cases, and an ambulance equipped with complete first aid supplies available 24/7.",
+          "image": "/modern-medical-clinic-for-special-needs-school-wit.jpg"
+        },
+        {
+          "id": "subsection-pharmacy-en",
+          "icon": "pill",
+          "titleAr": "الصيدلية",
+          "titleEn": "Pharmacy",
+          "descriptionAr": "تحتوي الصيدلية على جميع الأدوية التي يحتاجها الطلاب، مصنفة حسب اسم الطالب، ومحفوظة إلكترونياً.",
+          "descriptionEn": "The pharmacy contains all medications needed by students, classified by student name, and stored electronically.",
+          "image": "/school-pharmacy-with-organized-medications-and-pha.jpg"
+        },
+        {
+          "id": "subsection-monitoring-en",
+          "icon": "activity",
+          "titleAr": "المتابعة الصحية",
+          "titleEn": "Health Monitoring",
+          "descriptionAr": "تعتبر هذه الوحدة بمثابة العناية المركزة في المدرسة حيث يتم وضع الطلاب الذين يحتاجون للمتابعة والمراقبة الصحية على مدار الساعة بإشراف العيادة الطبية وكوادرها.",
+          "descriptionEn": "This unit serves as the intensive care unit in the school where students who need health monitoring and follow-up are placed 24/7 under the supervision of the medical clinic and its staff.",
+          "image": "/medical-monitoring-room-with-nurse-caring-for-spec.jpg"
+        }
+      ]
+    },
+    {
+      "id": "medical-cta-en",
+      "kind": "department-cta",
+      "title": "Have a Question?",
+      "description": "We are here to answer all your questions and help you choose the right program for your needs",
+      "primaryButtonLabel": "Contact Us Now",
+      "primaryButtonHref": "/#contact",
+      "secondaryButtonLabel": "Back to Home",
+      "secondaryButtonHref": "/",
+      "contactInfo": {
+        "phone": "4122002",
+        "email": "info@namothajia.com",
+        "address": "Amman, Jordan"
+      }
+    }
+  ],
+  "metadata": {
+    "icon": "stethoscope",
+    "color": "from-red-600 via-rose-600 to-pink-600",
+    "type": "medical"
+  }
+}

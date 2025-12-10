@@ -4,42 +4,43 @@ import { useState, useEffect } from "react"
 import { ChevronLeft, ChevronRight, Sparkles, Star, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/lib/language-context"
-import { getHeroSlides, type HeroSlide } from "@/lib/storage"
 
-export function HeroSlider() {
+interface HeroSliderProps {
+  slides?: Array<{
+    id: string
+    titleEn: string
+    titleAr: string
+    subtitleEn: string
+    subtitleAr: string
+    descriptionEn: string
+    descriptionAr: string
+    image: string
+    order?: number
+  }>
+  autoplay?: boolean
+  interval?: number
+  showDots?: boolean
+  showArrows?: boolean
+}
+
+export function HeroSlider({
+  slides = [],
+  autoplay = true,
+  interval = 5000,
+  showDots = true,
+  showArrows = true,
+}: HeroSliderProps) {
   const [currentSlide, setCurrentSlide] = useState(0)
   const { language, t } = useLanguage()
-  const [slides, setSlides] = useState<HeroSlide[]>([])
 
   useEffect(() => {
-    const loadSlides = async () => {
-      const loadedSlides = await getHeroSlides()
-      setSlides(loadedSlides.sort((a, b) => (a.order || 0) - (b.order || 0)))
-    }
-
-    loadSlides()
-
-    const handleStorageChange = () => {
-      loadSlides()
-    }
-
-    window.addEventListener("storage", handleStorageChange)
-    window.addEventListener("localStorageChange", handleStorageChange)
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange)
-      window.removeEventListener("localStorageChange", handleStorageChange)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (slides.length === 0) return
+    if (slides.length === 0 || !autoplay) return
 
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length)
-    }, 5000)
+    }, interval)
     return () => clearInterval(timer)
-  }, [slides.length])
+  }, [slides.length, autoplay, interval])
 
   const goToSlide = (index: number) => {
     setCurrentSlide(index)
@@ -79,17 +80,17 @@ export function HeroSlider() {
             index === currentSlide ? "opacity-100" : "opacity-0"
           }`}
         >
-          {/* Improved overlay background with better gradient */}
-          <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/70 to-background/90" />
-          <div className="absolute inset-0 bg-gradient-to-r from-primary via-transparent to-accent/5" />
-
+          {/* Background Image */}
           <img
             src={slide.image || "/placeholder.svg"}
             alt={language === "ar" ? slide.titleAr : slide.titleEn}
             className="w-full h-full object-cover"
           />
 
-          <div className="absolute inset-0 flex items-center justify-center">
+          {/* Subtle overlay for better text readability */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/40" />
+
+          <div className="absolute inset-0 flex items-center justify-center z-10">
             <div className="container mx-auto px-4">
               <div className="max-w-5xl mx-auto text-center">
                 <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
@@ -149,38 +150,45 @@ export function HeroSlider() {
         </div>
       ))}
 
-      {/* Improved navigation button design */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className={`absolute ${language === "ar" ? "left-6" : "right-6"} top-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-background/70 backdrop-blur-xl hover:bg-primary hover:text-primary-foreground border-2 border-primary/30 hover:border-primary shadow-2xl hover:shadow-3xl hover:shadow-primary/30 transition-all duration-300 hover:scale-110 group`}
-        onClick={goToPrevious}
-      >
-        <ChevronLeft className="w-7 h-7 group-hover:-translate-x-1 transition-transform duration-300" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        className={`absolute ${language === "ar" ? "right-6" : "left-6"} top-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-background/70 backdrop-blur-xl hover:bg-primary hover:text-primary-foreground border-2 border-primary/30 hover:border-primary shadow-2xl hover:shadow-3xl hover:shadow-primary/30 transition-all duration-300 hover:scale-110 group`}
-        onClick={goToNext}
-      >
-        <ChevronRight className="w-7 h-7 group-hover:translate-x-1 transition-transform duration-300" />
-      </Button>
+      {showArrows && (
+        <>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`absolute ${language === "ar" ? "left-6" : "right-6"} top-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-background/70 backdrop-blur-xl hover:bg-primary hover:text-primary-foreground border-2 border-primary/30 hover:border-primary shadow-2xl hover:shadow-3xl hover:shadow-primary/30 transition-all duration-300 hover:scale-110 group`}
+            onClick={goToPrevious}
+          >
+            <ChevronLeft className="w-7 h-7 group-hover:-translate-x-1 transition-transform duration-300" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`absolute ${language === "ar" ? "right-6" : "left-6"} top-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-background/70 backdrop-blur-xl hover:bg-primary hover:text-primary-foreground border-2 border-primary/30 hover:border-primary shadow-2xl hover:shadow-3xl hover:shadow-primary/30 transition-all duration-300 hover:scale-110 group`}
+            onClick={goToNext}
+          >
+            <ChevronRight className="w-7 h-7 group-hover:translate-x-1 transition-transform duration-300" />
+          </Button>
+        </>
+      )}
 
-      {/* Improved slider indicators design */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-3 bg-background/60 backdrop-blur-xl px-6 py-4 rounded-full border-2 border-primary/30 shadow-2xl">
-        {slides.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => goToSlide(index)}
-            className={`h-3 rounded-full transition-all duration-500 ${
-              index === currentSlide
-                ? "bg-gradient-to-r from-primary to-accent w-12 shadow-lg shadow-primary/50"
-                : "bg-muted-foreground/40 w-3 hover:bg-muted-foreground/70 hover:w-6"
-            }`}
-          />
-        ))}
-      </div>
+      {/* Bottom Overlay for Navigation Area */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/50 via-black/30 to-transparent z-10 pointer-events-none" />
+
+      {showDots && (
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-3 z-20">
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => goToSlide(index)}
+              className={`h-3 rounded-full transition-all duration-500 ${
+                index === currentSlide
+                  ? "bg-gradient-to-r from-primary to-accent w-12 shadow-lg shadow-primary/50"
+                  : "bg-white/40 w-3 hover:bg-white/60 hover:w-6"
+              }`}
+            />
+          ))}
+        </div>
+      )}
     </section>
   )
 }

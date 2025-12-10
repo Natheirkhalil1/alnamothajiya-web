@@ -1,40 +1,31 @@
 "use client"
-
-import { useState, useEffect } from "react"
 import { GraduationCap, Award, Target, Heart, Users, Building2, Globe } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { useLanguage } from "@/lib/language-context"
-import { getAboutContent, type AboutContent } from "@/lib/storage"
 
-export function AboutSection() {
+interface AboutSectionProps {
+  titleEn?: string
+  titleAr?: string
+  descriptionEn?: string
+  descriptionAr?: string
+  image?: string
+  features?: Array<{
+    titleEn: string
+    titleAr: string
+    descriptionEn: string
+    descriptionAr: string
+  }>
+}
+
+export function AboutSection({
+  titleEn = "About Our School",
+  titleAr = "عن مدرستنا",
+  descriptionEn = "We provide quality education",
+  descriptionAr = "نقدم تعليماً عالي الجودة",
+  image = "/placeholder.svg",
+  features = [],
+}: AboutSectionProps) {
   const { language, t } = useLanguage()
-  const [aboutContent, setAboutContent] = useState<AboutContent | null>(null)
-
-  useEffect(() => {
-    const loadContent = async () => {
-      const content = await getAboutContent()
-      setAboutContent(content)
-    }
-
-    loadContent()
-
-    // Listen for localStorage changes
-    const handleStorageChange = () => {
-      loadContent()
-    }
-
-    window.addEventListener("storage", handleStorageChange)
-    window.addEventListener("localStorageChange", handleStorageChange)
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange)
-      window.removeEventListener("localStorageChange", handleStorageChange)
-    }
-  }, [])
-
-  if (!aboutContent) {
-    return null
-  }
 
   const iconMap: Record<string, any> = {
     Target,
@@ -45,7 +36,7 @@ export function AboutSection() {
     Globe,
   }
 
-  const features = aboutContent.features.map((feature, index) => {
+  const displayFeatures = features.map((feature, index) => {
     const icons = [Target, Heart, Award, Users, Building2, Globe]
     const gradients = [
       { gradient: "from-blue-500/20 to-cyan-500/20", iconBg: "from-blue-500 to-cyan-500" },
@@ -90,8 +81,8 @@ export function AboutSection() {
             <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-border/50 backdrop-blur-sm bg-card/30">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
               <img
-                src={aboutContent.image || "/placeholder.svg"}
-                alt={language === "ar" ? aboutContent.titleAr : aboutContent.titleEn}
+                src={image || "/placeholder.svg"}
+                alt={language === "ar" ? titleAr : titleEn}
                 className="w-full h-auto transform group-hover:scale-110 transition-transform duration-1000"
               />
 
@@ -132,7 +123,7 @@ export function AboutSection() {
 
               <h2 className="text-5xl md:text-6xl font-bold leading-tight animate-slide-up">
                 <span className="bg-gradient-to-r from-foreground via-foreground/90 to-foreground/80 bg-clip-text text-transparent">
-                  {language === "ar" ? aboutContent.titleAr : aboutContent.titleEn}
+                  {language === "ar" ? titleAr : titleEn}
                 </span>
               </h2>
 
@@ -140,7 +131,7 @@ export function AboutSection() {
                 className="text-xl text-muted-foreground leading-relaxed animate-fade-in"
                 style={{ animationDelay: "200ms" }}
               >
-                {language === "ar" ? aboutContent.descriptionAr : aboutContent.descriptionEn}
+                {language === "ar" ? descriptionAr : descriptionEn}
               </p>
 
               {/* Additional stats */}
@@ -161,7 +152,7 @@ export function AboutSection() {
             </div>
 
             <div className="grid sm:grid-cols-2 gap-5">
-              {features.map((feature, index) => (
+              {displayFeatures.map((feature, index) => (
                 <Card
                   key={index}
                   className={`relative p-6 hover:shadow-2xl hover:scale-105 transition-all duration-500 border-border/50 bg-gradient-to-br ${feature.gradient} backdrop-blur-sm group overflow-hidden animate-fade-in`}

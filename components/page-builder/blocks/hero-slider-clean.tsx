@@ -1,0 +1,279 @@
+import * as React from "react"
+import { Block, HeroSliderBlock } from "../types"
+import { InputField, ImageField, TextareaField, createId, applyBlockStyles } from "../utils"
+
+export function HeroSliderEditor({ block, onChange }: { block: HeroSliderBlock; onChange: (b: Block) => void }) {
+    const updateSlides = (updater: (slides: HeroSliderBlock["slides"]) => HeroSliderBlock["slides"]) =>
+        onChange({ ...block, slides: updater(block.slides) })
+
+    return (
+        <div className="space-y-3 text-[11px]">
+            <div className="grid grid-cols-2 gap-2">
+                <div className="flex items-center gap-2">
+                    <input
+                        type="checkbox"
+                        id="autoplay"
+                        checked={block.autoplay ?? true}
+                        onChange={(e) => onChange({ ...block, autoplay: e.target.checked })}
+                        className="h-4 w-4 rounded border-gray-300 text-blue-600"
+                    />
+                    <label htmlFor="autoplay" className="text-[11px]">
+                        تشغيل تلقائي
+                    </label>
+                </div>
+                {block.autoplay && (
+                    <InputField
+                        label="الفاصل الزمني (ms)"
+                        value={(block.interval ?? 5000).toString()}
+                        onChange={(v) => onChange({ ...block, interval: parseInt(v) || 5000 })}
+                        type="number"
+                    />
+                )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+                <div className="flex items-center gap-2">
+                    <input
+                        type="checkbox"
+                        id="showDots"
+                        checked={block.showDots ?? true}
+                        onChange={(e) => onChange({ ...block, showDots: e.target.checked })}
+                        className="h-4 w-4 rounded border-gray-300 text-blue-600"
+                    />
+                    <label htmlFor="showDots" className="text-[11px]">
+                        إظهار النقاط
+                    </label>
+                </div>
+                <div className="flex items-center gap-2">
+                    <input
+                        type="checkbox"
+                        id="showArrows"
+                        checked={block.showArrows ?? true}
+                        onChange={(e) => onChange({ ...block, showArrows: e.target.checked })}
+                        className="h-4 w-4 rounded border-gray-300 text-blue-600"
+                    />
+                    <label htmlFor="showArrows" className="text-[11px]">
+                        إظهار الأسهم
+                    </label>
+                </div>
+            </div>
+
+            <div className="mt-3 space-y-2">
+                <div className="flex items-center justify-between">
+                    <span className="font-medium text-slate-700">الشرائح</span>
+                    <button
+                        type="button"
+                        onClick={() =>
+                            updateSlides((slides) => [
+                                ...slides,
+                                {
+                                    id: createId(),
+                                    title: "",
+                                    subtitle: "",
+                                    description: "",
+                                    imageUrl: "",
+                                },
+                            ])
+                        }
+                        className="rounded-full border border-slate-300 bg-white px-2 py-0.5 text-[11px]"
+                    >
+                        + إضافة شريحة
+                    </button>
+                </div>
+                {block.slides.map((slide, index) => (
+                    <div key={slide.id} className="space-y-2 rounded-md border border-slate-200 bg-slate-50/60 p-3">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-medium text-slate-600">شريحة {index + 1}</span>
+                            <button
+                                type="button"
+                                onClick={() => updateSlides((slides) => slides.filter((s) => s.id !== slide.id))}
+                                className="text-[11px] text-red-500"
+                            >
+                                حذف
+                            </button>
+                        </div>
+                        <InputField
+                            label="العنوان"
+                            value={slide.title}
+                            onChange={(v) => updateSlides((slides) => slides.map((s) => (s.id === slide.id ? { ...s, title: v } : s)))}
+                        />
+                        <InputField
+                            label="العنوان الفرعي"
+                            value={slide.subtitle}
+                            onChange={(v) =>
+                                updateSlides((slides) => slides.map((s) => (s.id === slide.id ? { ...s, subtitle: v } : s)))
+                            }
+                        />
+                        <TextareaField
+                            label="الوصف"
+                            value={slide.description}
+                            onChange={(v) =>
+                                updateSlides((slides) => slides.map((s) => (s.id === slide.id ? { ...s, description: v } : s)))
+                            }
+                            rows={2}
+                        />
+                        <ImageField
+                            label="رابط الصورة"
+                            value={slide.imageUrl}
+                            onChange={(v) =>
+                                updateSlides((slides) => slides.map((s) => (s.id === slide.id ? { ...s, imageUrl: v } : s)))
+                            }
+                            placeholder="/modern-school-exterior.png"
+                        />
+                    </div>
+                ))}
+            </div>
+        </div>
+    )
+}
+
+export function HeroSliderView({ block }: { block: HeroSliderBlock }) {
+    const [currentSlide, setCurrentSlide] = React.useState(0)
+    const slides = block.slides || []
+    const { hoverStyles, ...blockProps } = applyBlockStyles(block.blockStyles)
+
+    React.useEffect(() => {
+        if (slides.length === 0 || !block.autoplay) return
+
+        const timer = setInterval(() => {
+            setCurrentSlide((prev) => (prev + 1) % slides.length)
+        }, block.interval || 5000)
+        return () => clearInterval(timer)
+    }, [slides.length, block.autoplay, block.interval])
+
+    const goToSlide = (index: number) => setCurrentSlide(index)
+    const goToPrevious = () => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)
+    const goToNext = () => setCurrentSlide((prev) => (prev + 1) % slides.length)
+
+    if (slides.length === 0) {
+        return (
+            <>
+                {hoverStyles && <style>{hoverStyles}</style>}
+                <section {...blockProps} className={`relative h-screen w-full overflow-hidden bg-gradient-to-br from-primary/10 via-accent/10 to-secondary/10 flex items-center justify-center ${blockProps.className || ""}`}>
+                    <p className="text-muted-foreground">لا توجد شرائح</p>
+                </section>
+            </>
+        )
+    }
+
+    return (
+        <>
+            {hoverStyles && <style>{hoverStyles}</style>}
+            <section {...blockProps} className={`relative h-screen w-full overflow-hidden ${blockProps.className || ""}`}>
+                {/* Decorative Elements */}
+                <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                    {/* Animated Gradient Orbs */}
+                    <div className="absolute top-20 right-20 w-96 h-96 bg-gradient-to-br from-primary/30 to-accent/30 rounded-full blur-3xl animate-pulse-slow" />
+                    <div className="absolute bottom-20 left-20 w-80 h-80 bg-gradient-to-tr from-accent/20 to-primary/20 rounded-full blur-3xl animate-pulse-slow animation-delay-2000" />
+
+                    {/* Floating Shapes */}
+                    <div className="absolute top-1/4 left-10 w-20 h-20 border-2 border-primary/20 rounded-lg rotate-12 animate-float" />
+                    <div className="absolute bottom-1/3 right-16 w-16 h-16 border-2 border-accent/20 rounded-full animate-float animation-delay-1000" />
+                    <div className="absolute top-1/2 right-1/4 w-12 h-12 bg-gradient-to-br from-primary/10 to-accent/10 rounded-lg rotate-45 animate-float animation-delay-3000" />
+                </div>
+
+                {/* Slides */}
+                {slides.map((slide, index) => (
+                    <div
+                        key={slide.id}
+                        className={`absolute inset-0 transition-opacity duration-1000 ${index === currentSlide ? "opacity-100" : "opacity-0"
+                            }`}
+                    >
+                        {/* Background Image */}
+                        <img
+                            src={slide.imageUrl || "/placeholder.svg"}
+                            alt={slide.title}
+                            className="w-full h-full object-cover"
+                        />
+
+                        {/* Subtle overlay for better text readability */}
+                        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/40" />
+
+                        <div className="absolute inset-0 flex items-center justify-center z-10">
+                            <div className="container mx-auto px-4">
+                                <div className="max-w-5xl mx-auto text-center">
+                                    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                                        {/* Badge */}
+                                        <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-primary/30 via-accent/30 to-primary/30 backdrop-blur-xl rounded-full border-2 border-primary/40 shadow-2xl shadow-primary/20 animate-float">
+                                            <span className="text-base font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                                                مرحباً بكم
+                                            </span>
+                                        </div>
+
+                                        {/* Title */}
+                                        <h2 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight text-balance">
+                                            <span className="block text-foreground drop-shadow-lg">{slide.title}</span>
+                                            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-primary mt-3 animate-shimmer drop-shadow-2xl">
+                                                {slide.subtitle}
+                                            </span>
+                                        </h2>
+
+                                        {/* Description */}
+                                        <p className="text-lg md:text-xl text-muted-foreground leading-relaxed text-pretty max-w-3xl mx-auto drop-shadow-md">
+                                            {slide.description}
+                                        </p>
+
+                                        {/* Buttons */}
+                                        <div className="flex flex-col sm:flex-row gap-4 pt-6 justify-center">
+                                            <button className="group relative text-lg px-10 py-6 bg-gradient-to-r from-primary via-primary/90 to-primary hover:from-primary/90 hover:via-primary hover:to-primary/90 shadow-2xl shadow-primary/30 hover:shadow-3xl hover:shadow-primary/40 transition-all duration-500 hover:scale-105 overflow-hidden rounded-lg text-primary-foreground font-semibold">
+                                                <span className="relative z-10 flex items-center gap-2">
+                                                    اعرف المزيد
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                                    </svg>
+                                                </span>
+                                                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                                            </button>
+                                            <button className="group text-lg px-10 py-6 border-2 border-primary/50 hover:border-primary bg-background/50 backdrop-blur-sm hover:bg-primary/10 shadow-xl hover:shadow-2xl hover:shadow-primary/20 transition-all duration-500 hover:scale-105 rounded-lg font-semibold text-foreground">
+                                                تواصل معنا
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+
+                {/* Navigation Dots */}
+                {block.showDots && slides.length > 1 && (
+                    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 z-20">
+                        {slides.map((_, index) => (
+                            <button
+                                key={index}
+                                onClick={() => goToSlide(index)}
+                                className={`h-3 rounded-full transition-all duration-500 ${index === currentSlide ? "w-12 bg-primary" : "w-3 bg-primary/30 hover:bg-primary/50"
+                                    }`}
+                                aria-label={`Go to slide ${index + 1}`}
+                            />
+                        ))}
+                    </div>
+                )}
+
+                {/* Navigation Arrows */}
+                {block.showArrows && slides.length > 1 && (
+                    <>
+                        <button
+                            onClick={goToPrevious}
+                            className="absolute left-4 top-1/2 -translate-y-1/2 p-4 rounded-full bg-background/10 backdrop-blur-md border border-white/10 text-foreground hover:bg-background/20 transition-all duration-300 hover:scale-110 z-20 hidden md:block group"
+                            aria-label="Previous slide"
+                        >
+                            <svg className="w-6 h-6 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+                        <button
+                            onClick={goToNext}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 p-4 rounded-full bg-background/10 backdrop-blur-md border border-white/10 text-foreground hover:bg-background/20 transition-all duration-300 hover:scale-110 z-20 hidden md:block group"
+                            aria-label="Next slide"
+                        >
+                            <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                    </>
+                )}
+            </section>
+        </>
+    )
+}

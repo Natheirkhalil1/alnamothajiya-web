@@ -14,40 +14,32 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { useLanguage } from "@/lib/language-context"
 
-export function ContactSection() {
-  const { toast } = useToast()
-  const { language } = useLanguage()
-  const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    message: "",
-  })
+interface ContactSectionProps {
+  sectionTitle?: { en: string; ar: string }
+  sectionSubtitle?: { en: string; ar: string }
+  contactInfo?: Array<{
+    icon: any
+    titleAr: string
+    titleEn: string
+    value?: string
+    value2?: string
+    valueAr?: string
+    valueEn?: string
+    value2Ar?: string
+    value2En?: string
+    link?: string
+    gradient: string
+    bgGradient: string
+    descAr: string
+    descEn: string
+  }>
+  showForm?: boolean
+}
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    saveContactMessage({
-      name: formData.name,
-      phone: formData.phone,
-      email: formData.email,
-      message: formData.message,
-    })
-
-    sendNotifications({
-      type: "contact",
-      data: formData,
-    })
-
-    toast({
-      title: language === "ar" ? "تم إرسال رسالتك بنجاح" : "Message sent successfully",
-      description: language === "ar" ? "سنتواصل معك في أقرب وقت ممكن" : "We will contact you as soon as possible",
-    })
-
-    setFormData({ name: "", phone: "", email: "", message: "" })
-  }
-
-  const contactInfo = [
+export function ContactSection({
+  sectionTitle,
+  sectionSubtitle,
+  contactInfo = [
     {
       icon: Phone,
       titleAr: "اتصل بنا",
@@ -97,7 +89,56 @@ export function ContactSection() {
       descAr: "نستقبل الزوار خلال أوقات الدوام",
       descEn: "We welcome visitors during working hours",
     },
-  ]
+  ],
+  showForm = true,
+}: ContactSectionProps) {
+  const { toast } = useToast()
+  const { language } = useLanguage()
+  const [formData, setFormData] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    message: "",
+  })
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    saveContactMessage({
+      name: formData.name,
+      phone: formData.phone,
+      email: formData.email,
+      message: formData.message,
+    })
+
+    sendNotifications({
+      type: "contact",
+      data: formData,
+    })
+
+    toast({
+      title: language === "ar" ? "تم إرسال رسالتك بنجاح" : "Message sent successfully",
+      description: language === "ar" ? "سنتواصل معك في أقرب وقت ممكن" : "We will contact you as soon as possible",
+    })
+
+    setFormData({ name: "", phone: "", email: "", message: "" })
+  }
+
+  const displayTitle = sectionTitle
+    ? language === "ar"
+      ? sectionTitle.ar
+      : sectionTitle.en
+    : language === "ar"
+      ? "تواصل معنا"
+      : "Contact Us"
+
+  const displaySubtitle = sectionSubtitle
+    ? language === "ar"
+      ? sectionSubtitle.ar
+      : sectionSubtitle.en
+    : language === "ar"
+      ? "نحن هنا لمساعدتك"
+      : "We're Here to Help"
 
   return (
     <section
@@ -119,12 +160,12 @@ export function ContactSection() {
           <div className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 rounded-full mb-8 animate-gradient-x border-2 border-blue-500/20 shadow-xl backdrop-blur-sm">
             <MessageCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 animate-bounce" />
             <span className="text-base font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 dark:from-blue-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
-              {language === "ar" ? "تواصل معنا" : "Contact Us"}
+              {displayTitle}
             </span>
           </div>
           <h2 className="text-5xl md:text-7xl font-bold mb-8 text-balance leading-tight">
             <span className="bg-gradient-to-r from-slate-900 via-blue-900 to-purple-900 dark:from-slate-100 dark:via-blue-100 dark:to-purple-100 bg-clip-text text-transparent">
-              {language === "ar" ? "نحن هنا لمساعدتك" : "We're Here to Help"}
+              {displaySubtitle}
             </span>
           </h2>
           <p className="text-xl md:text-2xl text-slate-600 dark:text-slate-400 leading-relaxed text-pretty max-w-3xl mx-auto">
@@ -140,39 +181,39 @@ export function ContactSection() {
               {contactInfo.map((info, index) => (
                 <Card
                   key={index}
-                  className={`group p-6 hover:shadow-2xl transition-all duration-500 hover:scale-[1.03] bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-2 border-slate-200/50 dark:border-slate-800/50 hover:border-blue-500/50 dark:hover:border-blue-400/50 animate-fade-in-left relative overflow-hidden`}
+                  className={`group p-6 hover:shadow-2xl hover:shadow-pink-500/10 transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-800/50 hover:border-pink-400 dark:hover:border-pink-400 animate-fade-in-left relative overflow-hidden rounded-2xl`}
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   {/* Animated gradient background */}
                   <div
-                    className={`absolute inset-0 bg-gradient-to-br ${info.bgGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
+                    className={`absolute inset-0 bg-gradient-to-br from-pink-500/5 via-purple-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
                   />
 
                   {/* Shine effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
 
                   <div className="flex items-start gap-5 relative z-10">
                     <div
-                      className={`w-14 h-14 bg-gradient-to-br ${info.gradient} rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:rotate-12 transition-all duration-500 shadow-lg group-hover:shadow-2xl`}
+                      className={`w-14 h-14 bg-gradient-to-br ${info.gradient} rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg group-hover:shadow-xl`}
                     >
                       <info.icon className="w-7 h-7 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100 mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100 mb-2 group-hover:text-pink-600 dark:group-hover:text-pink-400 transition-colors duration-300">
                         {language === "ar" ? info.titleAr : info.titleEn}
                       </h3>
                       {info.link ? (
                         <div className="space-y-1">
                           <a
                             href={info.link}
-                            className="block text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-semibold text-base group-hover:underline"
+                            className="block text-slate-700 dark:text-slate-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors font-semibold text-base"
                           >
                             {info.value}
                           </a>
                           {info.value2 && (
                             <a
                               href={info.link}
-                              className="block text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-semibold text-base group-hover:underline"
+                              className="block text-slate-700 dark:text-slate-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors font-semibold text-base"
                             >
                               {info.value2}
                             </a>
@@ -200,121 +241,126 @@ export function ContactSection() {
             </div>
           </div>
 
-          <Card className="lg:col-span-3 p-10 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl hover:shadow-2xl transition-all duration-500 animate-fade-in-right border-2 border-slate-200/50 dark:border-slate-800/50 hover:border-blue-500/50 dark:hover:border-blue-400/50 relative overflow-hidden group">
-            {/* Decorative corner accents */}
-            <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-500/20 via-purple-500/10 to-transparent rounded-bl-full opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
-            <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-purple-500/20 via-pink-500/10 to-transparent rounded-tr-full opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+          {showForm && (
+            <Card className="lg:col-span-3 p-10 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl hover:shadow-2xl hover:shadow-pink-500/10 transition-all duration-500 hover:-translate-y-1 animate-fade-in-right border border-slate-200/50 dark:border-slate-800/50 hover:border-pink-400 dark:hover:border-pink-400 relative overflow-hidden group rounded-2xl">
+              {/* Decorative corner accents */}
+              <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-pink-500/20 via-purple-500/10 to-transparent rounded-bl-full opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-purple-500/20 via-pink-500/10 to-transparent rounded-tr-full opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
 
-            {/* Form header */}
-            <div className="mb-8 relative z-10">
-              <h3 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-3">
-                {language === "ar" ? "أرسل لنا رسالة" : "Send Us a Message"}
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400 text-lg">
-                {language === "ar"
-                  ? "املأ النموذج أدناه وسنتواصل معك في أقرب وقت ممكن"
-                  : "Fill out the form below and we'll get back to you as soon as possible"}
-              </p>
-            </div>
+              {/* Shine effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000 pointer-events-none" />
 
-            <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
-              <div className="space-y-3 group/field">
-                <Label
-                  htmlFor="name"
-                  className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2"
-                >
-                  {language === "ar" ? "الاسم الكامل" : "Full Name"}
-                  <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                  placeholder={language === "ar" ? "أدخل اسمك الكامل" : "Enter your full name"}
-                  className="h-14 text-base transition-all duration-300 focus:scale-[1.01] focus:shadow-xl border-2 border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400 bg-white/50 dark:bg-slate-800/50"
-                />
+              {/* Form header */}
+              <div className="mb-8 relative z-10">
+                <h3 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-3">
+                  {language === "ar" ? "أرسل لنا رسالة" : "Send Us a Message"}
+                </h3>
+                <p className="text-slate-600 dark:text-slate-400 text-lg">
+                  {language === "ar"
+                    ? "املأ النموذج أدناه وسنتواصل معك في أقرب وقت ممكن"
+                    : "Fill out the form below and we'll get back to you as soon as possible"}
+                </p>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-3 group/field">
+              <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
+                <div className="space-y-3">
                   <Label
-                    htmlFor="phone"
-                    className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2"
+                    htmlFor="name"
+                    className="text-base font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1"
                   >
-                    {language === "ar" ? "رقم الهاتف" : "Phone Number"}
-                    <span className="text-red-500">*</span>
+                    {language === "ar" ? "الاسم الكامل" : "Full Name"}
+                    <span className="text-rose-500">*</span>
                   </Label>
                   <Input
-                    id="phone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     required
-                    placeholder="+962xxxxxxxxx"
-                    className="h-14 text-base transition-all duration-300 focus:scale-[1.01] focus:shadow-xl border-2 border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400 bg-white/50 dark:bg-slate-800/50"
+                    placeholder={language === "ar" ? "أدخل اسمك الكامل" : "Enter your full name"}
+                    className="h-14 text-base rounded-xl transition-all duration-300 border border-slate-200 dark:border-slate-700 hover:border-pink-400 dark:hover:border-pink-400 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 dark:focus:border-pink-400 bg-white dark:bg-slate-800/80"
                   />
                 </div>
 
-                <div className="space-y-3 group/field">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <Label
+                      htmlFor="phone"
+                      className="text-base font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1"
+                    >
+                      {language === "ar" ? "رقم الهاتف" : "Phone Number"}
+                      <span className="text-rose-500">*</span>
+                    </Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      required
+                      placeholder="+962xxxxxxxxx"
+                      className="h-14 text-base rounded-xl transition-all duration-300 border border-slate-200 dark:border-slate-700 hover:border-pink-400 dark:hover:border-pink-400 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 dark:focus:border-pink-400 bg-white dark:bg-slate-800/80"
+                    />
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label
+                      htmlFor="email"
+                      className="text-base font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1"
+                    >
+                      {language === "ar" ? "البريد الإلكتروني" : "Email"}
+                      <span className="text-rose-500">*</span>
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      required
+                      placeholder="example@email.com"
+                      className="h-14 text-base rounded-xl transition-all duration-300 border border-slate-200 dark:border-slate-700 hover:border-pink-400 dark:hover:border-pink-400 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 dark:focus:border-pink-400 bg-white dark:bg-slate-800/80"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-3">
                   <Label
-                    htmlFor="email"
-                    className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2"
+                    htmlFor="message"
+                    className="text-base font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1"
                   >
-                    {language === "ar" ? "البريد الإلكتروني" : "Email"}
-                    <span className="text-red-500">*</span>
+                    {language === "ar" ? "رسالتك" : "Your Message"}
+                    <span className="text-rose-500">*</span>
                   </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  <Textarea
+                    id="message"
+                    value={formData.message}
+                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                     required
-                    placeholder="example@email.com"
-                    className="h-14 text-base transition-all duration-300 focus:scale-[1.01] focus:shadow-xl border-2 border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400 bg-white/50 dark:bg-slate-800/50"
+                    placeholder={language === "ar" ? "اكتب رسالتك هنا..." : "Write your message here..."}
+                    rows={5}
+                    className="text-base rounded-xl transition-all duration-300 border border-slate-200 dark:border-slate-700 hover:border-pink-400 dark:hover:border-pink-400 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 dark:focus:border-pink-400 resize-none bg-white dark:bg-slate-800/80"
                   />
                 </div>
-              </div>
 
-              <div className="space-y-3 group/field">
-                <Label
-                  htmlFor="message"
-                  className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2"
+                <Button
+                  type="submit"
+                  className="w-full h-14 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 hover:from-pink-600 hover:via-purple-600 hover:to-blue-600 hover:shadow-xl hover:shadow-pink-500/25 transition-all duration-500 group/button text-lg font-bold rounded-xl relative overflow-hidden"
+                  size="lg"
                 >
-                  {language === "ar" ? "رسالتك" : "Your Message"}
-                  <span className="text-red-500">*</span>
-                </Label>
-                <Textarea
-                  id="message"
-                  value={formData.message}
-                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                  required
-                  placeholder={language === "ar" ? "اكتب رسالتك هنا..." : "Write your message here..."}
-                  rows={6}
-                  className="text-base transition-all duration-300 focus:scale-[1.01] focus:shadow-xl border-2 border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400 resize-none bg-white/50 dark:bg-slate-800/50"
-                />
-              </div>
+                  <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover/button:translate-x-[200%] transition-transform duration-1000" />
+                  <span className="relative flex items-center justify-center gap-3">
+                    <CheckCircle2 className="w-5 h-5 group-hover/button:scale-110 transition-transform duration-300" />
+                    {language === "ar" ? "إرسال الرسالة" : "Send Message"}
+                    <Send className="w-5 h-5 group-hover/button:translate-x-1 transition-transform duration-300" />
+                  </span>
+                </Button>
 
-              <Button
-                type="submit"
-                className="w-full h-16 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 hover:shadow-2xl transition-all duration-500 group/button text-lg font-bold relative overflow-hidden"
-                size="lg"
-              >
-                <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-200%] group-hover/button:translate-x-[200%] transition-transform duration-1000" />
-                <span className="relative flex items-center justify-center gap-3">
-                  <CheckCircle2 className="w-6 h-6 group-hover/button:scale-110 transition-transform duration-300" />
-                  {language === "ar" ? "إرسال الرسالة" : "Send Message"}
-                  <Send className="w-6 h-6 group-hover/button:translate-x-2 group-hover/button:-translate-y-2 transition-transform duration-300" />
-                </span>
-              </Button>
-
-              <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-4">
-                {language === "ar"
-                  ? "سنقوم بالرد على رسالتك خلال 24 ساعة من أيام العمل"
-                  : "We will respond to your message within 24 business hours"}
-              </p>
-            </form>
-          </Card>
+                <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-4">
+                  {language === "ar"
+                    ? "سنقوم بالرد على رسالتك خلال 24 ساعة من أيام العمل"
+                    : "We will respond to your message within 24 business hours"}
+                </p>
+              </form>
+            </Card>
+          )}
         </div>
 
         {/* Full-width Map Section */}

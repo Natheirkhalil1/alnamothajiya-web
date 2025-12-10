@@ -1,0 +1,132 @@
+{
+  "titleAr": "السكن الداخلي",
+  "titleEn": "Internal Housing",
+  "slug": "departments-housing",
+  "descriptionAr": "يحتوي القسم الداخلي على شقق سكنية مجهزة تجهيزات فندقية مع خدمات شاملة",
+  "descriptionEn": "The internal section contains residential apartments equipped with hotel-standard furnishings with comprehensive services",
+  "blocksAr": [
+    {
+      "id": "housing-welcome-ar",
+      "kind": "department-welcome",
+      "icon": "home",
+      "title": "مرحباً بكم في السكن الداخلي - بيتك الثاني",
+      "description": "يحتوي القسم الداخلي على شقق سكنية مجهزة تجهيزات فندقية، معدة بأفضل الأثاث ومعقمة بأفضل الطرق، ومجهزة بنظام التدفئة المركزية شتاءً وبمكيفات صيفاً، مع خدمات شاملة تشمل النظافة والمصبغة والمطبخ والمكالمات المرئية والمراقبة.",
+      "imageUrl": "/comfortable-residential-apartment-for-special-need.jpg",
+      "stats": [
+        { "id": "stat-1", "value": "2+", "label": "قسم فرعي", "onClick": "#subsections" },
+        { "id": "stat-2", "value": "24/7", "label": "خدمة مستمرة", "onClick": "#contact" },
+        { "id": "stat-3", "value": "100%", "label": "التزام بالجودة", "onClick": "#cta" }
+      ]
+    },
+    {
+      "id": "housing-subsections-ar",
+      "kind": "department-subsections",
+      "header": {
+        "title": "الأقسام الفرعية",
+        "subtitle": "تعرف على جميع الخدمات والبرامج المتخصصة التي نقدمها",
+        "centered": true
+      },
+      "departmentColor": "from-teal-600 via-cyan-600 to-blue-600",
+      "items": [
+        {
+          "id": "subsection-apartments-ar",
+          "icon": "home",
+          "titleAr": "الشقق السكنية",
+          "titleEn": "Residential Apartments",
+          "descriptionAr": "يحتوي القسم الداخلي على شقق سكنية مجهزة تجهيزات فندقية، معدة بأفضل الأثاث ومعقمة بأفضل الطرق، ومجهزة بنظام التدفئة المركزية شتاءً وبمكيفات صيفاً. تحتوي الشقق على غرف نوم مجهزة بأسرة وصالات معيشة فيها جانب ترفيهي كبير ومناسب لجلوس كل طالب حسب حاجته، حيث يتم توزيع الطلاب في كل شقة إلى مجموعات متشابهة في الفئة العمرية وشدة الإعاقة والسلوكيات.",
+          "descriptionEn": "The internal section contains residential apartments equipped with hotel furnishings, prepared with the best furniture and sterilized in the best ways, equipped with central heating in winter and air conditioning in summer.",
+          "image": "/comfortable-residential-apartment-for-special-need.jpg"
+        },
+        {
+          "id": "subsection-recreational-ar",
+          "icon": "sparkles",
+          "titleAr": "المرافق الترفيهية",
+          "titleEn": "Recreational Facilities",
+          "descriptionAr": "تتوفر ملاعب وصالات رياضية ملحقة بالسكن من أجل الترفيه، وهناك قاعة سينما تعرض فيها أفلام مناسبة لحاجات الطلاب.",
+          "descriptionEn": "Playgrounds and sports halls are attached to the housing for recreation, and there is a cinema hall showing films suitable for students' needs.",
+          "image": "/recreational-facilities-with-sports-hall-and-cinem.jpg"
+        }
+      ]
+    },
+    {
+      "id": "housing-cta-ar",
+      "kind": "department-cta",
+      "title": "هل لديك استفسار؟",
+      "description": "نحن هنا للإجابة على جميع استفساراتكم ومساعدتكم في اختيار البرنامج المناسب لاحتياجاتكم",
+      "primaryButtonLabel": "تواصل معنا الآن",
+      "primaryButtonHref": "/#contact",
+      "secondaryButtonLabel": "العودة للرئيسية",
+      "secondaryButtonHref": "/",
+      "contactInfo": {
+        "phone": "4122002",
+        "email": "info@namothajia.com",
+        "address": "عمان، الأردن"
+      }
+    }
+  ],
+  "blocksEn": [
+    {
+      "id": "housing-welcome-en",
+      "kind": "department-welcome",
+      "icon": "home",
+      "title": "Welcome to Internal Housing - Your Second Home",
+      "description": "The internal section contains residential apartments equipped with hotel-standard furnishings, prepared with the best furniture and sterilized in the best ways, equipped with central heating in winter and air conditioning in summer, with comprehensive services including cleaning, laundry, kitchen, video calls, and surveillance.",
+      "imageUrl": "/comfortable-residential-apartment-for-special-need.jpg",
+      "stats": [
+        { "id": "stat-1", "value": "2+", "label": "Subsections", "onClick": "#subsections" },
+        { "id": "stat-2", "value": "24/7", "label": "Continuous Service", "onClick": "#contact" },
+        { "id": "stat-3", "value": "100%", "label": "Quality Commitment", "onClick": "#cta" }
+      ]
+    },
+    {
+      "id": "housing-subsections-en",
+      "kind": "department-subsections",
+      "header": {
+        "title": "Subsections",
+        "subtitle": "Discover all specialized services and programs we offer",
+        "centered": true
+      },
+      "departmentColor": "from-teal-600 via-cyan-600 to-blue-600",
+      "items": [
+        {
+          "id": "subsection-apartments-en",
+          "icon": "home",
+          "titleAr": "الشقق السكنية",
+          "titleEn": "Residential Apartments",
+          "descriptionAr": "يحتوي القسم الداخلي على شقق سكنية مجهزة تجهيزات فندقية، معدة بأفضل الأثاث ومعقمة بأفضل الطرق، ومجهزة بنظام التدفئة المركزية شتاءً وبمكيفات صيفاً.",
+          "descriptionEn": "The internal section contains residential apartments equipped with hotel furnishings, prepared with the best furniture and sterilized in the best ways, equipped with central heating in winter and air conditioning in summer. The apartments contain bedrooms equipped with beds and living rooms with a large recreational aspect suitable for each student according to their needs, where students are distributed in each apartment into similar groups in age, disability severity, and behaviors.",
+          "image": "/comfortable-residential-apartment-for-special-need.jpg"
+        },
+        {
+          "id": "subsection-recreational-en",
+          "icon": "sparkles",
+          "titleAr": "المرافق الترفيهية",
+          "titleEn": "Recreational Facilities",
+          "descriptionAr": "تتوفر ملاعب وصالات رياضية ملحقة بالسكن من أجل الترفيه، وهناك قاعة سينما تعرض فيها أفلام مناسبة لحاجات الطلاب.",
+          "descriptionEn": "Playgrounds and sports halls are attached to the housing for recreation, and there is a cinema hall showing films suitable for students' needs.",
+          "image": "/recreational-facilities-with-sports-hall-and-cinem.jpg"
+        }
+      ]
+    },
+    {
+      "id": "housing-cta-en",
+      "kind": "department-cta",
+      "title": "Have a Question?",
+      "description": "We are here to answer all your questions and help you choose the right program for your needs",
+      "primaryButtonLabel": "Contact Us Now",
+      "primaryButtonHref": "/#contact",
+      "secondaryButtonLabel": "Back to Home",
+      "secondaryButtonHref": "/",
+      "contactInfo": {
+        "phone": "4122002",
+        "email": "info@namothajia.com",
+        "address": "Amman, Jordan"
+      }
+    }
+  ],
+  "metadata": {
+    "icon": "home",
+    "color": "from-teal-600 via-cyan-600 to-blue-600",
+    "type": "housing"
+  }
+}

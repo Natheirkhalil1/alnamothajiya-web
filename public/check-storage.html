@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Storage Checker</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #0f0; }
+        pre { background: #000; padding: 10px; border: 1px solid #0f0; overflow: auto; }
+        h2 { color: #0ff; }
+        button { background: #0f0; color: #000; padding: 10px 20px; margin: 10px 0; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>📦 LocalStorage Data Inspector</h1>
+    <button onclick="checkPages()">Check Pages Data</button>
+    <button onclick="clearConsole()">Clear</button>
+
+    <h2>Pages in localStorage:</h2>
+    <pre id="output">Click "Check Pages Data" to inspect...</pre>
+
+    <script>
+        function clearConsole() {
+            document.getElementById('output').textContent = '';
+        }
+
+        function checkPages() {
+            const output = document.getElementById('output');
+            const pagesData = localStorage.getItem('pages');
+
+            if (!pagesData) {
+                output.textContent = 'No pages found in localStorage';
+                return;
+            }
+
+            try {
+                const pages = JSON.parse(pagesData);
+                let result = `Found ${pages.length} page(s)\n\n`;
+
+                pages.forEach((page, index) => {
+                    result += `\n${'='.repeat(80)}\n`;
+                    result += `Page ${index + 1}:\n`;
+                    result += `${'='.repeat(80)}\n`;
+                    result += `ID: ${page.id}\n`;
+                    result += `Slug: ${page.slug}\n`;
+                    result += `Title AR: ${page.titleAr}\n`;
+                    result += `Title EN: ${page.titleEn}\n`;
+                    result += `Is Home: ${page.isHome ? 'YES' : 'NO'}\n`;
+                    result += `Published: ${page.isPublished ? 'YES' : 'NO'}\n`;
+                    result += `\n--- Blocks Info ---\n`;
+                    result += `blocksAr: ${page.blocksAr ? page.blocksAr.length + ' blocks' : 'NOT SET'}\n`;
+                    result += `blocksEn: ${page.blocksEn ? page.blocksEn.length + ' blocks' : 'NOT SET'}\n`;
+                    result += `blocks (legacy): ${page.blocks ? page.blocks.length + ' blocks' : 'NOT SET'}\n`;
+
+                    if (page.blocksAr && page.blocksAr.length > 0) {
+                        result += `\n--- Arabic Blocks ---\n`;
+                        page.blocksAr.forEach((block, i) => {
+                            result += `  ${i + 1}. ${block.type}\n`;
+                        });
+                    }
+
+                    if (page.blocksEn && page.blocksEn.length > 0) {
+                        result += `\n--- English Blocks ---\n`;
+                        page.blocksEn.forEach((block, i) => {
+                            result += `  ${i + 1}. ${block.type}\n`;
+                        });
+                    }
+
+                    if (page.blocks && page.blocks.length > 0) {
+                        result += `\n--- Legacy Blocks ---\n`;
+                        page.blocks.forEach((block, i) => {
+                            result += `  ${i + 1}. ${block.type}\n`;
+                        });
+                    }
+                });
+
+                output.textContent = result;
+            } catch (e) {
+                output.textContent = 'Error parsing pages data: ' + e.message;
+            }
+        }
+    </script>
+</body>
+</html>

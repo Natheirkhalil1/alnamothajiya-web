@@ -1,37 +1,27 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import Link from "next/link"
 import { ArrowLeft, ArrowRight, GraduationCap, Mail, Sparkles, Heart, Home, Activity, Stethoscope } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/lib/language-context"
-import { getDepartmentContents, type DepartmentContent } from "@/lib/storage"
 
-export function DepartmentsSection() {
+interface DepartmentsSectionProps {
+  cards?: Array<{
+    id: string
+    type: string
+    titleEn: string
+    titleAr: string
+    descriptionEn: string
+    descriptionAr: string
+    image: string
+  }>
+  sectionTitle?: { en: string; ar: string }
+  subtitle?: { en: string; ar: string }
+}
+
+export function DepartmentsSection({ cards = [], sectionTitle, subtitle }: DepartmentsSectionProps) {
   const { language, t } = useLanguage()
-  const [departments, setDepartments] = useState<DepartmentContent[]>([])
-
-  useEffect(() => {
-    const loadDepartmentsData = async () => {
-      const depts = await getDepartmentContents()
-      setDepartments(depts)
-    }
-
-    loadDepartmentsData()
-
-    const handleStorageChange = () => {
-      loadDepartmentsData()
-    }
-
-    window.addEventListener("localStorageChange", handleStorageChange)
-    window.addEventListener("storage", handleStorageChange)
-
-    return () => {
-      window.removeEventListener("localStorageChange", handleStorageChange)
-      window.removeEventListener("storage", handleStorageChange)
-    }
-  }, [])
 
   const ArrowIcon = language === "ar" ? ArrowLeft : ArrowRight
 
@@ -96,6 +86,20 @@ export function DepartmentsSection() {
     )
   }
 
+  const displaySectionTitle = sectionTitle
+    ? language === "ar"
+      ? sectionTitle.ar
+      : sectionTitle.en
+    : t.departments.title
+
+  const displaySubtitle = subtitle
+    ? language === "ar"
+      ? subtitle.ar
+      : subtitle.en
+    : language === "ar"
+      ? "أقسام متخصصة تقدم خدمات شاملة ومتكاملة لجميع الطلاب بأعلى معايير الجودة والاحترافية"
+      : "Specialized departments providing comprehensive and integrated services for all students with the highest standards of quality and professionalism"
+
   return (
     <section id="departments" className="relative py-32 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-background via-muted/30 to-background" />
@@ -110,12 +114,12 @@ export function DepartmentsSection() {
         <div className="text-center max-w-4xl mx-auto mb-20 opacity-0 animate-fade-in">
           <div className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 rounded-full mb-8 border-2 border-primary/20 backdrop-blur-sm shadow-lg">
             <Sparkles className="w-6 h-6 text-primary animate-pulse" />
-            <span className="text-base font-bold text-primary tracking-wide">{t.departments.title}</span>
+            <span className="text-base font-bold text-primary tracking-wide">{displaySectionTitle}</span>
             <Sparkles className="w-6 h-6 text-primary animate-pulse" style={{ animationDelay: "0.5s" }} />
           </div>
 
           <h2 className="text-6xl md:text-7xl font-black mb-8 text-balance bg-gradient-to-r from-foreground via-foreground/80 to-foreground bg-clip-text">
-            {t.departments.subtitle}
+            {displaySubtitle}
           </h2>
 
           <p className="text-xl text-muted-foreground text-pretty leading-relaxed">
@@ -125,7 +129,7 @@ export function DepartmentsSection() {
           </p>
         </div>
 
-        {departments.length === 0 ? (
+        {cards.length === 0 ? (
           <div className="text-center py-20 bg-muted/30 rounded-2xl border-2 border-dashed border-border">
             <GraduationCap className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-foreground mb-2">لا توجد أقسام</h3>
@@ -133,7 +137,7 @@ export function DepartmentsSection() {
           </div>
         ) : (
           <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
-            {departments.map((dept, index) => {
+            {cards.map((dept, index) => {
               const colorScheme = getColorScheme(dept.type)
               const Icon = getDepartmentIcon(dept.type)
 

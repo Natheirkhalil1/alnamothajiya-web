@@ -3,9 +3,10 @@
 import type React from "react"
 
 import { useEffect, useState } from "react"
-import { useRouter, usePathname } from "next/navigation"
+import { useRouter, usePathname } from 'next/navigation'
 import { hasUsers } from "@/lib/storage"
-import { Loader2 } from "lucide-react"
+import { initializeAdminUser } from "@/lib/init-admin"
+import { Loader2 } from 'lucide-react'
 
 export function SetupChecker({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -19,13 +20,16 @@ export function SetupChecker({ children }: { children: React.ReactNode }) {
 
   const checkSetup = async () => {
     // Skip check for setup and login pages
-    if (pathname === "/setup" || pathname === "/admin-login") {
+    if (pathname === "/setup" || pathname === "/admin-login" || pathname === "/login" || pathname === "/staff-login") {
       setChecking(false)
       return
     }
 
     try {
       console.log("[v0] Checking if users exist...")
+      
+      initializeAdminUser()
+      
       const usersExist = await hasUsers()
       console.log("[v0] Users exist:", usersExist)
 
@@ -44,11 +48,8 @@ export function SetupChecker({ children }: { children: React.ReactNode }) {
 
   if (checking) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="flex items-center gap-2">
-          <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-          <span className="text-lg text-gray-700">Loading...</span>
-        </div>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
       </div>
     )
   }

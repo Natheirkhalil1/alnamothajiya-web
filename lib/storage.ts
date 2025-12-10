@@ -1,39 +1,26 @@
-import { getFromLocalStorage, saveToLocalStorage, COLLECTIONS } from "./storage-adapter"
-// import { getDb, FIREBASE_COLLECTIONS, getFirebaseAuth } from "./firebase"
-// import { collection, getDocs, query, orderBy, addDoc, doc, setDoc, updateDoc, deleteDoc } from "firebase/firestore"
+import type { ReactNode } from "react"
+import {
+  getFromFirestore,
+  getDocFromFirestore,
+  saveToFirestore,
+  deleteFromFirestore,
+  queryFirestore,
+  where,
+  COLLECTIONS,
+  getFromLocalStorage,
+  saveToLocalStorage
+} from "./storage-adapter"
+import { getDb, FIREBASE_COLLECTIONS, SETTINGS_DOCS, deleteFileFromStorage } from "./firebase"
+import { collection, getDocs, doc, setDoc, deleteDoc, query, orderBy, getDoc } from "firebase/firestore"
 
-let firestoreModule: any = null
-let firebaseModule: any = null
+// Re-export COLLECTIONS for backward compatibility
+export { COLLECTIONS }
 
-async function loadFirestore() {
-  if (!firestoreModule) {
-    try {
-      const { getDb, FIREBASE_COLLECTIONS } = await import("./firebase")
-      const firestore = await import("firebase/firestore")
-      firestoreModule = { getDb, FIREBASE_COLLECTIONS, ...firestore }
-      console.log("[v0] Firebase Firestore loaded successfully")
-    } catch (error) {
-      console.log("[v0] Firebase not available, using localStorage fallback")
-      firestoreModule = null
-    }
-  }
-  return firestoreModule
-}
+console.log("[Firebase] Storage module initialized - Firestore mode")
 
-async function loadFirebaseAuth() {
-  if (!firebaseModule) {
-    try {
-      const { getFirebaseAuth } = await import("./firebase")
-      const auth = await import("firebase/auth")
-      firebaseModule = { getFirebaseAuth, ...auth }
-      console.log("[v0] Firebase Auth loaded successfully")
-    } catch (error) {
-      console.log("[v0] Firebase not available, using localStorage fallback")
-      firebaseModule = null
-    }
-  }
-  return firebaseModule
-}
+// ============================================
+// INTERFACES
+// ============================================
 
 export interface EmploymentApplication {
   id: string
@@ -47,6 +34,7 @@ export interface EmploymentApplication {
   expectedSalary: string
   coverLetter: string
   submittedAt: string
+  status?: "pending" | "reviewed" | "accepted" | "rejected"
 }
 
 export interface ContactMessage {
@@ -59,6 +47,39 @@ export interface ContactMessage {
   submittedAt: string
 }
 
+export interface FormField {
+  id: string
+  type: "text" | "email" | "phone" | "textarea" | "number" | "select" | "checkbox" | "radio" | "date"
+  labelAr: string
+  labelEn: string
+  placeholder?: string
+  placeholderEn?: string
+  required: boolean
+  options?: string[]
+  order: number
+}
+
+export interface Form {
+  id: string
+  titleAr: string
+  titleEn: string
+  descriptionAr?: string
+  descriptionEn?: string
+  fields: FormField[]
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface FormSubmission {
+  id: string
+  formId: string
+  formTitle: string
+  data: Record<string, any>
+  submittedAt: string
+  status: "new" | "read" | "archived"
+}
+
 export interface Testimonial {
   id: string
   name: string
@@ -66,6 +87,18 @@ export interface Testimonial {
   rating: number
   comment: string
   createdAt: string
+}
+
+export interface JobCustomField {
+  id: string
+  labelAr: string
+  labelEn: string
+  type: "text" | "textarea" | "select" | "file" | "number" | "date" | "email" | "phone"
+  required: boolean
+  placeholder?: string
+  placeholderEn?: string
+  options?: { valueAr: string; valueEn: string }[]
+  order: number
 }
 
 export interface JobPosition {
@@ -76,13 +109,17 @@ export interface JobPosition {
   typeEn: string
   workShift?: string
   workShiftEn?: string
-  gender?: string // "ذكر" | "أنثى" | "لا يهم"
-  genderEn?: string // "Male" | "Female" | "Doesn't matter"
-  workDuration?: string // e.g., "4-12" meaning 4 hours to 12 hours
+  gender?: "ذكر" | "أنثى" | "لا يهم"
+  genderEn?: "Male" | "Female" | "Doesn't matter"
+  workDuration?: string
   workDurationEn?: string
   description: string
   descriptionEn: string
   createdAt: string
+  requiresCv?: boolean
+  requiresCoverLetter?: boolean
+  requiresPhoto?: boolean
+  customFields?: JobCustomField[]
 }
 
 export interface PendingReview {
@@ -92,6 +129,16 @@ export interface PendingReview {
   rating: number
   comment: string
   submittedAt: string
+}
+
+export interface RejectedReview {
+  id: string
+  name: string
+  image: string
+  rating: number
+  comment: string
+  submittedAt: string
+  rejectedAt: string
 }
 
 export interface ServiceContent {
@@ -134,7 +181,7 @@ export interface SubsectionBranch {
 }
 
 export interface Subsection {
-  icon: string // Icon name as string
+  icon: string
   titleAr: string
   titleEn: string
   image: string
@@ -146,7 +193,7 @@ export interface Subsection {
 export interface DepartmentData {
   id: string
   slug: string
-  icon: string // Icon name as string
+  icon: string
   titleAr: string
   titleEn: string
   color: string
@@ -180,8 +227,30 @@ export interface GalleryImage {
   titleEn: string
   descriptionAr: string
   descriptionEn: string
-  category?: string // Made category optional with specific types
+  category?: string
   order: number
+}
+
+export interface MediaItem {
+  id: string
+  url: string
+  filename: string
+  originalName: string
+  type: "image" | "video" | "document" | "other"
+  mimeType: string
+  size: number
+  width?: number
+  height?: number
+  alt?: string
+  titleAr?: string
+  titleEn?: string
+  descriptionAr?: string
+  descriptionEn?: string
+  category?: string
+  tags?: string[]
+  uploadedAt: string
+  uploadedBy?: string
+  source: "upload" | "url" | "ai"
 }
 
 export interface DepartmentContent {
@@ -213,7 +282,6 @@ export interface ContactInfo {
 
 export interface EnhancedEmploymentApplication {
   id: string
-  // Personal Information
   fullName: string
   birthPlace: string
   birthDate: string
@@ -226,8 +294,6 @@ export interface EnhancedEmploymentApplication {
   position: string
   expectedSalary: string
   canStayOvernight: string
-
-  // Education
   education: {
     degree: string
     major: string
@@ -235,20 +301,18 @@ export interface EnhancedEmploymentApplication {
     graduationYear: string
     gpa?: string
   }[]
-
-  // Experience
   experience: {
     institution: string
     jobTitle: string
     duration: string
     responsibilities: string
   }[]
-
-  // CV
   cvFileName?: string
   cvFileUrl?: string
-
-  // Metadata
+  coverLetter?: string
+  photoFileName?: string
+  photoFileUrl?: string
+  customFieldResponses?: { fieldId: string; value: string; fileName?: string }[]
   submittedAt: string
   status: "pending" | "reviewed" | "accepted" | "rejected"
   notes?: string
@@ -276,35 +340,24 @@ export interface Employee {
   role: "admin" | "hr_manager" | "service_manager" | "content_manager" | "receptionist" | "employee" | "viewer"
   password: string
   permissions: {
-    // صلاحيات طلبات التوظيف
     canViewApplications: boolean
     canEditApplications: boolean
     canApproveApplications: boolean
     canDeleteApplications: boolean
-
-    // صلاحيات طلبات الخدمة
     canViewServiceRequests: boolean
     canEditServiceRequests: boolean
     canDeleteServiceRequests: boolean
-
-    // صلاحيات الرسائل
     canViewMessages: boolean
     canReplyToMessages: boolean
     canDeleteMessages: boolean
-
-    // صلاحيات المحتوى
     canViewContent: boolean
     canEditContent: boolean
     canPublishContent: boolean
     canDeleteContent: boolean
-
-    // صلاحيات الموظفين
     canViewEmployees: boolean
     canAddEmployees: boolean
     canEditEmployees: boolean
     canDeleteEmployees: boolean
-
-    // صلاحيات التقارير
     canViewReports: boolean
     canExportData: boolean
   }
@@ -315,142 +368,89 @@ export interface Employee {
 
 export type Staff = Employee
 
-// Moved Activity interface to updates section
-// export interface Activity {
-//   id: string
-//   employeeId: string
-//   employeeName: string
-//   action: string
-//   actionType: "create" | "update" | "delete" | "approve" | "reject" | "view"
-//   targetType: "application" | "message" | "testimonial" | "job" | "content" | "employee"
-//   targetId: string
-//   details: string
-//   timestamp: string
-// }
-
-// Notification interface moved to updates section
-// export interface Notification {
-//   id: string
-//   title: string
-//   message: string
-//   type: "info" | "success" | "warning" | "error"
-//   activityId?: string
-//   isRead: boolean
-//   createdAt: string
-// }
-
 export interface PageBlock {
   id: string
   type:
-    | "heading"
-    | "paragraph"
-    | "image"
-    | "gallery"
-    | "video"
-    | "quote"
-    | "divider"
-    | "button"
-    | "html"
-    | "row"
-    | "hero-slider"
-    | "statistics"
-    | "features"
-    | "card"
-    | "icon-box"
-    | "accordion"
-    | "tabs"
-    | "alert"
-    | "testimonial-card"
-    | "team-member"
-    | "pricing-card"
-    | "cta"
-    | "form"
-    | "map"
-    | "social-links"
-    | "spacer"
+  | "heading"
+  | "paragraph"
+  | "image"
+  | "gallery"
+  | "video"
+  | "quote"
+  | "divider"
+  | "button"
+  | "html"
+  | "row"
+  | "hero-slider"
+  | "statistics"
+  | "features"
+  | "card"
+  | "icon-box"
+  | "accordion"
+  | "tabs"
+  | "alert"
+  | "testimonial-card"
+  | "team-member"
+  | "pricing-card"
+  | "cta"
+  | "form"
+  | "map"
+  | "social-links"
+  | "spacer"
   order: number
   children?: PageBlock[]
   styles?: {
-    // Colors
     backgroundColor?: string
     textColor?: string
     borderColor?: string
     gradientFrom?: string
     gradientTo?: string
     gradientVia?: string
-    // Animations
-    animation?:
-      | "none"
-      | "fade-in"
-      | "slide-up"
-      | "slide-down"
-      | "slide-left"
-      | "slide-right"
-      | "zoom-in"
-      | "zoom-out"
-      | "bounce"
-      | "pulse"
-      | "float"
+    animation?: string
     animationDelay?: string
     animationDuration?: string
-    // Hover effects
     hoverScale?: string
     hoverRotate?: string
     hoverTranslate?: string
     hoverShadow?: string
     hoverBorderColor?: string
-    // Spacing
     padding?: string
     margin?: string
     gap?: string
-    // Border & Shadow
     borderRadius?: string
     borderWidth?: string
     shadow?: string
-    // Layout
     textAlign?: "left" | "center" | "right"
     maxWidth?: string
-    // Backdrop
     backdropBlur?: string
     opacity?: string
   }
   content: {
-    // For heading
     level?: 1 | 2 | 3 | 4 | 5 | 6
     textAr?: string
     textEn?: string
-    // For paragraph
-    // For image
     imageUrl?: string
     altAr?: string
     altEn?: string
     captionAr?: string
     captionEn?: string
-    // For gallery
     images?: Array<{ url: string; alt: string; caption?: string }>
-    // For video
     videoUrl?: string
     titleAr?: string
     titleEn?: string
-    // For quote
     quoteAr?: string
     quoteEn?: string
     authorAr?: string
     authorEn?: string
-    // For button
     buttonTextAr?: string
     buttonTextEn?: string
     buttonUrl?: string
     buttonStyle?: string
-    // For divider
     dividerStyle?: string
-    // For HTML
     htmlCode?: string
-    // For row (columns layout)
     columns?: number
     columnBlocks?: PageBlock[][]
     gap?: string
-    // For hero-slider
     slides?: Array<{
       id: string
       imageUrl: string
@@ -461,14 +461,12 @@ export interface PageBlock {
       descriptionAr?: string
       descriptionEn?: string
     }>
-    // For statistics
     stats?: Array<{
       id: string
       number: string
       labelAr: string
       labelEn: string
     }>
-    // For features
     features?: Array<{
       id: string
       icon: string
@@ -477,7 +475,6 @@ export interface PageBlock {
       descriptionAr: string
       descriptionEn: string
     }>
-    // For card
     cardImageUrl?: string
     cardTitleAr?: string
     cardTitleEn?: string
@@ -486,13 +483,11 @@ export interface PageBlock {
     cardButtonTextAr?: string
     cardButtonTextEn?: string
     cardButtonUrl?: string
-    // For icon-box
     icon?: string
     iconColor?: string
     iconSize?: string
     iconBoxSize?: string
     iconBoxBg?: string
-    // For accordion
     accordionItems?: Array<{
       id: string
       titleAr: string
@@ -500,7 +495,6 @@ export interface PageBlock {
       contentAr: string
       contentEn: string
     }>
-    // For tabs
     tabItems?: Array<{
       id: string
       labelAr: string
@@ -508,19 +502,16 @@ export interface PageBlock {
       contentAr: string
       contentEn: string
     }>
-    // For alert
     alertType?: "info" | "success" | "warning" | "error"
     alertTitleAr?: string
     alertTitleEn?: string
     alertMessageAr?: string
     alertMessageEn?: string
-    // For testimonial-card
     testimonialName?: string
     testimonialImage?: string
     testimonialRating?: number
     testimonialComment?: string
     testimonialPosition?: string
-    // For team-member
     memberName?: string
     memberImage?: string
     memberPositionAr?: string
@@ -530,7 +521,6 @@ export interface PageBlock {
     memberEmail?: string
     memberPhone?: string
     memberSocial?: Array<{ platform: string; url: string }>
-    // For pricing-card
     pricingTitleAr?: string
     pricingTitleEn?: string
     pricingPrice?: string
@@ -541,7 +531,6 @@ export interface PageBlock {
     pricingButtonTextEn?: string
     pricingButtonUrl?: string
     pricingHighlighted?: boolean
-    // For cta
     ctaTitleAr?: string
     ctaTitleEn?: string
     ctaDescriptionAr?: string
@@ -550,7 +539,6 @@ export interface PageBlock {
     ctaButtonTextEn?: string
     ctaButtonUrl?: string
     ctaBackgroundImage?: string
-    // For form
     formFields?: Array<{
       id: string
       type: "text" | "email" | "tel" | "textarea" | "select"
@@ -564,16 +552,13 @@ export interface PageBlock {
     formSubmitTextAr?: string
     formSubmitTextEn?: string
     formSubmitUrl?: string
-    // For map
     mapUrl?: string
     mapHeight?: string
-    // For social-links
     socialLinks?: Array<{
       platform: string
       url: string
       icon: string
     }>
-    // For spacer
     spacerHeight?: string
     height?: string
   }
@@ -591,11 +576,242 @@ export interface DynamicPage {
   image?: string
   seoDescriptionAr?: string
   seoDescriptionEn?: string
+  keywordsAr?: string
+  keywordsEn?: string
   featuredImage?: string
   blocks?: PageBlock[]
+  blocksAr?: PageBlock[]
+  blocksEn?: PageBlock[]
+  customCss?: string
+  customJs?: string
+  isPublished: boolean
+  isHome?: boolean
+  migratedFrom?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface MenuItem {
+  id: string
+  labelAr: string
+  labelEn: string
+  linkType: 'page' | 'url' | 'section'
+  pageSlug?: string
+  pageSlugAr?: string
+  pageSlugEn?: string
+  url?: string
+  sectionId?: string
+  openInNewTab: boolean
+  icon?: string
+  order: number
+  children?: MenuItem[]
+}
+
+export interface GeneralSettings {
+  siteName: string
+  siteNameEn: string
+  siteTagline: string
+  siteTaglineEn: string
+  siteLogo: string
+  favicon: string
+  defaultLanguage: "ar" | "en"
+  timeZone: string
+  dateFormat: string
+  copyrightText: string
+  copyrightTextEn: string
+  seoDescription: string
+  seoDescriptionEn: string
+  seoKeywords: string
+  seoKeywordsEn: string
+  googleAnalyticsId: string
+  socialLinks: {
+    facebook: string
+    twitter: string
+    instagram: string
+    linkedin: string
+    youtube: string
+    whatsapp: string
+    tiktok: string
+  }
+  primaryColor: string
+  secondaryColor: string
+}
+
+export interface HeaderSettings {
+  // Note: Site identity (logo, siteName, tagline) comes from GeneralSettings
+  menuItems: MenuItem[]
+  style: {
+    backgroundColor: string
+    textColor: string
+    hoverColor: string
+    activeColor?: string
+    font: string
+    height: number
+    isSticky: boolean
+    isTransparent: boolean
+    shadow: string
+  }
+  showLanguageSwitcher: boolean
+  languageSwitcherPosition: 'left' | 'right'
+  showSearch: boolean
+  ctaButton?: {
+    labelAr: string
+    labelEn: string
+    link: string
+    style: 'primary' | 'secondary' | 'outline'
+  }
+  contactInfo?: {
+    showPhone: boolean
+    showEmail: boolean
+    phone?: string
+    email?: string
+  }
+}
+
+export interface FooterColumn {
+  id: string
+  titleAr: string
+  titleEn: string
+  type: 'links' | 'text' | 'contact' | 'custom'
+  order: number
+  content: {
+    links?: Array<{
+      labelAr: string
+      labelEn: string
+      linkType: 'page' | 'url'
+      pageSlug?: string
+      pageSlugAr?: string
+      pageSlugEn?: string
+      url?: string
+    }>
+    textAr?: string
+    textEn?: string
+    contactItems?: Array<{
+      icon: string
+      labelAr: string
+      labelEn: string
+      value: string
+    }>
+    htmlAr?: string
+    htmlEn?: string
+  }
+}
+
+export interface FooterSettings {
+  layout: '1-column' | '2-column' | '3-column' | '4-column'
+  columns: FooterColumn[]
+  style: {
+    backgroundColor: string
+    textColor: string
+    linkColor: string
+    linkHoverColor: string
+    font: string
+    padding: number
+  }
+  socialMedia: {
+    facebook?: string
+    twitter?: string
+    instagram?: string
+    youtube?: string
+    linkedin?: string
+    tiktok?: string
+    whatsapp?: string
+  }
+  contactInfo: {
+    showAddress: boolean
+    addressAr?: string
+    addressEn?: string
+    showPhone: boolean
+    phone?: string
+    showEmail: boolean
+    email?: string
+    showWorkingHours: boolean
+    workingHoursAr?: string
+    workingHoursEn?: string
+  }
+  showLogo: boolean
+  showNewsletter: boolean
+  newsletterTitleAr?: string
+  newsletterTitleEn?: string
+  copyrightAr: string
+  copyrightEn: string
+  showBackToTop: boolean
+  paymentIcons?: string[]
+}
+
+export interface MaintenanceSettings {
+  enabled: boolean
+  titleAr: string
+  titleEn: string
+  messageAr: string
+  messageEn: string
+  showCountdown: boolean
+  countdownDate?: string
+  showContactInfo: boolean
+  contactEmail?: string
+  contactPhone?: string
+  showSocialLinks: boolean
+  backgroundImage?: string
+  logoImage?: string
+  primaryColor: string
+  secondaryColor: string
+}
+
+export interface MigrationStatus {
+  completed: boolean
+  timestamp: string
+  migratedPages: string[]
+  backupCreated: boolean
+  version: string
+}
+
+export interface Activity {
+  id: string
+  employeeId: string
+  employeeName: string
+  action: string
+  actionType: "create" | "update" | "delete" | "approve" | "reject" | "view"
+  targetType: "application" | "message" | "testimonial" | "job" | "content" | "employee"
+  targetId: string
+  details: string
+  timestamp: string
+}
+
+export interface Notification {
+  id: string
+  userId: string
+  title: string
+  message: string
+  type: "info" | "success" | "warning" | "error"
+  read: boolean
+  createdAt: string
+  link?: string
+}
+
+export interface LocalizedPage {
+  id: string
+  slug: string
+  title: string
+  description: string
+  content: string
+  blocks: PageBlock[]
+  image?: string
+  seoDescription?: string
+  keywords?: string
+  featuredImage?: string
   isPublished: boolean
   createdAt: string
   updatedAt: string
+  lang: "ar" | "en"
+  dir: "rtl" | "ltr"
+}
+
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
+
+function generateId(): string {
+  return Date.now().toString() + Math.random().toString(36).substr(2, 9)
 }
 
 function dispatchStorageChange(key: string, value: any): void {
@@ -608,424 +824,199 @@ function dispatchStorageChange(key: string, value: any): void {
   }
 }
 
+// ============================================
+// EMPLOYMENT APPLICATIONS (web_applications)
+// ============================================
+
 export async function saveEmploymentApplication(
   data: Omit<EmploymentApplication, "id" | "submittedAt">,
 ): Promise<void> {
-  const applications = getFromLocalStorage<EmploymentApplication[]>(COLLECTIONS.EMPLOYMENT_APPLICATIONS, [])
-  const newApp: EmploymentApplication = {
-    ...data,
-    id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-    submittedAt: new Date().toISOString(),
+  try {
+    const db = getDb()
+    const newApp: EmploymentApplication = {
+      ...data,
+      id: generateId(),
+      submittedAt: new Date().toISOString(),
+      status: "pending",
+    }
+    await setDoc(doc(db, FIREBASE_COLLECTIONS.EMPLOYMENT_APPLICATIONS, newApp.id), newApp)
+    console.log("[Firebase] Employment application saved with ID:", newApp.id)
+  } catch (error) {
+    console.error("[Firebase] Error saving employment application:", error)
+    throw error
   }
-  applications.push(newApp)
-  saveToLocalStorage(COLLECTIONS.EMPLOYMENT_APPLICATIONS, applications)
-  console.log("[v0] Employment application saved with ID:", newApp.id)
 }
 
 export async function getEmploymentApplications(): Promise<EmploymentApplication[]> {
-  return getFromLocalStorage<EmploymentApplication[]>(COLLECTIONS.EMPLOYMENT_APPLICATIONS, [])
+  try {
+    return await getFromFirestore<EmploymentApplication[]>(FIREBASE_COLLECTIONS.EMPLOYMENT_APPLICATIONS, [])
+  } catch (error) {
+    console.error("[Firebase] Error getting employment applications:", error)
+    return []
+  }
 }
 
 export async function deleteEmploymentApplication(id: string): Promise<void> {
-  const applications = getFromLocalStorage<EmploymentApplication[]>(COLLECTIONS.EMPLOYMENT_APPLICATIONS, [])
-  const filtered = applications.filter((app) => app.id !== id)
-  saveToLocalStorage(COLLECTIONS.EMPLOYMENT_APPLICATIONS, filtered)
-  console.log("[v0] Employment application deleted:", id)
+  try {
+    await deleteFromFirestore(FIREBASE_COLLECTIONS.EMPLOYMENT_APPLICATIONS, id)
+    console.log("[Firebase] Employment application deleted:", id)
+  } catch (error) {
+    console.error("[Firebase] Error deleting employment application:", error)
+    throw error
+  }
 }
 
-export async function saveContactMessage(data: Omit<ContactMessage, "id" | "submittedAt">): Promise<void> {
-  const messages = getFromLocalStorage<ContactMessage[]>(COLLECTIONS.CONTACT_MESSAGES, [])
-  const newMessage: ContactMessage = {
-    ...data,
-    id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-    submittedAt: new Date().toISOString(),
+export async function updateEmploymentApplicationStatus(
+  id: string,
+  status: EmploymentApplication["status"],
+): Promise<void> {
+  try {
+    await saveToFirestore(FIREBASE_COLLECTIONS.EMPLOYMENT_APPLICATIONS, id, { status })
+  } catch (error) {
+    console.error("[Firebase] Error updating employment application status:", error)
+    throw error
   }
-  messages.push(newMessage)
-  saveToLocalStorage(COLLECTIONS.CONTACT_MESSAGES, messages)
+}
+
+// ============================================
+// CONTACT MESSAGES (web_contact_messages)
+// ============================================
+
+export async function saveContactMessage(data: Omit<ContactMessage, "id" | "submittedAt">): Promise<void> {
+  try {
+    const db = getDb()
+    const newMessage: ContactMessage = {
+      ...data,
+      id: generateId(),
+      submittedAt: new Date().toISOString(),
+    }
+    await setDoc(doc(db, FIREBASE_COLLECTIONS.CONTACT_MESSAGES, newMessage.id), newMessage)
+  } catch (error) {
+    console.error("[Firebase] Error saving contact message:", error)
+    throw error
+  }
 }
 
 export async function getContactMessages(): Promise<ContactMessage[]> {
-  return getFromLocalStorage<ContactMessage[]>(COLLECTIONS.CONTACT_MESSAGES, [])
+  try {
+    return await getFromFirestore<ContactMessage[]>(FIREBASE_COLLECTIONS.CONTACT_MESSAGES, [])
+  } catch (error) {
+    console.error("[Firebase] Error getting contact messages:", error)
+    return []
+  }
 }
 
 export async function deleteContactMessage(id: string): Promise<void> {
-  const messages = getFromLocalStorage<ContactMessage[]>(COLLECTIONS.CONTACT_MESSAGES, [])
-  const filtered = messages.filter((msg) => msg.id !== id)
-  saveToLocalStorage(COLLECTIONS.CONTACT_MESSAGES, filtered)
+  try {
+    await deleteFromFirestore(FIREBASE_COLLECTIONS.CONTACT_MESSAGES, id)
+  } catch (error) {
+    console.error("[Firebase] Error deleting contact message:", error)
+    throw error
+  }
 }
+
+// ============================================
+// TESTIMONIALS (web_testimonials)
+// ============================================
 
 export async function saveTestimonial(data: Omit<Testimonial, "id" | "createdAt">): Promise<void> {
   try {
-    // Removed Firebase addDoc, using localStorage via storage-adapter
-    const testimonials = getFromLocalStorage<Testimonial[]>(COLLECTIONS.TESTIMONIALS, [])
+    const db = getDb()
     const newTestimonial: Testimonial = {
       ...data,
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      id: generateId(),
       createdAt: new Date().toISOString(),
     }
-    testimonials.push(newTestimonial)
-    saveToLocalStorage(COLLECTIONS.TESTIMONIALS, testimonials)
+    await setDoc(doc(db, FIREBASE_COLLECTIONS.TESTIMONIALS, newTestimonial.id), newTestimonial)
   } catch (error) {
-    console.error("Error saving testimonial:", error)
+    console.error("[Firebase] Error saving testimonial:", error)
     throw error
   }
 }
 
 export async function getTestimonials(): Promise<Testimonial[]> {
   try {
-    const snapshot = getFromLocalStorage<Testimonial[]>(COLLECTIONS.TESTIMONIALS, [])
-
-    if (snapshot.length === 0) {
-      const defaultTestimonials: Testimonial[] = [
-        {
-          id: "test-001",
-          name: "عبدالله أحمد السعيد",
-          image: "/diverse-user-avatars.png",
-          rating: 5,
-          comment:
-            "مدرسة متميزة بكل المقاييس. المعلمون مؤهلون والإدارة متعاونة جداً. ابني تطور كثيراً منذ التحاقه بالمدرسة.",
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: "test-002",
-          name: "فاطمة محمد الحربي",
-          image: "/diverse-user-avatars.png",
-          rating: 5,
-          comment: "أفضل قرار اتخذته هو تسجيل ابنتي في هذه المدرسة. البيئة التعليمية رائعة والأنشطة اللاصفية متنوعة.",
-          createdAt: new Date().toISOString(),
-        },
-      ]
-      // Removed Firebase setDoc loop, using localStorage via storage-adapter
-      saveToLocalStorage(COLLECTIONS.TESTIMONIALS, defaultTestimonials)
-      return defaultTestimonials
-    }
-
-    return snapshot
+    return await getFromFirestore<Testimonial[]>(FIREBASE_COLLECTIONS.TESTIMONIALS, [])
   } catch (error) {
-    console.error("Error getting testimonials:", error)
+    console.error("[Firebase] Error getting testimonials:", error)
     return []
   }
 }
 
 export async function deleteTestimonial(id: string): Promise<void> {
   try {
-    // Removed Firebase deleteDoc, using localStorage via storage-adapter
-    const testimonials = getFromLocalStorage<Testimonial[]>(COLLECTIONS.TESTIMONIALS, [])
-    const filtered = testimonials.filter((t) => t.id !== id)
-    saveToLocalStorage(COLLECTIONS.TESTIMONIALS, filtered)
+    await deleteFromFirestore(FIREBASE_COLLECTIONS.TESTIMONIALS, id)
   } catch (error) {
-    console.error("Error deleting testimonial:", error)
+    console.error("[Firebase] Error deleting testimonial:", error)
     throw error
   }
 }
 
+// ============================================
+// JOB POSITIONS (web_job_positions)
+// ============================================
+
 export async function saveJobPosition(data: Omit<JobPosition, "id" | "createdAt">): Promise<void> {
   try {
+    const db = getDb()
     const newJob: JobPosition = {
       ...data,
-      id: Date.now().toString(),
+      id: generateId(),
       createdAt: new Date().toISOString(),
     }
-    // Removed Firebase addDoc, using localStorage via storage-adapter
-    const jobs = getFromLocalStorage<JobPosition[]>(COLLECTIONS.JOB_POSITIONS, [])
-    jobs.push(newJob)
-    saveToLocalStorage(COLLECTIONS.JOB_POSITIONS, jobs)
+    await setDoc(doc(db, FIREBASE_COLLECTIONS.JOB_POSITIONS, newJob.id), newJob)
   } catch (error) {
-    console.error("Error saving job position:", error)
+    console.error("[Firebase] Error saving job position:", error)
     throw error
   }
 }
 
 export async function getJobPositions(): Promise<JobPosition[]> {
   try {
-    const snapshot = getFromLocalStorage<JobPosition[]>(COLLECTIONS.JOB_POSITIONS, [])
-
-    if (snapshot.length === 0) {
-      const defaultJobs: JobPosition[] = [
-        {
-          id: "1",
-          title: "معلم علوم",
-          titleEn: "Science Teacher",
-          type: "دوام كامل",
-          typeEn: "Full-time",
-          workShift: "8:00 ص - 3:00 م",
-          workShiftEn: "8:00 AM - 3:00 PM",
-          gender: "لا يهم",
-          genderEn: "Doesn't matter",
-          workDuration: "7 ساعات",
-          workDurationEn: "7 hours",
-          description: "تدريس العلوم والتجارب العملية",
-          descriptionEn: "Teaching science and practical experiments",
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: "2",
-          title: "معلم رياضيات",
-          titleEn: "Mathematics Teacher",
-          type: "دوام كامل",
-          typeEn: "Full-time",
-          workShift: "8:00 ص - 3:00 م",
-          workShiftEn: "8:00 AM - 3:00 PM",
-          gender: "لا يهم",
-          genderEn: "Doesn't matter",
-          workDuration: "7 ساعات",
-          workDurationEn: "7 hours",
-          description: "تدريس الرياضيات بأساليب حديثة",
-          descriptionEn: "Teaching mathematics with modern methods",
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: "3",
-          title: "معلم لغة عربية",
-          titleEn: "Arabic Language Teacher",
-          type: "دوام كامل",
-          typeEn: "Full-time",
-          workShift: "8:00 ص - 3:00 م",
-          workShiftEn: "8:00 AM - 3:00 PM",
-          gender: "أنثى",
-          genderEn: "Female",
-          workDuration: "7 ساعات",
-          workDurationEn: "7 hours",
-          description: "تدريس اللغة العربية لجميع المراحل",
-          descriptionEn: "Teaching Arabic for all levels",
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: "4",
-          title: "أخصائي نفسي",
-          titleEn: "Psychologist",
-          type: "دوام كامل",
-          typeEn: "Full-time",
-          workShift: "9:00 ص - 4:00 م",
-          workShiftEn: "9:00 AM - 4:00 PM",
-          gender: "لا يهم",
-          genderEn: "Doesn't matter",
-          workDuration: "7 ساعات",
-          workDurationEn: "7 hours",
-          description: "تقديم الدعم النفسي للطلاب",
-          descriptionEn: "Providing psychological support to students",
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: "5",
-          title: "مشرف تربوي",
-          titleEn: "Educational Supervisor",
-          type: "دوام كامل",
-          typeEn: "Full-time",
-          workShift: "7:30 ص - 3:30 م",
-          workShiftEn: "7:30 AM - 3:30 PM",
-          gender: "ذكر",
-          genderEn: "Male",
-          workDuration: "8 ساعات",
-          workDurationEn: "8 hours",
-          description: "الإشراف على العملية التعليمية",
-          descriptionEn: "Supervising the educational process",
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: "6",
-          title: "معلم لغة إنجليزية",
-          titleEn: "English Language Teacher",
-          type: "دوام كامل",
-          typeEn: "Full-time",
-          workShift: "8:00 ص - 3:00 م",
-          workShiftEn: "8:00 AM - 3:00 PM",
-          gender: "لا يهم",
-          genderEn: "Doesn't matter",
-          workDuration: "7 ساعات",
-          workDurationEn: "7 hours",
-          description: "تدريس اللغة الإنجليزية",
-          descriptionEn: "Teaching English language",
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: "7",
-          title: "موظف إداري",
-          titleEn: "Administrative Staff",
-          type: "دوام جزئي",
-          typeEn: "Part-time",
-          workShift: "9:00 ص - 1:00 م",
-          workShiftEn: "9:00 AM - 1:00 PM",
-          gender: "لا يهم",
-          genderEn: "Doesn't matter",
-          workDuration: "4 ساعات",
-          workDurationEn: "4 hours",
-          description: "إدارة الشؤون الإدارية",
-          descriptionEn: "Managing administrative affairs",
-          createdAt: new Date().toISOString(),
-        },
-      ]
-      // Removed Firebase setDoc loop, using localStorage via storage-adapter
-      saveToLocalStorage(COLLECTIONS.JOB_POSITIONS, defaultJobs)
-      return defaultJobs
-    }
-
-    return snapshot
+    const jobs = await getFromFirestore<JobPosition[]>(FIREBASE_COLLECTIONS.JOB_POSITIONS, [])
+    return jobs
   } catch (error) {
-    console.error("Error getting job positions:", error)
+    console.error("[Firebase] Error getting job positions:", error)
     return []
   }
 }
 
-export function getAvailableJobs(): JobPosition[] {
-  // Removed Firebase getDocs, using localStorage via storage-adapter
+export function getAvailableJobs(): Promise<JobPosition[]> {
   return getJobPositions()
 }
 
 export async function deleteJobPosition(id: string): Promise<void> {
   try {
-    // Removed Firebase deleteDoc, using localStorage via storage-adapter
-    const jobs = getFromLocalStorage<JobPosition[]>(COLLECTIONS.JOB_POSITIONS, [])
-    const filtered = jobs.filter((job) => job.id !== id)
-    saveToLocalStorage(COLLECTIONS.JOB_POSITIONS, filtered)
+    await deleteFromFirestore(FIREBASE_COLLECTIONS.JOB_POSITIONS, id)
   } catch (error) {
-    console.error("Error deleting job position:", error)
+    console.error("[Firebase] Error deleting job position:", error)
     throw error
   }
 }
 
 export async function updateJobPosition(id: string, data: Omit<JobPosition, "id" | "createdAt">): Promise<void> {
   try {
-    // Removed Firebase updateDoc, using localStorage via storage-adapter
-    const jobs = getFromLocalStorage<JobPosition[]>(COLLECTIONS.JOB_POSITIONS, [])
-    const index = jobs.findIndex((job) => job.id === id)
-    if (index !== -1) {
-      jobs[index] = { ...jobs[index], ...data, id, createdAt: jobs[index].createdAt }
-      saveToLocalStorage(COLLECTIONS.JOB_POSITIONS, jobs)
-    }
+    await saveToFirestore(FIREBASE_COLLECTIONS.JOB_POSITIONS, id, data)
   } catch (error) {
-    console.error("Error updating job position:", error)
+    console.error("[Firebase] Error updating job position:", error)
     throw error
   }
 }
 
 export function resetJobPositionsToDefault(): void {
-  if (typeof window !== "undefined") {
-    const defaultJobs: JobPosition[] = [
-      {
-        id: "1",
-        title: "معلم علوم",
-        titleEn: "Science Teacher",
-        type: "دوام كامل",
-        typeEn: "Full-time",
-        workShift: "8:00 ص - 3:00 م",
-        workShiftEn: "8:00 AM - 3:00 PM",
-        gender: "لا يهم",
-        genderEn: "Doesn't matter",
-        workDuration: "7 ساعات",
-        workDurationEn: "7 hours",
-        description: "تدريس العلوم والتجارب العملية",
-        descriptionEn: "Teaching science and practical experiments",
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: "2",
-        title: "معلم رياضيات",
-        titleEn: "Mathematics Teacher",
-        type: "دوام كامل",
-        typeEn: "Full-time",
-        workShift: "8:00 ص - 3:00 م",
-        workShiftEn: "8:00 AM - 3:00 PM",
-        gender: "لا يهم",
-        genderEn: "Doesn't matter",
-        workDuration: "7 ساعات",
-        workDurationEn: "7 hours",
-        description: "تدريس الرياضيات بأساليب حديثة",
-        descriptionEn: "Teaching mathematics with modern methods",
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: "3",
-        title: "معلم لغة عربية",
-        titleEn: "Arabic Language Teacher",
-        type: "دوام كامل",
-        typeEn: "Full-time",
-        workShift: "8:00 ص - 3:00 م",
-        workShiftEn: "8:00 AM - 3:00 PM",
-        gender: "أنثى",
-        genderEn: "Female",
-        workDuration: "7 ساعات",
-        workDurationEn: "7 hours",
-        description: "تدريس اللغة العربية لجميع المراحل",
-        descriptionEn: "Teaching Arabic for all levels",
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: "4",
-        title: "أخصائي نفسي",
-        titleEn: "Psychologist",
-        type: "دوام كامل",
-        typeEn: "Full-time",
-        workShift: "9:00 ص - 4:00 م",
-        workShiftEn: "9:00 AM - 4:00 PM",
-        gender: "لا يهم",
-        genderEn: "Doesn't matter",
-        workDuration: "7 ساعات",
-        workDurationEn: "7 hours",
-        description: "تقديم الدعم النفسي للطلاب",
-        descriptionEn: "Providing psychological support to students",
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: "5",
-        title: "مشرف تربوي",
-        titleEn: "Educational Supervisor",
-        type: "دوام كامل",
-        typeEn: "Full-time",
-        workShift: "7:30 ص - 3:30 م",
-        workShiftEn: "7:30 AM - 3:30 PM",
-        gender: "ذكر",
-        genderEn: "Male",
-        workDuration: "8 ساعات",
-        workDurationEn: "8 hours",
-        description: "الإشراف على العملية التعليمية",
-        descriptionEn: "Supervising the educational process",
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: "6",
-        title: "معلم لغة إنجليزية",
-        titleEn: "English Language Teacher",
-        type: "دوام كامل",
-        typeEn: "Full-time",
-        workShift: "8:00 ص - 3:00 م",
-        workShiftEn: "8:00 AM - 3:00 PM",
-        gender: "لا يهم",
-        genderEn: "Doesn't matter",
-        workDuration: "7 ساعات",
-        workDurationEn: "7 hours",
-        description: "تدريس اللغة الإنجليزية",
-        descriptionEn: "Teaching English language",
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: "7",
-        title: "موظف إداري",
-        titleEn: "Administrative Staff",
-        type: "دوام جزئي",
-        typeEn: "Part-time",
-        workShift: "9:00 ص - 1:00 م",
-        workShiftEn: "9:00 AM - 1:00 PM",
-        gender: "لا يهم",
-        genderEn: "Doesn't matter",
-        workDuration: "4 ساعات",
-        workDurationEn: "4 hours",
-        description: "إدارة الشؤون الإدارية",
-        descriptionEn: "Managing administrative affairs",
-        createdAt: new Date().toISOString(),
-      },
-    ]
-    localStorage.setItem("jobPositions", JSON.stringify(defaultJobs))
-    dispatchStorageChange("jobPositions", defaultJobs)
-  }
+  console.log("[Firebase] resetJobPositionsToDefault - This function is deprecated in Firebase mode")
 }
+
+// ============================================
+// PENDING/REJECTED REVIEWS (localStorage for now - can migrate later)
+// ============================================
 
 export function savePendingReview(data: Omit<PendingReview, "id" | "submittedAt">): void {
   if (typeof window !== "undefined") {
     const reviews = getPendingReviews()
     const newReview: PendingReview = {
       ...data,
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      id: generateId(),
       submittedAt: new Date().toISOString(),
     }
     reviews.push(newReview)
@@ -1046,14 +1037,12 @@ export function approvePendingReview(id: string): void {
     const reviews = getPendingReviews()
     const review = reviews.find((r) => r.id === id)
     if (review) {
-      // إضافة الرأي إلى الآراء المعتمدة
       saveTestimonial({
         name: review.name,
         image: review.image,
         rating: review.rating,
         comment: review.comment,
       })
-      // حذف من الآراء المعلقة
       deletePendingReview(id)
     }
   }
@@ -1066,12 +1055,91 @@ export function deletePendingReview(id: string): void {
   }
 }
 
+export function rejectPendingReview(id: string): void {
+  if (typeof window !== "undefined") {
+    const reviews = getPendingReviews()
+    const review = reviews.find((r) => r.id === id)
+    if (review) {
+      const rejectedReview: RejectedReview = {
+        ...review,
+        rejectedAt: new Date().toISOString(),
+      }
+      saveRejectedReview(rejectedReview)
+      deletePendingReview(id)
+    }
+  }
+}
+
+export function saveRejectedReview(review: RejectedReview): void {
+  if (typeof window !== "undefined") {
+    const reviews = getRejectedReviews()
+    reviews.push(review)
+    localStorage.setItem("web_rejected_reviews", JSON.stringify(reviews))
+  }
+}
+
+export function getRejectedReviews(): RejectedReview[] {
+  if (typeof window !== "undefined") {
+    const data = localStorage.getItem("web_rejected_reviews")
+    return data ? JSON.parse(data) : []
+  }
+  return []
+}
+
+export function deleteRejectedReview(id: string): void {
+  if (typeof window !== "undefined") {
+    const reviews = getRejectedReviews().filter((r) => r.id !== id)
+    localStorage.setItem("web_rejected_reviews", JSON.stringify(reviews))
+  }
+}
+
+export function approveRejectedReview(id: string): void {
+  if (typeof window !== "undefined") {
+    const reviews = getRejectedReviews()
+    const review = reviews.find((r) => r.id === id)
+    if (review) {
+      saveTestimonial({
+        name: review.name,
+        image: review.image,
+        rating: review.rating,
+        comment: review.comment,
+      })
+      deleteRejectedReview(id)
+    }
+  }
+}
+
+export function rejectApprovedReview(id: string): void {
+  if (typeof window !== "undefined") {
+    getTestimonials().then((testimonials) => {
+      const testimonial = testimonials.find((t) => t.id === id)
+      if (testimonial) {
+        const rejectedReview: RejectedReview = {
+          id: testimonial.id,
+          name: testimonial.name,
+          image: testimonial.image,
+          rating: testimonial.rating,
+          comment: testimonial.comment,
+          submittedAt: testimonial.createdAt,
+          rejectedAt: new Date().toISOString(),
+        }
+        saveRejectedReview(rejectedReview)
+        deleteTestimonial(id)
+      }
+    })
+  }
+}
+
+// ============================================
+// SERVICE CONTENT (localStorage - can migrate later)
+// ============================================
+
 export function saveServiceContent(data: Omit<ServiceContent, "id" | "createdAt">): void {
   if (typeof window !== "undefined") {
     const services = getServiceContents()
     const newService: ServiceContent = {
       ...data,
-      id: Date.now().toString(),
+      id: generateId(),
       createdAt: new Date().toISOString(),
     }
     services.push(newService)
@@ -1082,51 +1150,16 @@ export function saveServiceContent(data: Omit<ServiceContent, "id" | "createdAt"
 export function getServiceContents(): ServiceContent[] {
   if (typeof window !== "undefined") {
     const data = localStorage.getItem("serviceContents")
-
     if (data) {
-      const existingServices = JSON.parse(data)
-      // Check if training service exists and remove it
-      const hasTraining = existingServices.some((s: ServiceContent) => s.type === "training")
-      if (hasTraining || existingServices.length > 2) {
-        // Reset to default services without training
-        const defaultServices: ServiceContent[] = [
-          {
-            id: "1",
-            titleAr: "طلب الخدمة",
-            titleEn: "Service Request",
-            descriptionAr: "قدم طلبك للحصول على خدماتنا التعليمية والتأهيلية المتخصصة بسهولة وسرعة",
-            descriptionEn:
-              "Submit your request to access our specialized educational and rehabilitation services easily and quickly",
-            type: "education",
-            createdAt: new Date().toISOString(),
-          },
-          {
-            id: "2",
-            titleAr: "فرص توظيف",
-            titleEn: "Employment Opportunities",
-            descriptionAr:
-              "انضم إلى فريقنا التعليمي المتميز. نبحث عن معلمين وإداريين مؤهلين للمساهمة في رسالتنا التعليمية",
-            descriptionEn:
-              "Join our distinguished educational team. We are looking for qualified teachers and administrators",
-            type: "employment",
-            createdAt: new Date().toISOString(),
-          },
-        ]
-        localStorage.setItem("serviceContents", JSON.stringify(defaultServices))
-        return defaultServices
-      }
-      return existingServices
+      return JSON.parse(data)
     }
-
-    // Default services if no data exists
     const defaultServices: ServiceContent[] = [
       {
         id: "1",
         titleAr: "طلب الخدمة",
         titleEn: "Service Request",
         descriptionAr: "قدم طلبك للحصول على خدماتنا التعليمية والتأهيلية المتخصصة بسهولة وسرعة",
-        descriptionEn:
-          "Submit your request to access our specialized educational and rehabilitation services easily and quickly",
+        descriptionEn: "Submit your request to access our specialized educational and rehabilitation services easily and quickly",
         type: "education",
         createdAt: new Date().toISOString(),
       },
@@ -1135,8 +1168,7 @@ export function getServiceContents(): ServiceContent[] {
         titleAr: "فرص توظيف",
         titleEn: "Employment Opportunities",
         descriptionAr: "انضم إلى فريقنا التعليمي المتميز. نبحث عن معلمين وإداريين مؤهلين للمساهمة في رسالتنا التعليمية",
-        descriptionEn:
-          "Join our distinguished educational team. We are looking for qualified teachers and administrators",
+        descriptionEn: "Join our distinguished educational team. We are looking for qualified teachers and administrators",
         type: "employment",
         createdAt: new Date().toISOString(),
       },
@@ -1152,10 +1184,7 @@ export function updateServiceContent(id: string, data: Omit<ServiceContent, "id"
     const services = getServiceContents()
     const index = services.findIndex((s) => s.id === id)
     if (index !== -1) {
-      services[index] = {
-        ...services[index],
-        ...data,
-      }
+      services[index] = { ...services[index], ...data }
       localStorage.setItem("serviceContents", JSON.stringify(services))
     }
   }
@@ -1167,6 +1196,10 @@ export function deleteServiceContent(id: string): void {
     localStorage.setItem("serviceContents", JSON.stringify(services))
   }
 }
+
+// ============================================
+// SITE CONTENT (localStorage - can migrate later)
+// ============================================
 
 export function getSiteContents(): SiteContent[] {
   if (typeof window !== "undefined") {
@@ -1181,7 +1214,7 @@ export function saveSiteContent(data: Omit<SiteContent, "id" | "createdAt">): vo
     const contents = getSiteContents()
     const newContent: SiteContent = {
       ...data,
-      id: Date.now().toString(),
+      id: generateId(),
       createdAt: new Date().toISOString(),
     }
     contents.push(newContent)
@@ -1207,497 +1240,417 @@ export function deleteSiteContent(id: string): void {
   }
 }
 
+// ============================================
+// HERO SLIDES (web_hero_slides)
+// ============================================
+
 export async function getHeroSlides(): Promise<HeroSlide[]> {
-  const slides = getFromLocalStorage<HeroSlide[]>(COLLECTIONS.HERO_SLIDES, [])
-
-  if (slides.length === 0) {
-    const defaultSlides: HeroSlide[] = [
-      {
-        id: "1",
-        image: "/modern-special-education-school-classroom-with-div.jpg",
-        titleAr: "المدرسة النموذجية",
-        titleEn: "Al Namothajia School",
-        descriptionAr: "لتعزيز التعليم والإبداع في بيئة مريحة وآمنة تراعي الفروق الفردية وتطور قدرات كل طالب",
-        descriptionEn: "To enhance education and creativity in a comfortable and safe environment",
-      },
-      {
-        id: "2",
-        image: "/happy-special-needs-students-learning-together-wit.jpg",
-        titleAr: "تعليم متميز",
-        titleEn: "Distinguished Education",
-        descriptionAr: "نبني جيلاً واعياً ومبدعاً لمستقبل أفضل",
-        descriptionEn: "Building a conscious and creative generation for a better future",
-      },
-      {
-        id: "3",
-        image: "/modern-special-education-school-facilities-with-ad.jpg",
-        titleAr: "بيئة تعليمية حديثة",
-        titleEn: "Modern Learning Environment",
-        descriptionAr: "نوفر أحدث الوسائل التعليمية لتجربة تعلم فريدة",
-        descriptionEn: "We provide the latest educational tools for a unique learning experience",
-      },
-    ]
-    saveToLocalStorage(COLLECTIONS.HERO_SLIDES, defaultSlides)
-    return defaultSlides
+  try {
+    const slides = await getFromFirestore<HeroSlide[]>(FIREBASE_COLLECTIONS.HERO_SLIDES, [])
+    if (slides.length === 0) {
+      const defaultSlides: HeroSlide[] = [
+        {
+          id: "1",
+          image: "/modern-special-education-school-classroom-with-div.jpg",
+          titleAr: "المدرسة النموذجية",
+          titleEn: "Al Namothajia School",
+          descriptionAr: "لتعزيز التعليم والإبداع في بيئة مريحة وآمنة تراعي الفروق الفردية وتطور قدرات كل طالب",
+          descriptionEn: "To enhance education and creativity in a comfortable and safe environment",
+        },
+      ]
+      return defaultSlides
+    }
+    return slides
+  } catch (error) {
+    console.error("[Firebase] Error getting hero slides:", error)
+    return []
   }
-
-  return slides
 }
 
 export async function saveHeroSlide(data: Omit<HeroSlide, "id">): Promise<void> {
-  const slides = getFromLocalStorage<HeroSlide[]>(COLLECTIONS.HERO_SLIDES, [])
-  const newSlide: HeroSlide = {
-    ...data,
-    id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+  try {
+    const db = getDb()
+    const newSlide: HeroSlide = {
+      ...data,
+      id: generateId(),
+    }
+    await setDoc(doc(db, FIREBASE_COLLECTIONS.HERO_SLIDES, newSlide.id!), newSlide)
+  } catch (error) {
+    console.error("[Firebase] Error saving hero slide:", error)
+    throw error
   }
-  slides.push(newSlide)
-  saveToLocalStorage(COLLECTIONS.HERO_SLIDES, slides)
 }
 
 export async function updateHeroSlide(id: string, data: Partial<HeroSlide>): Promise<void> {
-  const slides = getFromLocalStorage<HeroSlide[]>(COLLECTIONS.HERO_SLIDES, [])
-  const index = slides.findIndex((s) => s.id === id)
-  if (index !== -1) {
-    slides[index] = { ...slides[index], ...data }
-    saveToLocalStorage(COLLECTIONS.HERO_SLIDES, slides)
+  try {
+    await saveToFirestore(FIREBASE_COLLECTIONS.HERO_SLIDES, id, data)
+  } catch (error) {
+    console.error("[Firebase] Error updating hero slide:", error)
+    throw error
   }
 }
 
 export async function deleteHeroSlide(id: string): Promise<void> {
-  const slides = getFromLocalStorage<HeroSlide[]>(COLLECTIONS.HERO_SLIDES, [])
-  const filtered = slides.filter((s) => s.id !== id)
-  saveToLocalStorage(COLLECTIONS.HERO_SLIDES, filtered)
+  try {
+    await deleteFromFirestore(FIREBASE_COLLECTIONS.HERO_SLIDES, id)
+  } catch (error) {
+    console.error("[Firebase] Error deleting hero slide:", error)
+    throw error
+  }
 }
+
+// ============================================
+// DEPARTMENT CONTENTS (web_department_contents)
+// ============================================
 
 export async function getDepartmentContents(): Promise<DepartmentContent[]> {
   try {
-    // Removed Firebase getDocs, using localStorage via storage-adapter
-    const snapshot = getFromLocalStorage<DepartmentContent[]>(COLLECTIONS.DEPARTMENT_CONTENTS, [])
-
-    if (snapshot.length === 0) {
-      // Initialize with default data
-      const defaultContents: DepartmentContent[] = [
-        {
-          id: "1",
-          type: "medical",
-          titleAr: "القسم الطبي",
-          titleEn: "Medical Department",
-          descriptionAr:
-            "قسم طبي متكامل يوفر الرعاية الصحية الشاملة للطلاب على مدار الساعة، يشمل العيادة والصيدلية والمتابعة العلاجية",
-          descriptionEn:
-            "Comprehensive medical department providing 24/7 healthcare for students, including clinic, pharmacy, and medical follow-up",
-          image: "/modern-medical-clinic-for-special-needs-school-wit.jpg",
-        },
-        {
-          id: "2",
-          type: "heart",
-          titleAr: "قلب المدرسة",
-          titleEn: "Heart of the School",
-          descriptionAr:
-            "القسم الأساسي الذي يضم 14 قسماً متخصصاً يعملون بتكامل تام لتقديم خدمات تعليمية وتأهيلية شاملة لجميع الطلاب",
-          descriptionEn:
-            "The core department comprising 14 specialized sections working in complete integration to provide comprehensive educational and rehabilitation services",
-          image: "/professional-psychologist-conducting-assessment-wi.jpg",
-        },
-        {
-          id: "3",
-          type: "housing",
-          titleAr: "السكن الداخلي",
-          titleEn: "Internal Housing",
-          descriptionAr:
-            "شقق سكنية مجهزة بتجهيزات فندقية مع خدمات شاملة تشمل النظافة والمصبغة والمطبخ والمكالمات المرئية والمراقبة",
-          descriptionEn:
-            "Residential apartments equipped with hotel furnishings and comprehensive services including cleaning, laundry, kitchen, video calls, and surveillance",
-          image: "/comfortable-residential-apartment-for-special-need.jpg",
-        },
-        {
-          id: "4",
-          type: "activities",
-          titleAr: "الأنشطة اللامنهجية",
-          titleEn: "Extracurricular Activities",
-          descriptionAr: "رحلات أسبوعية ونشاطات ترفيهية متنوعة تساهم في تنمية المهارات الاجتماعية والترفيهية للطلاب",
-          descriptionEn:
-            "Weekly trips and various recreational activities contributing to the development of students' social and recreational skills",
-          image: "/special-needs-students-on-educational-field-trip-w.jpg",
-        },
-      ]
-
-      // Save to localStorage
-      saveToLocalStorage(COLLECTIONS.DEPARTMENT_CONTENTS, defaultContents)
-      return defaultContents
-    }
-
-    return snapshot
+    return await getFromFirestore<DepartmentContent[]>(FIREBASE_COLLECTIONS.DEPARTMENT_CONTENTS, [])
   } catch (error) {
-    console.error("Error getting department contents:", error)
+    console.error("[Firebase] Error getting department contents:", error)
     return []
   }
 }
 
 export async function updateDepartmentContent(id: string, data: Partial<DepartmentContent>): Promise<void> {
   try {
-    // Removed Firebase updateDoc, using localStorage via storage-adapter
-    const contents = getFromLocalStorage<DepartmentContent[]>(COLLECTIONS.DEPARTMENT_CONTENTS, [])
-    const index = contents.findIndex((c) => c.id === id)
-    if (index !== -1) {
-      contents[index] = { ...contents[index], ...data }
-      saveToLocalStorage(COLLECTIONS.DEPARTMENT_CONTENTS, contents)
-    }
+    await saveToFirestore(FIREBASE_COLLECTIONS.DEPARTMENT_CONTENTS, id, data)
   } catch (error) {
-    console.error("Error updating department content:", error)
+    console.error("[Firebase] Error updating department content:", error)
     throw error
   }
 }
 
+// ============================================
+// CONTACT INFO (web_settings/contact)
+// ============================================
+
 export async function getContactInfo(): Promise<ContactInfo | null> {
   try {
-    // Removed Firebase getDocs, using localStorage via storage-adapter
-    const snapshot = getFromLocalStorage<ContactInfo[]>(COLLECTIONS.CONTACT_INFO, [])
-
-    if (snapshot.length === 0) {
-      const defaultInfo: ContactInfo = {
-        id: "1",
-        phone: "+972595864023",
-        whatsapp: "+972595864023",
-        email: "mmm460286@gmail.com",
-        address: "عمان، الأردن",
-        addressEn: "Amman, Jordan",
-        workingHours: "الأحد - الخميس: 8:00 صباحاً - 3:00 مساءً",
-        workingHoursEn: "Sunday - Thursday: 8:00 AM - 3:00 PM",
-        holidays: "الجمعة والسبت",
-        holidaysEn: "Friday and Saturday",
-        responsiblePerson: "أ. محمد أحمد",
-        responsiblePersonEn: "Mr. Mohammad Ahmad",
-        responsibleTitle: "مدير المدرسة",
-        responsibleTitleEn: "School Principal",
-      }
-
-      // Save to localStorage
-      saveToLocalStorage(COLLECTIONS.CONTACT_INFO, [defaultInfo])
-      return defaultInfo
+    const db = getDb()
+    const docRef = doc(db, FIREBASE_COLLECTIONS.SETTINGS, SETTINGS_DOCS.CONTACT)
+    const docSnap = await getDoc(docRef)
+    if (docSnap.exists()) {
+      return { id: "contact", ...docSnap.data() } as ContactInfo
     }
-
-    return snapshot[0] ?? null
+    return null
   } catch (error) {
-    console.error("Error getting contact info:", error)
+    console.error("[Firebase] Error getting contact info:", error)
     return null
   }
 }
 
 export async function updateContactInfo(data: ContactInfo): Promise<void> {
   try {
-    // Removed Firebase setDoc, using localStorage via storage-adapter
-    const contactInfo = getFromLocalStorage<ContactInfo[]>(COLLECTIONS.CONTACT_INFO, [])
-    const index = contactInfo.findIndex((info) => info.id === data.id)
-    if (index !== -1) {
-      contactInfo[index] = data
-    } else {
-      contactInfo.push(data)
-    }
-    saveToLocalStorage(COLLECTIONS.CONTACT_INFO, contactInfo)
+    const db = getDb()
+    await setDoc(doc(db, FIREBASE_COLLECTIONS.SETTINGS, SETTINGS_DOCS.CONTACT), data)
   } catch (error) {
-    console.error("Error updating contact info:", error)
+    console.error("[Firebase] Error updating contact info:", error)
     throw error
   }
 }
 
+// ============================================
+// ABOUT CONTENT (web_about_content)
+// ============================================
+
 export async function getAboutContent(): Promise<AboutContent | null> {
   try {
-    // Removed Firebase getDocs, using localStorage via storage-adapter
-    const snapshot = getFromLocalStorage<AboutContent[]>(COLLECTIONS.ABOUT_CONTENT, [])
-
-    if (snapshot.length === 0) {
-      const defaultContent: AboutContent = {
-        id: "1",
-        titleAr: "المدرسة النموذجية للتربية الخاصة",
-        titleEn: "Al Namothajia School for Special Education",
-        descriptionAr:
-          "مؤسسة تعليمية رائدة تأسست عام 1985، نقدم خدمات تعليمية وتأهيلية متميزة لذوي الاحتياجات الخاصة في بيئة آمنة ومحفزة تراعي الفروق الفردية وتطور قدرات كل طالب",
-        descriptionEn:
-          "A leading educational institution established in 1985, providing distinguished educational and rehabilitation services for people with special needs in a safe and stimulating environment",
-        image: "/modern-special-education-school-building-exterior.jpg",
-        features: [
-          {
-            titleAr: "رؤيتنا",
-            titleEn: "Our Vision",
-            descriptionAr: "أن نكون المؤسسة الرائدة في تقديم خدمات التربية الخاصة على مستوى المنطقة",
-            descriptionEn: "To be the leading institution in providing special education services in the region",
-          },
-          {
-            titleAr: "رسالتنا",
-            titleEn: "Our Mission",
-            descriptionAr: "تقديم برامج تعليمية وتأهيلية شاملة تمكن ذوي الاحتياجات الخاصة من تحقيق أقصى إمكانياتهم",
-            descriptionEn:
-              "Providing comprehensive educational and rehabilitation programs that enable people with special needs to achieve their full potential",
-          },
-          {
-            titleAr: "قيمنا",
-            titleEn: "Our Values",
-            descriptionAr: "الاحترام، التميز، الشمولية، والالتزام بأعلى معايير الجودة في التعليم والرعاية",
-            descriptionEn: "Respect, excellence, inclusivity, and commitment to the highest standards of quality",
-          },
-          {
-            titleAr: "فريقنا",
-            titleEn: "Our Team",
-            descriptionAr: "كادر متخصص ومؤهل من المعلمين والأخصائيين ذوي الخبرة في التربية الخاصة",
-            descriptionEn:
-              "Specialized and qualified staff of teachers and specialists experienced in special education",
-          },
-          {
-            titleAr: "مرافقنا",
-            titleEn: "Our Facilities",
-            descriptionAr: "بنية تحتية حديثة ومجهزة بأحدث التقنيات والوسائل التعليمية المتطورة",
-            descriptionEn: "Modern infrastructure equipped with the latest technologies and advanced educational tools",
-          },
-          {
-            titleAr: "شراكاتنا",
-            titleEn: "Our Partnerships",
-            descriptionAr: "تعاون مستمر مع المؤسسات المحلية والدولية لتطوير خدماتنا التعليمية",
-            descriptionEn: "Continuous collaboration with local and international institutions to develop our services",
-          },
-        ],
-      }
-
-      // Save to localStorage
-      saveToLocalStorage(COLLECTIONS.ABOUT_CONTENT, [defaultContent])
-      return defaultContent
-    }
-
-    return snapshot[0] ?? null
+    const contents = await getFromFirestore<AboutContent[]>(FIREBASE_COLLECTIONS.ABOUT_CONTENT, [])
+    return contents[0] || null
   } catch (error) {
-    console.error("Error getting about content:", error)
+    console.error("[Firebase] Error getting about content:", error)
     return null
   }
 }
 
 export async function updateAboutContent(data: AboutContent): Promise<void> {
   try {
-    // Removed Firebase setDoc, using localStorage via storage-adapter
-    const aboutContents = getFromLocalStorage<AboutContent[]>(COLLECTIONS.ABOUT_CONTENT, [])
-    const index = aboutContents.findIndex((content) => content.id === data.id)
-    if (index !== -1) {
-      aboutContents[index] = data
-    } else {
-      aboutContents.push(data)
-    }
-    saveToLocalStorage(COLLECTIONS.ABOUT_CONTENT, aboutContents)
+    await saveToFirestore(FIREBASE_COLLECTIONS.ABOUT_CONTENT, data.id, data)
   } catch (error) {
-    console.error("Error updating about content:", error)
+    console.error("[Firebase] Error updating about content:", error)
     throw error
   }
 }
 
+// ============================================
+// GALLERY IMAGES (web_gallery_images)
+// ============================================
+
 export async function getGalleryImages(): Promise<GalleryImage[]> {
   try {
-    // Removed Firebase getDocs, using localStorage via storage-adapter
-    const snapshot = getFromLocalStorage<GalleryImage[]>(COLLECTIONS.GALLERY_IMAGES, [])
-
-    if (snapshot.length === 0) {
-      const defaultImages: GalleryImage[] = [
-        {
-          id: "1",
-          image: "/modern-school-classroom-with-students.jpg",
-          titleAr: "الفصول الدراسية الحديثة",
-          titleEn: "Modern Classrooms",
-          descriptionAr: "فصول دراسية مجهزة بأحدث التقنيات التعليمية",
-          descriptionEn: "Classrooms equipped with the latest educational technologies",
-          category: "المرافق",
-          order: 1,
-        },
-        {
-          id: "2",
-          image: "/happy-students-learning-together.jpg",
-          titleAr: "طلاب سعداء",
-          titleEn: "Happy Students",
-          descriptionAr: "طلابنا يتعلمون في بيئة محفزة وداعمة",
-          descriptionEn: "Our students learn in a stimulating and supportive environment",
-          category: "الأنشطة",
-          order: 2,
-        },
-        {
-          id: "3",
-          image: "/modern-school-facilities-and-technology.jpg",
-          titleAr: "التقنيات المتطورة",
-          titleEn: "Advanced Technology",
-          descriptionAr: "نستخدم أحدث التقنيات في التعليم",
-          descriptionEn: "We use the latest technologies in education",
-          category: "المرافق",
-          order: 3,
-        },
-        {
-          id: "4",
-          image: "/students-in-science-lab.jpg",
-          titleAr: "مختبر العلوم",
-          titleEn: "Science Laboratory",
-          descriptionAr: "مختبرات علمية مجهزة للتجارب العملية",
-          descriptionEn: "Scientific laboratories equipped for practical experiments",
-          category: "المرافق",
-          order: 4,
-        },
-        {
-          id: "5",
-          image: "/school-library-with-books.jpg",
-          titleAr: "المكتبة المدرسية",
-          titleEn: "School Library",
-          descriptionAr: "مكتبة غنية بالكتب والمراجع التعليمية",
-          descriptionEn: "Library rich with books and educational references",
-          category: "المرافق",
-          order: 5,
-        },
-        {
-          id: "6",
-          image: "/art-class-students-painting.jpg",
-          titleAr: "حصة الفنون",
-          titleEn: "Art Class",
-          descriptionAr: "تنمية المواهب الفنية والإبداعية",
-          descriptionEn: "Developing artistic and creative talents",
-          category: "الأنشطة",
-          order: 6,
-        },
-        {
-          id: "7",
-          image: "/computer-lab-students.jpg",
-          titleAr: "مختبر الحاسوب",
-          titleEn: "Computer Lab",
-          descriptionAr: "تعليم المهارات التقنية والبرمجة",
-          descriptionEn: "Teaching technical skills and programming",
-          category: "المرافق",
-          order: 7,
-        },
-        {
-          id: "8",
-          image: "/gallery-hero-4.jpg",
-          titleAr: "الأنشطة الرياضية",
-          titleEn: "Sports Activities",
-          descriptionAr: "برامج رياضية متنوعة لتنمية المهارات البدنية",
-          descriptionEn: "Various sports programs to develop physical skills",
-          category: "الأنشطة",
-          order: 8,
-        },
-      ]
-
-      // Save to localStorage
-      saveToLocalStorage(COLLECTIONS.GALLERY_IMAGES, defaultImages)
-      return defaultImages
-    }
-
-    return snapshot.sort((a, b) => (a.order || 0) - (b.order || 0))
+    const images = await getFromFirestore<GalleryImage[]>(FIREBASE_COLLECTIONS.GALLERY_IMAGES, [])
+    return images.sort((a, b) => (a.order || 0) - (b.order || 0))
   } catch (error) {
-    console.error("Error getting gallery images:", error)
+    console.error("[Firebase] Error getting gallery images:", error)
     return []
   }
 }
 
 export async function saveGalleryImage(data: Omit<GalleryImage, "id">): Promise<void> {
   try {
+    const db = getDb()
     const newImage: GalleryImage = {
       ...data,
-      id: Date.now().toString(),
+      id: generateId(),
     }
-    // Removed Firebase addDoc, using localStorage via storage-adapter
-    const images = getFromLocalStorage<GalleryImage[]>(COLLECTIONS.GALLERY_IMAGES, [])
-    images.push(newImage)
-    saveToLocalStorage(COLLECTIONS.GALLERY_IMAGES, images)
+    await setDoc(doc(db, FIREBASE_COLLECTIONS.GALLERY_IMAGES, newImage.id), newImage)
   } catch (error) {
-    console.error("Error saving gallery image:", error)
+    console.error("[Firebase] Error saving gallery image:", error)
     throw error
   }
 }
 
 export async function updateGalleryImage(id: string, data: Partial<GalleryImage>): Promise<void> {
   try {
-    // Removed Firebase updateDoc, using localStorage via storage-adapter
-    const images = getFromLocalStorage<GalleryImage[]>(COLLECTIONS.GALLERY_IMAGES, [])
-    const index = images.findIndex((img) => img.id === id)
-    if (index !== -1) {
-      images[index] = { ...images[index], ...data }
-      saveToLocalStorage(COLLECTIONS.GALLERY_IMAGES, images)
-    }
+    await saveToFirestore(FIREBASE_COLLECTIONS.GALLERY_IMAGES, id, data)
   } catch (error) {
-    console.error("Error updating gallery image:", error)
+    console.error("[Firebase] Error updating gallery image:", error)
     throw error
   }
 }
 
 export async function deleteGalleryImage(id: string): Promise<void> {
   try {
-    // Removed Firebase deleteDoc, using localStorage via storage-adapter
-    const images = getFromLocalStorage<GalleryImage[]>(COLLECTIONS.GALLERY_IMAGES, [])
-    const filtered = images.filter((img) => img.id !== id)
-    saveToLocalStorage(COLLECTIONS.GALLERY_IMAGES, filtered)
+    await deleteFromFirestore(FIREBASE_COLLECTIONS.GALLERY_IMAGES, id)
   } catch (error) {
-    console.error("Error deleting gallery image:", error)
+    console.error("[Firebase] Error deleting gallery image:", error)
     throw error
   }
 }
 
-// Enhanced Employment Application functions (rewritten for Firebase)
+// ============================================
+// MEDIA LIBRARY (web_media)
+// ============================================
+
+export async function getMediaItems(): Promise<MediaItem[]> {
+  try {
+    const items = await getFromFirestore<MediaItem[]>(FIREBASE_COLLECTIONS.MEDIA, [])
+    return items.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
+  } catch (error) {
+    console.error("[Firebase] Error getting media items:", error)
+    return []
+  }
+}
+
+export async function getMediaItem(id: string): Promise<MediaItem | null> {
+  try {
+    return await getDocFromFirestore<MediaItem | null>(FIREBASE_COLLECTIONS.MEDIA, id, null)
+  } catch (error) {
+    console.error("[Firebase] Error getting media item:", error)
+    return null
+  }
+}
+
+export async function saveMediaItem(data: Omit<MediaItem, "id" | "uploadedAt">): Promise<MediaItem> {
+  try {
+    const db = getDb()
+    const newItem: MediaItem = {
+      ...data,
+      id: generateId(),
+      uploadedAt: new Date().toISOString(),
+    }
+    await setDoc(doc(db, FIREBASE_COLLECTIONS.MEDIA, newItem.id), newItem)
+    return newItem
+  } catch (error) {
+    console.error("[Firebase] Error saving media item:", error)
+    throw error
+  }
+}
+
+export async function updateMediaItem(id: string, data: Partial<MediaItem>): Promise<void> {
+  try {
+    await saveToFirestore(FIREBASE_COLLECTIONS.MEDIA, id, data)
+  } catch (error) {
+    console.error("[Firebase] Error updating media item:", error)
+    throw error
+  }
+}
+
+export async function deleteMediaItem(id: string): Promise<void> {
+  try {
+    // First get the media item to get the file URL
+    const item = await getMediaItem(id)
+
+    // Delete from Firestore
+    await deleteFromFirestore(FIREBASE_COLLECTIONS.MEDIA, id)
+
+    // Delete file from Storage if it was an upload (not external URL)
+    if (item && item.source === "upload" && item.url) {
+      try {
+        await deleteFileFromStorage(item.url)
+      } catch (storageError) {
+        // Log but don't fail if storage deletion fails
+        console.error("[Firebase] Error deleting file from storage (item still removed from library):", storageError)
+      }
+    }
+  } catch (error) {
+    console.error("[Firebase] Error deleting media item:", error)
+    throw error
+  }
+}
+
+export async function getMediaByCategory(category: string): Promise<MediaItem[]> {
+  try {
+    const items = await getMediaItems()
+    return items.filter((item) => item.category === category)
+  } catch (error) {
+    console.error("[Firebase] Error getting media by category:", error)
+    return []
+  }
+}
+
+export async function searchMedia(query: string): Promise<MediaItem[]> {
+  try {
+    const items = await getMediaItems()
+    const lowerQuery = query.toLowerCase()
+    return items.filter(
+      (item) =>
+        item.originalName.toLowerCase().includes(lowerQuery) ||
+        item.titleAr?.toLowerCase().includes(lowerQuery) ||
+        item.titleEn?.toLowerCase().includes(lowerQuery) ||
+        item.descriptionAr?.toLowerCase().includes(lowerQuery) ||
+        item.descriptionEn?.toLowerCase().includes(lowerQuery) ||
+        item.category?.toLowerCase().includes(lowerQuery) ||
+        item.tags?.some((tag) => tag.toLowerCase().includes(lowerQuery))
+    )
+  } catch (error) {
+    console.error("[Firebase] Error searching media:", error)
+    return []
+  }
+}
+
+export async function getMediaCategories(): Promise<string[]> {
+  try {
+    const items = await getMediaItems()
+    const categories = new Set<string>()
+    items.forEach((item) => {
+      if (item.category) {
+        categories.add(item.category)
+      }
+    })
+    return Array.from(categories)
+  } catch (error) {
+    console.error("[Firebase] Error getting media categories:", error)
+    return []
+  }
+}
+
+// ============================================
+// ENHANCED EMPLOYMENT APPLICATIONS (web_enhanced_applications)
+// ============================================
+
 export async function saveEnhancedEmploymentApplication(
   data: Omit<EnhancedEmploymentApplication, "id" | "submittedAt" | "status">,
 ): Promise<EnhancedEmploymentApplication> {
   try {
+    const db = getDb()
     const newApplication: EnhancedEmploymentApplication = {
       ...data,
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      id: generateId(),
       submittedAt: new Date().toISOString(),
       status: "pending",
     }
-    // Removed Firebase setDoc, using localStorage via storage-adapter
-    const applications = getFromLocalStorage<EnhancedEmploymentApplication[]>(COLLECTIONS.ENHANCED_APPLICATIONS, [])
-    applications.push(newApplication)
-    saveToLocalStorage(COLLECTIONS.ENHANCED_APPLICATIONS, applications)
+    await setDoc(doc(db, FIREBASE_COLLECTIONS.ENHANCED_APPLICATIONS, newApplication.id), newApplication)
     return newApplication
   } catch (error) {
-    console.error("Error saving enhanced employment application:", error)
+    console.error("[Firebase] Error saving enhanced employment application:", error)
     throw error
   }
 }
 
 export async function getEnhancedEmploymentApplications(): Promise<EnhancedEmploymentApplication[]> {
   try {
-    // Removed Firebase getDocs, using localStorage via storage-adapter
-    return getFromLocalStorage<EnhancedEmploymentApplication[]>(COLLECTIONS.ENHANCED_APPLICATIONS, [])
+    return await getFromFirestore<EnhancedEmploymentApplication[]>(FIREBASE_COLLECTIONS.ENHANCED_APPLICATIONS, [])
   } catch (error) {
-    console.error("Error getting enhanced employment applications:", error)
+    console.error("[Firebase] Error getting enhanced employment applications:", error)
     return []
   }
 }
 
-// Existing local storage functions for EnhancedEmploymentApplication replaced with Firebase equivalents.
+export async function deleteEnhancedEmploymentApplication(id: string): Promise<void> {
+  try {
+    await deleteFromFirestore(FIREBASE_COLLECTIONS.ENHANCED_APPLICATIONS, id)
+  } catch (error) {
+    console.error("[Firebase] Error deleting enhanced employment application:", error)
+    throw error
+  }
+}
 
-// Service Request functions (rewritten for Firebase)
+export async function updateEnhancedEmploymentApplication(
+  id: string,
+  updates: Partial<EnhancedEmploymentApplication>,
+): Promise<void> {
+  try {
+    await saveToFirestore(FIREBASE_COLLECTIONS.ENHANCED_APPLICATIONS, id, updates)
+  } catch (error) {
+    console.error("[Firebase] Error updating enhanced employment application:", error)
+    throw error
+  }
+}
+
+// ============================================
+// SERVICE REQUESTS (web_service_requests)
+// ============================================
+
 export async function saveServiceRequest(
   data: Omit<ServiceRequest, "id" | "submittedAt" | "status">,
 ): Promise<ServiceRequest> {
   try {
+    const db = getDb()
     const newRequest: ServiceRequest = {
       ...data,
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      id: generateId(),
       submittedAt: new Date().toISOString(),
       status: "pending",
     }
-    // Removed Firebase setDoc, using localStorage via storage-adapter
-    const requests = getFromLocalStorage<ServiceRequest[]>(COLLECTIONS.SERVICE_REQUESTS, [])
-    requests.push(newRequest)
-    saveToLocalStorage(COLLECTIONS.SERVICE_REQUESTS, requests)
+    await setDoc(doc(db, FIREBASE_COLLECTIONS.SERVICE_REQUESTS, newRequest.id), newRequest)
     return newRequest
   } catch (error) {
-    console.error("Error saving service request:", error)
+    console.error("[Firebase] Error saving service request:", error)
     throw error
   }
 }
 
 export async function getServiceRequests(): Promise<ServiceRequest[]> {
   try {
-    // Removed Firebase getDocs, using localStorage via storage-adapter
-    return getFromLocalStorage<ServiceRequest[]>(COLLECTIONS.SERVICE_REQUESTS, [])
+    return await getFromFirestore<ServiceRequest[]>(FIREBASE_COLLECTIONS.SERVICE_REQUESTS, [])
   } catch (error) {
-    console.error("Error getting service requests:", error)
+    console.error("[Firebase] Error getting service requests:", error)
     return []
   }
 }
 
-// Existing local storage functions for ServiceRequest replaced with Firebase equivalents.
+export async function deleteServiceRequest(id: string): Promise<void> {
+  try {
+    await deleteFromFirestore(FIREBASE_COLLECTIONS.SERVICE_REQUESTS, id)
+  } catch (error) {
+    console.error("[Firebase] Error deleting service request:", error)
+    throw error
+  }
+}
+
+export async function updateServiceRequest(id: string, updates: Partial<ServiceRequest>): Promise<void> {
+  try {
+    await saveToFirestore(FIREBASE_COLLECTIONS.SERVICE_REQUESTS, id, updates)
+  } catch (error) {
+    console.error("[Firebase] Error updating service request:", error)
+    throw error
+  }
+}
+
+export async function updateServiceRequestStatus(id: string, status: ServiceRequest["status"]): Promise<void> {
+  try {
+    await saveToFirestore(FIREBASE_COLLECTIONS.SERVICE_REQUESTS, id, { status })
+  } catch (error) {
+    console.error("[Firebase] Error updating service request status:", error)
+    throw error
+  }
+}
+
+// ============================================
+// DEPARTMENT DATA (localStorage for complex structure)
+// ============================================
 
 export function getFullDepartmentsData(): DepartmentData[] {
   if (typeof window !== "undefined") {
@@ -1705,436 +1658,84 @@ export function getFullDepartmentsData(): DepartmentData[] {
     if (data) {
       return JSON.parse(data)
     }
-
-    // Default departments data
-    const defaultData: DepartmentData[] = [
-      {
-        id: "1",
-        slug: "medical",
-        icon: "Stethoscope",
-        titleAr: "القسم الطبي",
-        titleEn: "Medical Department",
-        color: "from-red-600 via-rose-600 to-pink-600",
-        welcomeAr: "مرحباً بكم في القسم الطبي - صحة طلابنا أولويتنا",
-        welcomeEn: "Welcome to Medical Department - Our Students' Health is Our Priority",
-        descriptionAr:
-          "يتميز القسم الطبي بكوادر طبية ذوي كفاءات عالية من أطباء وممرضين متواجدين على مدار الساعة، مع معدات طبية شاملة لجميع الحالات الطارئة واليومية، وسيارة إسعاف مجهزة بكامل لوازم الإسعافات الأولية.",
-        descriptionEn:
-          "The Medical Department features highly qualified medical staff of doctors and nurses available 24/7, with comprehensive medical equipment for all emergency and daily cases, and an ambulance equipped with complete first aid supplies.",
-        heroSlides: [
-          {
-            image: "/modern-medical-clinic-for-special-needs-school-wit.jpg",
-            titleAr: "العيادة الطبية",
-            titleEn: "Medical Clinic",
-            descriptionAr: "عيادة مجهزة بأحدث المعدات الطبية",
-            descriptionEn: "Clinic equipped with the latest medical equipment",
-          },
-          {
-            image: "/school-pharmacy-with-organized-medications-and-pha.jpg",
-            titleAr: "الصيدلية",
-            titleEn: "Pharmacy",
-            descriptionAr: "صيدلية شاملة لجميع احتياجات الطلاب الدوائية",
-            descriptionEn: "Comprehensive pharmacy for all students' medication needs",
-          },
-          {
-            image: "/medical-monitoring-room-with-nurse-caring-for-spec.jpg",
-            titleAr: "المتابعة الصحية",
-            titleEn: "Health Monitoring",
-            descriptionAr: "وحدة عناية مركزة للمتابعة الصحية على مدار الساعة",
-            descriptionEn: "Intensive care unit for 24/7 health monitoring",
-          },
-        ],
-        subsections: [
-          {
-            icon: "Stethoscope",
-            titleAr: "العيادة",
-            titleEn: "Clinic",
-            image: "/modern-medical-clinic-for-special-needs-school-wit.jpg",
-            descriptionAr:
-              "تتميز العيادة بقسم طبي مجهز بكوادر طبية ذوي كفاءات (أطباء وممرضين متواجدين على مدار الساعة)، وفيها معدات طبية شاملة لجميع الحالات الطارئة واليومية، ويتوفر فيها سيارة إسعاف مجهزة بكامل لوازم الإسعافات الأولية على مدار الساعة.",
-            descriptionEn:
-              "The clinic features a medical section equipped with qualified medical staff (doctors and nurses available 24/7), comprehensive medical equipment for all emergency and daily cases, and an ambulance equipped with complete first aid supplies available 24/7.",
-            branches: [],
-          },
-          {
-            icon: "Pill",
-            titleAr: "الصيدلية",
-            titleEn: "Pharmacy",
-            image: "/school-pharmacy-with-organized-medications-and-pha.jpg",
-            descriptionAr:
-              "تحتوي الصيدلية على جميع الأدوية التي يحتاجها الطلاب، مصنفة حسب اسم الطالب، ومحفوظة إلكترونياً.",
-            descriptionEn:
-              "The pharmacy contains all medications needed by students, classified by student name, and stored electronically.",
-            branches: [],
-          },
-          {
-            icon: "Activity",
-            titleAr: "المتابعة الصحية",
-            titleEn: "Health Monitoring",
-            image: "/medical-monitoring-room-with-nurse-caring-for-spec.jpg",
-            descriptionAr:
-              "تعتبر هذه الوحدة بمثابة العناية المركزة في المدرسة حيث يتم وضع الطلاب الذين يحتاجون للمتابعة والمراقبة الصحية على مدار الساعة بإشراف العيادة الطبية وكوادرها.",
-            descriptionEn:
-              "This unit serves as the intensive care unit in the school where students who need health monitoring and follow-up are placed 24/7 under the supervision of the medical clinic and its staff.",
-            branches: [],
-          },
-        ],
-      },
-      {
-        id: "2",
-        slug: "heart",
-        icon: "HeartPulse",
-        titleAr: "قلب المدرسة",
-        titleEn: "Heart of the School",
-        color: "from-pink-500 via-purple-500 to-indigo-500",
-        welcomeAr: "مرحباً بكم في قلب المدرسة - حيث يتجلى التميز والإبداع",
-        welcomeEn: "Welcome to the Heart of the School - Where Excellence and Creativity Shine",
-        descriptionAr:
-          "القسم الأساسي الذي يضم 14 قسماً متخصصاً يعملون بتكامل تام لتقديم خدمات تعليمية وتأهيلية شاملة لجميع الطلاب، مع التركيز على تنمية المهارات الفردية وتحقيق الأهداف التعليمية.",
-        descriptionEn:
-          "The core department comprising 14 specialized sections working in complete integration to provide comprehensive educational and rehabilitation services for all students, focusing on developing individual skills and achieving educational goals.",
-        heroSlides: [
-          {
-            image: "/professional-psychologist-conducting-assessment-wi.jpg",
-            titleAr: "التأهيل النفسي",
-            titleEn: "Psychological Rehabilitation",
-            descriptionAr: "دعم نفسي متخصص لتجاوز التحديات وتحقيق النمو الشخصي",
-            descriptionEn: "Specialized psychological support to overcome challenges and achieve personal growth",
-          },
-          {
-            image: "/special-education-teacher-assisting-student-in-cla.jpg",
-            titleAr: "التعليم المتخصص",
-            titleEn: "Specialized Education",
-            descriptionAr: "برامج تعليمية مصممة لتلبية الاحتياجات الفردية لكل طالب",
-            descriptionEn: "Educational programs designed to meet the individual needs of each student",
-          },
-          {
-            image: "/speech-therapist-working-with-child-on-articula.jpg",
-            titleAr: "علاج النطق",
-            titleEn: "Speech Therapy",
-            descriptionAr: "تحسين مهارات التواصل والنطق لدى الطلاب",
-            descriptionEn: "Improving communication and speech skills for students",
-          },
-        ],
-        subsections: [
-          {
-            icon: "Users",
-            titleAr: "فريق العمل",
-            titleEn: "Our Team",
-            image: "/team-of-special-education-professionals.jpg",
-            descriptionAr:
-              "نعتمد على فريق من الأخصائيين والمعلمين ذوي الخبرة العالية في مجال التربية الخاصة، ملتزمون بتقديم أفضل رعاية وتعليم.",
-            descriptionEn:
-              "We rely on a team of highly experienced specialists and teachers in the field of special education, committed to providing the best care and education.",
-            branches: [],
-          },
-          {
-            icon: "Brain",
-            titleAr: "التأهيل العصبي",
-            titleEn: "Neuro-Rehabilitation",
-            image: "/neuroscience-lab-equipment.jpg",
-            descriptionAr: "برامج تأهيلية متخصصة تعتمد على أحدث التقنيات لدعم التطور العصبي والحركي للطلاب.",
-            descriptionEn:
-              "Specialized rehabilitation programs utilizing the latest technologies to support students' neurodevelopment and motor skills.",
-            branches: [],
-          },
-          {
-            icon: "ChartSquare",
-            titleAr: "التقييم والتشخيص",
-            titleEn: "Assessment and Diagnosis",
-            image: "/professional-psychologist-conducting-assessment-wi.jpg",
-            descriptionAr: "نقدم تقييمات شاملة لتحديد احتياجات كل طالب ووضع خطط تعليمية وتأهيلية فردية.",
-            descriptionEn:
-              "We provide comprehensive assessments to identify each student's needs and develop individualized educational and rehabilitation plans.",
-            branches: [],
-          },
-        ],
-      },
-      {
-        id: "3",
-        slug: "housing",
-        icon: "Home",
-        titleAr: "السكن الداخلي",
-        titleEn: "Internal Housing",
-        color: "from-blue-400 via-cyan-500 to-teal-500",
-        welcomeAr: "مرحباً بكم في بيئة سكنية آمنة ومريحة",
-        welcomeEn: "Welcome to a Safe and Comfortable Residential Environment",
-        descriptionAr:
-          "نوفر بيئة سكنية آمنة ومريحة للطلاب، مجهزة بكافة وسائل الراحة والخدمات لضمان إقامة سعيدة وموفقة، مع إشراف دائم لضمان سلامتهم.",
-        descriptionEn:
-          "We provide a safe and comfortable residential environment for students, equipped with all amenities and services to ensure a happy and successful stay, with constant supervision to ensure their safety.",
-        heroSlides: [
-          {
-            image: "/comfortable-residential-apartment-for-special-need.jpg",
-            titleAr: "غرف مريحة",
-            titleEn: "Comfortable Rooms",
-            descriptionAr: "غرف مجهزة بالكامل لتوفير أقصى درجات الراحة",
-            descriptionEn: "Fully equipped rooms to provide maximum comfort",
-          },
-          {
-            image: "/school-dormitory-common-area-with-students-study.jpg",
-            titleAr: "مناطق مشتركة",
-            titleEn: "Common Areas",
-            descriptionAr: "مساحات اجتماعية مجهزة للدراسة والترفيه",
-            descriptionEn: "Social spaces equipped for study and recreation",
-          },
-          {
-            image: "/school-dining-hall-with-students-eating-meal.jpg",
-            titleAr: "قاعة الطعام",
-            titleEn: "Dining Hall",
-            descriptionAr: "وجبات صحية ومتوازنة تقدم في قاعة طعام مجهزة",
-            descriptionEn: "Healthy and balanced meals served in a well-equipped dining hall",
-          },
-        ],
-        subsections: [
-          {
-            icon: "Bed",
-            titleAr: "الغرف السكنية",
-            titleEn: "Residential Rooms",
-            image: "/comfortable-residential-apartment-for-special-need.jpg",
-            descriptionAr: "غرف مصممة لضمان الراحة والخصوصية، مجهزة بأثاث حديث، وتشمل خدمات النظافة الدورية.",
-            descriptionEn:
-              "Rooms designed to ensure comfort and privacy, equipped with modern furniture, and including regular cleaning services.",
-            branches: [],
-          },
-          {
-            icon: "Utensils",
-            titleAr: "خدمات الوجبات",
-            titleEn: "Meal Services",
-            image: "/school-dining-hall-with-students-eating-meal.jpg",
-            descriptionAr: "تقديم وجبات غذائية متوازنة وصحية، مع مراعاة الاحتياجات الغذائية الخاصة للطلاب.",
-            descriptionEn: "Providing balanced and healthy meals, taking into account students' special dietary needs.",
-            branches: [],
-          },
-          {
-            icon: "Users",
-            titleAr: "الإشراف والرعاية",
-            titleEn: "Supervision and Care",
-            image: "/caregiver-assisting-student-in-dormitory.jpg",
-            descriptionAr: "فريق إشراف متخصص يعمل على مدار الساعة لضمان سلامة الطلاب ورعايتهم.",
-            descriptionEn: "A specialized supervision team works around the clock to ensure students' safety and care.",
-            branches: [],
-          },
-        ],
-      },
-      {
-        id: "4",
-        slug: "activities",
-        icon: "PuzzlePiece",
-        titleAr: "الأنشطة اللامنهجية",
-        titleEn: "Extracurricular Activities",
-        color: "from-green-400 via-lime-500 to-yellow-500",
-        welcomeAr: "اكتشف عالم الإبداع والمرح معنا!",
-        welcomeEn: "Discover a World of Creativity and Fun with Us!",
-        descriptionAr:
-          "نؤمن بأهمية الأنشطة اللامنهجية في تنمية شخصية الطالب ومهاراته. نقدم مجموعة متنوعة من الأنشطة الرياضية والفنية والثقافية والترفيهية.",
-        descriptionEn:
-          "We believe in the importance of extracurricular activities in developing a student's personality and skills. We offer a variety of sports, artistic, cultural, and recreational activities.",
-        heroSlides: [
-          {
-            image: "/special-needs-students-on-educational-field-trip-w.jpg",
-            titleAr: "رحلات تعليمية",
-            titleEn: "Educational Trips",
-            descriptionAr: "استكشاف العالم وتعلم أشياء جديدة في رحلات ميدانية ممتعة",
-            descriptionEn: "Exploring the world and learning new things on fun field trips",
-          },
-          {
-            image: "/students-participating-in-school-play-or-musica.jpg",
-            titleAr: "أنشطة فنية",
-            titleEn: "Artistic Activities",
-            descriptionAr: "إطلاق العنان للإبداع من خلال الرسم والمسرح والموسيقى",
-            descriptionEn: "Unleashing creativity through drawing, theater, and music",
-          },
-          {
-            image: "/students-playing-sports-on-school-field.jpg",
-            titleAr: "أنشطة رياضية",
-            titleEn: "Sports Activities",
-            descriptionAr: "تنمية المهارات البدنية والروح الرياضية",
-            descriptionEn: "Developing physical skills and sportsmanship",
-          },
-        ],
-        subsections: [
-          {
-            icon: "Hiking",
-            titleAr: "الرحلات الميدانية",
-            titleEn: "Field Trips",
-            image: "/special-needs-students-on-educational-field-trip-w.jpg",
-            descriptionAr: "تنظيم رحلات دورية لأماكن مختلفة لتعزيز التعلم العملي واكتساب الخبرات الحياتية.",
-            descriptionEn:
-              "Organizing regular trips to various locations to enhance practical learning and gain life experiences.",
-            branches: [],
-          },
-          {
-            icon: "TheaterMasks",
-            titleAr: "الفنون المسرحية والموسيقية",
-            titleEn: "Performing Arts and Music",
-            image: "/students-participating-in-school-play-or-musica.jpg",
-            descriptionAr: "تنمية المهارات الإبداعية من خلال المشاركة في الأنشطة المسرحية والموسيقية.",
-            descriptionEn: "Developing creative skills through participation in theatrical and musical activities.",
-            branches: [],
-          },
-          {
-            icon: "Basketball",
-            titleAr: "الرياضة واللياقة البدنية",
-            titleEn: "Sports and Fitness",
-            image: "/students-playing-sports-on-school-field.jpg",
-            descriptionAr: "توفير بيئة رياضية محفزة لتنمية اللياقة البدنية والروح الرياضية لدى الطلاب.",
-            descriptionEn:
-              "Providing a stimulating sports environment to develop students' physical fitness and sportsmanship.",
-            branches: [],
-          },
-          {
-            icon: "Sparkles",
-            titleAr: "الأنشطة الثقافية والاجتماعية",
-            titleEn: "Cultural and Social Activities",
-            image: "/diverse-group-of-students-socializing-at-school.jpg",
-            descriptionAr: "برامج وأنشطة متنوعة تعزز الوعي الثقافي وتنمي المهارات الاجتماعية.",
-            descriptionEn: "Various programs and activities that enhance cultural awareness and develop social skills.",
-            branches: [],
-          },
-        ],
-      },
-    ]
-    localStorage.setItem("departmentContents", JSON.stringify(defaultData))
-    dispatchStorageChange("departmentContents", defaultData)
-    return defaultData
+    return []
   }
   return []
 }
 
+// ============================================
+// EMPLOYEES (web_employees)
+// ============================================
+
 export async function getEmployees(): Promise<Employee[]> {
   try {
-    const firestore = await loadFirestore()
-    if (!firestore) {
-      throw new Error("Firestore not available")
-    }
-    const { collection, getDocs } = firestore
-    const db = firestore.getDb()
-
-    console.log("[v0] Fetching employees from Firestore...")
-    const employeesRef = collection(db, firestore.FIREBASE_COLLECTIONS.EMPLOYEES)
-    const snapshot = await getDocs(employeesRef)
-
-    const employees = snapshot.docs.map((doc) => ({
-      ...doc.data(),
-      id: doc.id,
-    })) as Employee[]
-
-    console.log("[v0] Fetched", employees.length, "employees from Firestore")
+    console.log("[Firebase] Fetching employees from Firestore...")
+    const employees = await getFromFirestore<Employee[]>(FIREBASE_COLLECTIONS.EMPLOYEES, [])
+    console.log("[Firebase] Fetched", employees.length, "employees from Firestore")
     return employees
   } catch (error) {
-    console.error("[v0] Error getting employees from Firestore, falling back to localStorage:", error)
-    // Fallback to localStorage if Firebase fails
-    const snapshot = getFromLocalStorage<Employee[]>(COLLECTIONS.EMPLOYEES, [])
-    return snapshot
+    console.error("[Firebase] Error getting employees:", error)
+    return []
   }
 }
 
 export async function getEmployeeById(id: string): Promise<Employee | null> {
   try {
-    // Removed Firebase getDoc, using localStorage via storage-adapter
-    const employees = getFromLocalStorage<Employee[]>(COLLECTIONS.EMPLOYEES, [])
-    const employee = employees.find((emp) => emp.id === id)
-    return employee || null
+    return await getDocFromFirestore<Employee | null>(FIREBASE_COLLECTIONS.EMPLOYEES, id, null)
   } catch (error) {
-    console.error("Error getting employee:", error)
+    console.error("[Firebase] Error getting employee by ID:", error)
     return null
   }
 }
 
 export async function getEmployeeByEmail(email: string): Promise<Employee | null> {
   try {
-    console.log("[v0] Fetching employee by email:", email)
+    console.log("[Firebase] Fetching employee by email:", email)
     const employees = await getEmployees()
     const employee = employees.find((emp) => emp.email === email)
-
     if (employee) {
-      console.log("[v0] Employee found:", employee.fullName)
+      console.log("[Firebase] Employee found:", employee.fullName)
     } else {
-      console.log("[v0] No employee found with email:", email)
+      console.log("[Firebase] No employee found with email:", email)
     }
-
     return employee || null
   } catch (error) {
-    console.error("[v0] Error getting employee by email:", error)
+    console.error("[Firebase] Error getting employee by email:", error)
     return null
   }
 }
 
 export async function updateEmployee(id: string, updates: Partial<Employee>): Promise<void> {
   try {
-    const firestore = await loadFirestore()
-    if (!firestore) {
-      throw new Error("Firestore not available")
-    }
-    const { doc, updateDoc } = firestore
-    const db = firestore.getDb()
-
-    console.log("[v0] Updating employee in Firestore:", id)
-    const employeeRef = doc(db, firestore.FIREBASE_COLLECTIONS.EMPLOYEES, id)
-    await updateDoc(employeeRef, updates)
-    console.log("[v0] Employee updated successfully")
+    console.log("[Firebase] Updating employee:", id)
+    await saveToFirestore(FIREBASE_COLLECTIONS.EMPLOYEES, id, updates)
+    console.log("[Firebase] Employee updated successfully")
   } catch (error) {
-    console.error("[v0] Error updating employee in Firestore, falling back to localStorage:", error)
-    // Fallback to localStorage
-    const employees = getFromLocalStorage<Employee[]>(COLLECTIONS.EMPLOYEES, [])
-    const index = employees.findIndex((emp) => emp.id === id)
-
-    if (index !== -1) {
-      employees[index] = { ...employees[index], ...updates }
-      saveToLocalStorage(COLLECTIONS.EMPLOYEES, employees)
-    }
+    console.error("[Firebase] Error updating employee:", error)
+    throw error
   }
 }
 
 export async function saveEmployee(employee: Employee): Promise<void> {
   try {
-    const firestore = await loadFirestore()
-    if (!firestore) {
-      throw new Error("Firestore not available")
-    }
-    const { doc, setDoc } = firestore
-    const db = firestore.getDb()
-
-    console.log("[v0] Saving employee to Firestore:", employee.email)
-    const employeeRef = doc(db, firestore.FIREBASE_COLLECTIONS.EMPLOYEES, employee.id)
-    await setDoc(employeeRef, employee)
-    console.log("[v0] Employee saved successfully")
+    console.log("[Firebase] Saving employee:", employee.email)
+    const db = getDb()
+    await setDoc(doc(db, FIREBASE_COLLECTIONS.EMPLOYEES, employee.id), employee)
+    console.log("[Firebase] Employee saved successfully")
   } catch (error) {
-    console.error("[v0] Error saving employee to Firestore, falling back to localStorage:", error)
-    // Fallback to localStorage
-    const employees = getFromLocalStorage<Employee[]>(COLLECTIONS.EMPLOYEES, [])
-    const index = employees.findIndex((emp) => emp.id === employee.id)
-
-    if (index !== -1) {
-      employees[index] = employee
-    } else {
-      employees.push(employee)
-    }
-
-    saveToLocalStorage(COLLECTIONS.EMPLOYEES, employees)
+    console.error("[Firebase] Error saving employee:", error)
+    throw error
   }
 }
 
 export async function deleteEmployee(id: string): Promise<void> {
   try {
-    const firestore = await loadFirestore()
-    if (!firestore) {
-      throw new Error("Firestore not available")
-    }
-    const { doc, deleteDoc } = firestore
-    const db = firestore.getDb()
-
-    console.log("[v0] Deleting employee from Firestore:", id)
-    const employeeRef = doc(db, firestore.FIREBASE_COLLECTIONS.EMPLOYEES, id)
-    await deleteDoc(employeeRef)
-    console.log("[v0] Employee deleted successfully")
+    console.log("[Firebase] Deleting employee:", id)
+    await deleteFromFirestore(FIREBASE_COLLECTIONS.EMPLOYEES, id)
+    console.log("[Firebase] Employee deleted successfully")
   } catch (error) {
-    console.error("[v0] Error deleting employee from Firestore, falling back to localStorage:", error)
-    // Fallback to localStorage
-    const employees = getFromLocalStorage<Employee[]>(COLLECTIONS.EMPLOYEES, [])
-    const filtered = employees.filter((emp) => emp.id !== id)
-    saveToLocalStorage(COLLECTIONS.EMPLOYEES, filtered)
+    console.error("[Firebase] Error deleting employee:", error)
+    throw error
   }
 }
 
@@ -2142,17 +1743,14 @@ export async function addEmployee(employee: Omit<Employee, "id" | "createdAt">):
   try {
     const newEmployee: Employee = {
       ...employee,
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      id: generateId(),
       createdAt: new Date().toISOString(),
     }
-
-    // Removed Firebase setDoc, using localStorage via storage-adapter
-    const employees = getFromLocalStorage<Employee[]>(COLLECTIONS.EMPLOYEES, [])
-    employees.push(newEmployee)
-    saveToLocalStorage(COLLECTIONS.EMPLOYEES, employees)
+    console.log("[Firebase] Adding new employee:", newEmployee.email)
+    await saveEmployee(newEmployee)
     return newEmployee
   } catch (error) {
-    console.error("Error adding employee:", error)
+    console.error("[Firebase] Error adding employee:", error)
     throw error
   }
 }
@@ -2161,38 +1759,27 @@ export async function authenticateEmployee(email: string, password: string): Pro
   try {
     const employees = await getEmployees()
     const employee = employees.find((emp) => emp.email === email && emp.password === password && emp.isActive)
-
     if (employee) {
-      // Update last login
-      await updateEmployee(employee.id, {
-        lastLogin: new Date().toISOString(),
-      })
+      await updateEmployee(employee.id, { lastLogin: new Date().toISOString() })
       return employee
     }
-
     return null
   } catch (error) {
-    console.error("Error authenticating employee:", error)
+    console.error("[Firebase] Error authenticating employee:", error)
     return null
   }
 }
 
 export async function hasUsers(): Promise<boolean> {
   try {
-    const firestore = await loadFirestore()
-    if (!firestore) {
-      throw new Error("Firestore not available")
-    }
-    const { getDocs, collection } = firestore
-    const db = firestore.getDb()
-    const employeesRef = collection(db, firestore.FIREBASE_COLLECTIONS.EMPLOYEES)
-    const snapshot = await getDocs(employeesRef)
-    return !snapshot.empty
+    console.log("[Firebase] Checking if users exist...")
+    const employees = await getEmployees()
+    const hasFirebaseUsers = employees.length > 0
+    console.log("[Firebase] Users found:", hasFirebaseUsers)
+    return hasFirebaseUsers
   } catch (error) {
-    console.error("Error checking users:", error)
-    // Fallback to localStorage if Firebase fails
-    const employees = getFromLocalStorage<Employee[]>(COLLECTIONS.EMPLOYEES, [])
-    return employees.length > 0
+    console.error("[Firebase] Error checking users:", error)
+    return false
   }
 }
 
@@ -2202,31 +1789,16 @@ export async function createFirstAdmin(
   password: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const firestore = await loadFirestore()
-    const firebase = await loadFirebaseAuth()
-    if (!firestore || !firebase) {
-      throw new Error("Firebase not available")
-    }
-
-    const { createUserWithEmailAndPassword } = firebase
-    const { setDoc, doc } = firestore
-    const auth = firebase.getFirebaseAuth()
-    const db = firestore.getDb()
-
-    // Create user in Firebase Authentication
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password)
-    const userId = userCredential.user.uid
-
-    // Create employee record in Firestore web_employees collection
+    console.log("[Firebase] Creating first admin...")
     const newEmployee: Employee = {
-      id: userId,
+      id: generateId(),
       fullName,
       email,
       phone: "",
       position: "System Administrator",
       department: "Administration",
       role: "admin",
-      password: "", // Don't store password in Firestore, Firebase Auth handles it
+      password: password,
       permissions: {
         canViewApplications: true,
         canEditApplications: true,
@@ -2252,157 +1824,156 @@ export async function createFirstAdmin(
       createdAt: new Date().toISOString(),
       isActive: true,
     }
-
-    const employeeRef = doc(db, firestore.FIREBASE_COLLECTIONS.EMPLOYEES, userId)
-    await setDoc(employeeRef, newEmployee)
-
+    await saveEmployee(newEmployee)
+    console.log("[Firebase] First admin created successfully")
     return { success: true }
   } catch (error: any) {
-    console.error("Error creating first admin:", error)
-    return {
-      success: false,
-      error: error.message || "Failed to create admin user",
+    console.error("[Firebase] Error creating first admin:", error)
+    return { success: false, error: error.message || "Failed to create admin user" }
+  }
+}
+
+// ============================================
+// DYNAMIC PAGES (web_dynamic_pages)
+// ============================================
+
+// Helper function to recursively clean data for Firestore
+// - Removes undefined values
+// - Converts nested arrays to objects with numeric keys (Firestore doesn't support nested arrays)
+function cleanForFirestore<T>(obj: T): T {
+  if (obj === null || obj === undefined) {
+    return obj
+  }
+  if (Array.isArray(obj)) {
+    // Check if this array contains other arrays (nested array)
+    const hasNestedArray = obj.some(item => Array.isArray(item))
+    if (hasNestedArray) {
+      // Convert array of arrays to object with __isNestedArray marker
+      const converted: Record<string, any> = { __isNestedArray: true }
+      obj.forEach((item, index) => {
+        converted[index.toString()] = cleanForFirestore(item)
+      })
+      return converted as T
     }
+    // Regular array - just clean each item
+    return obj.map(item => cleanForFirestore(item)) as T
+  }
+  if (typeof obj === "object") {
+    const cleaned: Record<string, any> = {}
+    for (const [key, value] of Object.entries(obj as Record<string, any>)) {
+      if (value !== undefined) {
+        cleaned[key] = cleanForFirestore(value)
+      }
+    }
+    return cleaned as T
+  }
+  return obj
+}
+
+// Helper function to restore nested arrays from Firestore format
+function restoreFromFirestore<T>(obj: T): T {
+  if (obj === null || obj === undefined) {
+    return obj
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(item => restoreFromFirestore(item)) as T
+  }
+  if (typeof obj === "object") {
+    const record = obj as Record<string, any>
+    // Check if this is a converted nested array
+    if (record.__isNestedArray === true) {
+      const restored: any[] = []
+      for (const [key, value] of Object.entries(record)) {
+        if (key !== "__isNestedArray") {
+          const index = parseInt(key, 10)
+          if (!isNaN(index)) {
+            restored[index] = restoreFromFirestore(value)
+          }
+        }
+      }
+      return restored as T
+    }
+    // Regular object - restore each property
+    const cleaned: Record<string, any> = {}
+    for (const [key, value] of Object.entries(record)) {
+      cleaned[key] = restoreFromFirestore(value)
+    }
+    return cleaned as T
+  }
+  return obj
+}
+
+export async function getDynamicPage(id: string): Promise<DynamicPage | null> {
+  try {
+    console.log("[Firebase] Fetching dynamic page:", id)
+    const page = await getDocFromFirestore<DynamicPage | null>(FIREBASE_COLLECTIONS.DYNAMIC_PAGES, id, null)
+    // Restore nested arrays that were converted for Firestore storage
+    return page ? restoreFromFirestore(page) : null
+  } catch (error) {
+    console.error("[Firebase] Error getting dynamic page:", error)
+    return null
   }
 }
 
 export async function getDynamicPages(): Promise<DynamicPage[]> {
-  console.log("[v0] Attempting to fetch dynamic pages from Firebase...")
   try {
-    const firestore = await loadFirestore()
-    if (!firestore) {
-      console.log("[v0] Firestore not available, using localStorage fallback")
-      throw new Error("Firestore not available")
-    }
-
-    console.log("[v0] Firestore loaded, fetching from collection:", COLLECTIONS.PAGES)
-    const { collection, getDocs } = firestore
-    const db = firestore.getDb()
-    const pagesCollection = collection(db, COLLECTIONS.PAGES)
-    const snapshot = await getDocs(pagesCollection)
-
-    const pages: DynamicPage[] = []
-    snapshot.forEach((doc) => {
-      // The data() method returns the data for the document.
-      // We need to ensure it conforms to DynamicPage interface.
-      pages.push(doc.data() as DynamicPage)
-    })
-
-    console.log("[v0] Fetched", pages.length, "pages from Firestore")
-    return pages
+    console.log("[Firebase] Fetching dynamic pages...")
+    const pages = await getFromFirestore<DynamicPage[]>(FIREBASE_COLLECTIONS.DYNAMIC_PAGES, [])
+    console.log("[Firebase] Fetched", pages.length, "pages")
+    // Restore nested arrays that were converted for Firestore storage
+    return pages.map(page => restoreFromFirestore(page))
   } catch (error) {
-    console.error("[v0] Error fetching dynamic pages from Firestore:", error)
-    console.log("[v0] Falling back to localStorage...")
-    // Fallback to localStorage
-    const pages = getFromLocalStorage<DynamicPage[]>(COLLECTIONS.PAGES, [])
-    console.log("[v0] Fetched", pages.length, "pages from localStorage")
-    return pages
+    console.error("[Firebase] Error getting dynamic pages:", error)
+    return []
   }
 }
 
 export async function saveDynamicPage(page: Omit<DynamicPage, "id" | "createdAt" | "updatedAt">): Promise<DynamicPage> {
-  console.log("[v0] Attempting to save dynamic page to Firebase...")
   try {
+    const db = getDb()
     const newPage: DynamicPage = {
       ...page,
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      id: generateId(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }
-
-    const firestore = await loadFirestore()
-    if (!firestore) {
-      console.log("[v0] Firestore not available, using localStorage fallback")
-      throw new Error("Firestore not available")
-    }
-
-    console.log("[v0] Firestore loaded, saving to collection:", COLLECTIONS.PAGES)
-    const { doc, setDoc } = firestore
-    const db = firestore.getDb()
-    const docRef = doc(db, COLLECTIONS.PAGES, newPage.id)
-    await setDoc(docRef, newPage)
-
-    console.log("[v0] Dynamic page saved to Firestore successfully:", newPage.id)
+    // Clean data for Firestore (remove undefined, handle nested arrays)
+    const cleanedPage = cleanForFirestore(newPage)
+    console.log("[Firebase] Saving dynamic page...")
+    await setDoc(doc(db, FIREBASE_COLLECTIONS.DYNAMIC_PAGES, newPage.id), cleanedPage)
+    console.log("[Firebase] Dynamic page saved:", newPage.id)
+    // Return the original page structure (not the cleaned version with markers)
     return newPage
   } catch (error) {
-    console.error("[v0] Error saving dynamic page to Firestore:", error)
-    console.log("[v0] Falling back to localStorage...")
-    // Fallback to localStorage
-    const pages = getFromLocalStorage<DynamicPage[]>(COLLECTIONS.PAGES, [])
-    const newPage: DynamicPage = {
-      ...page,
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
-    pages.push(newPage)
-    saveToLocalStorage(COLLECTIONS.PAGES, pages)
-    console.log("[v0] Dynamic page saved to localStorage:", newPage.id)
-    return newPage
+    console.error("[Firebase] Error saving dynamic page:", error)
+    throw error
   }
 }
 
 export async function updateDynamicPage(id: string, updates: Partial<DynamicPage>): Promise<void> {
-  console.log("[v0] Attempting to update dynamic page in Firebase:", id)
   try {
-    const firestore = await loadFirestore()
-    if (!firestore) {
-      console.log("[v0] Firestore not available, using localStorage fallback")
-      throw new Error("Firestore not available")
-    }
-
-    console.log("[v0] Firestore loaded, updating in collection:", COLLECTIONS.PAGES)
-    const { doc, updateDoc } = firestore
-    const db = firestore.getDb()
-    const docRef = doc(db, COLLECTIONS.PAGES, id)
-    await updateDoc(docRef, {
+    console.log("[Firebase] Updating dynamic page:", id)
+    // Clean data for Firestore (remove undefined, handle nested arrays)
+    const cleanedUpdates = cleanForFirestore({
       ...updates,
       updatedAt: new Date().toISOString(),
     })
-
-    console.log("[v0] Dynamic page updated in Firestore successfully:", id)
+    await saveToFirestore(FIREBASE_COLLECTIONS.DYNAMIC_PAGES, id, cleanedUpdates)
+    console.log("[Firebase] Dynamic page updated:", id)
   } catch (error) {
-    console.error("[v0] Error updating dynamic page in Firestore:", error)
-    console.log("[v0] Falling back to localStorage...")
-    // Fallback to localStorage
-    const pages = getFromLocalStorage<DynamicPage[]>(COLLECTIONS.PAGES, [])
-    const index = pages.findIndex((p) => p.id === id)
-    if (index !== -1) {
-      pages[index] = {
-        ...pages[index],
-        ...updates,
-        updatedAt: new Date().toISOString(),
-      }
-      saveToLocalStorage(COLLECTIONS.PAGES, pages)
-      console.log("[v0] Dynamic page updated in localStorage:", id)
-    }
+    console.error("[Firebase] Error updating dynamic page:", error)
+    throw error
   }
 }
 
 export async function deleteDynamicPage(id: string): Promise<void> {
-  console.log("[v0] Attempting to delete dynamic page from Firebase:", id)
   try {
-    const firestore = await loadFirestore()
-    if (!firestore) {
-      console.log("[v0] Firestore not available, using localStorage fallback")
-      throw new Error("Firestore not available")
-    }
-
-    console.log("[v0] Firestore loaded, deleting from collection:", COLLECTIONS.PAGES)
-    const { doc, deleteDoc } = firestore
-    const db = firestore.getDb()
-    const docRef = doc(db, COLLECTIONS.PAGES, id)
-    await deleteDoc(docRef)
-
-    console.log("[v0] Dynamic page deleted from Firestore successfully:", id)
+    console.log("[Firebase] Deleting dynamic page:", id)
+    await deleteFromFirestore(FIREBASE_COLLECTIONS.DYNAMIC_PAGES, id)
+    console.log("[Firebase] Dynamic page deleted:", id)
   } catch (error) {
-    console.error("[v0] Error deleting dynamic page from Firestore:", error)
-    console.log("[v0] Falling back to localStorage...")
-    // Fallback to localStorage
-    const pages = getFromLocalStorage<DynamicPage[]>(COLLECTIONS.PAGES, [])
-    const filteredPages = pages.filter((p) => p.id !== id)
-    saveToLocalStorage(COLLECTIONS.PAGES, filteredPages)
-    console.log("[v0] Dynamic page deleted from localStorage:", id)
+    console.error("[Firebase] Error deleting dynamic page:", error)
+    throw error
   }
 }
 
@@ -2413,9 +1984,7 @@ export async function createPage(pageData: {
   status: "draft" | "published"
   blocks: PageBlock[]
 }): Promise<DynamicPage> {
-  console.log("[v0] Creating new page from template...")
-
-  // Convert the page builder format to DynamicPage format
+  console.log("[Firebase] Creating new page from template...")
   const newPage: Omit<DynamicPage, "id" | "createdAt" | "updatedAt"> = {
     slug: pageData.slug,
     titleAr: pageData.language === "ar" ? pageData.title : "",
@@ -2426,283 +1995,308 @@ export async function createPage(pageData: {
     contentEn: "",
     blocks: pageData.blocks,
     isPublished: pageData.status === "published",
+    isHome: false,
   }
-
   return await saveDynamicPage(newPage)
 }
 
-// Activity logging functions
-export interface Activity {
-  id: string
-  employeeId: string
-  employeeName: string
-  action: string
-  actionType: "create" | "update" | "delete" | "approve" | "reject" | "view"
-  targetType: "application" | "message" | "testimonial" | "job" | "content" | "employee"
-  targetId: string
-  details: string
-  timestamp: string
+export async function getDynamicPageBySlug(slug: string): Promise<DynamicPage | null> {
+  try {
+    console.log("[Firebase] Fetching page by slug:", slug)
+    const pages = await getDynamicPages()
+    const page = pages.find((p) => p.slug === slug)
+    if (page) {
+      console.log("[Firebase] Found page:", page.titleAr)
+    } else {
+      console.log("[Firebase] No page found with slug:", slug)
+    }
+    return page || null
+  } catch (error) {
+    console.error("[Firebase] Error getting page by slug:", error)
+    return null
+  }
 }
+
+export async function getLocalizedPageBySlug(slug: string, lang: "ar" | "en"): Promise<LocalizedPage | null> {
+  const page = await getDynamicPageBySlug(slug)
+  if (!page) return null
+
+  const isAr = lang === "ar"
+  let blocks = isAr ? page.blocksAr : page.blocksEn
+  if (!blocks || blocks.length === 0) {
+    blocks = isAr ? page.blocksEn : page.blocksAr
+  }
+  if (!blocks || blocks.length === 0) {
+    blocks = page.blocks
+  }
+
+  return {
+    id: page.id,
+    slug: page.slug,
+    title: isAr ? (page.titleAr || page.titleEn) : (page.titleEn || page.titleAr),
+    description: isAr ? (page.descriptionAr || page.descriptionEn) : (page.descriptionEn || page.descriptionAr),
+    content: isAr ? (page.contentAr || page.contentEn) : (page.contentEn || page.contentAr),
+    blocks: blocks || [],
+    image: page.image,
+    seoDescription: isAr ? page.seoDescriptionAr : page.seoDescriptionEn,
+    keywords: isAr ? page.keywordsAr : page.keywordsEn,
+    featuredImage: page.featuredImage,
+    isPublished: page.isPublished,
+    createdAt: page.createdAt,
+    updatedAt: page.updatedAt,
+    lang: lang,
+    dir: isAr ? "rtl" : "ltr"
+  }
+}
+
+export async function getHomePage(lang: "ar" | "en"): Promise<LocalizedPage | null> {
+  const pages = await getDynamicPages()
+  const homePage = pages.find(p => p.isHome === true && p.isPublished)
+  if (!homePage) {
+    console.log("[Firebase] No published home page found")
+    return null
+  }
+  return getLocalizedPageBySlug(homePage.slug, lang)
+}
+
+export function isPageHomepage(slug: string): boolean {
+  // This is a sync function, we'll need to use localStorage cache
+  if (typeof window !== "undefined") {
+    const cachedPages = localStorage.getItem("cachedPages")
+    if (cachedPages) {
+      const pages = JSON.parse(cachedPages) as DynamicPage[]
+      const page = pages.find(p => p.slug === slug)
+      return page?.isHome === true
+    }
+  }
+  return false
+}
+
+// ============================================
+// ACTIVITIES (web_activities)
+// ============================================
 
 export async function getActivities(limit = 50): Promise<Activity[]> {
   try {
-    const firestore = await loadFirestore()
-    if (!firestore) {
-      throw new Error("Firestore not available")
-    }
-    const { collection, query, orderBy, getDocs } = firestore
-    const db = firestore.getDb()
-    const activitiesRef = collection(db, firestore.FIREBASE_COLLECTIONS.ACTIVITIES)
-    const q = query(activitiesRef, orderBy("timestamp", "desc"))
-    const snapshot = await getDocs(q)
-
-    const activities: Activity[] = []
-    snapshot.forEach((doc) => {
-      activities.push({ id: doc.id, ...doc.data() } as Activity)
-    })
-
-    return activities.slice(0, limit)
+    console.log("[Firebase] Fetching activities...")
+    const activities = await getFromFirestore<Activity[]>(FIREBASE_COLLECTIONS.ACTIVITIES, [])
+    return activities
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, limit)
   } catch (error) {
-    console.error("Error getting activities:", error)
-    // Fallback to localStorage
-    const activities = getFromLocalStorage<Activity[]>(COLLECTIONS.ACTIVITIES, [])
-    return activities.slice(0, limit)
+    console.error("[Firebase] Error getting activities:", error)
+    return []
   }
 }
 
 export async function logActivity(activity: Omit<Activity, "id" | "timestamp">): Promise<void> {
   try {
-    const firestore = await loadFirestore()
-    if (!firestore) {
-      throw new Error("Firestore not available")
+    console.log("[Firebase] Logging activity:", activity.action)
+    const db = getDb()
+    const newActivity: Activity = {
+      ...activity,
+      id: generateId(),
+      timestamp: new Date().toISOString(),
     }
-    const { collection, addDoc } = firestore
-    const db = firestore.getDb()
-    const activitiesRef = collection(db, firestore.FIREBASE_COLLECTIONS.ACTIVITIES)
-
-    await addDoc(activitiesRef, {
-      ...activity,
-      timestamp: new Date().toISOString(),
-    })
+    await setDoc(doc(db, FIREBASE_COLLECTIONS.ACTIVITIES, newActivity.id), newActivity)
   } catch (error) {
-    console.error("Error logging activity:", error)
-    // Fallback to localStorage
-    const activities = getFromLocalStorage<Activity[]>(COLLECTIONS.ACTIVITIES, [])
-    activities.unshift({
-      ...activity,
-      id: Date.now().toString(),
-      timestamp: new Date().toISOString(),
-    })
-    saveToLocalStorage(COLLECTIONS.ACTIVITIES, activities)
+    console.error("[Firebase] Error logging activity:", error)
   }
 }
 
-// Notification functions
-export interface Notification {
-  id: string
-  userId: string
-  title: string
-  message: string
-  type: "info" | "success" | "warning" | "error"
-  read: boolean
-  createdAt: string
-  link?: string
-}
+// ============================================
+// NOTIFICATIONS (web_notifications)
+// ============================================
 
 export async function getNotifications(userId: string): Promise<Notification[]> {
   try {
-    // Removed Firebase getDocs, using localStorage via storage-adapter
-    const notifications = getFromLocalStorage<Notification[]>("web_notifications", [])
-    const userNotifications = notifications.filter((n) => n.userId === userId)
-    // Sorting by createdAt in descending order
-    userNotifications.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    return userNotifications
+    const notifications = await getFromFirestore<Notification[]>(FIREBASE_COLLECTIONS.NOTIFICATIONS, [])
+    return notifications
+      .filter((n) => n.userId === userId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
   } catch (error) {
-    console.error("Error getting notifications:", error)
+    console.error("[Firebase] Error getting notifications:", error)
     return []
   }
 }
 
 export async function getUnreadNotifications(userId: string): Promise<Notification[]> {
   try {
-    // Removed Firebase getDocs, using localStorage via storage-adapter
-    const notifications = getFromLocalStorage<Notification[]>("web_notifications", [])
-    return notifications.filter((n) => n.userId === userId && !n.read)
+    const notifications = await getNotifications(userId)
+    return notifications.filter((n) => !n.read)
   } catch (error) {
-    console.error("Error getting unread notifications:", error)
+    console.error("[Firebase] Error getting unread notifications:", error)
     return []
   }
 }
 
 export async function markNotificationAsRead(notificationId: string): Promise<void> {
   try {
-    // Removed Firebase updateDoc, using localStorage via storage-adapter
-    const notifications = getFromLocalStorage<Notification[]>("web_notifications", [])
-    const index = notifications.findIndex((n) => n.id === notificationId)
-    if (index !== -1) {
-      notifications[index].read = true
-      saveToLocalStorage("web_notifications", notifications)
-    }
+    await saveToFirestore(FIREBASE_COLLECTIONS.NOTIFICATIONS, notificationId, { read: true })
   } catch (error) {
-    console.error("Error marking notification as read:", error)
+    console.error("[Firebase] Error marking notification as read:", error)
   }
 }
 
 export async function markAllNotificationsAsRead(userId: string): Promise<void> {
   try {
-    // Removed Firebase batch update, using localStorage via storage-adapter
-    const notifications = getFromLocalStorage<Notification[]>("web_notifications", [])
-    const updatedNotifications = notifications.map((n) => (n.userId === userId && !n.read ? { ...n, read: true } : n))
-    saveToLocalStorage("web_notifications", updatedNotifications)
+    const notifications = await getNotifications(userId)
+    const db = getDb()
+    for (const notification of notifications) {
+      if (!notification.read) {
+        await setDoc(doc(db, FIREBASE_COLLECTIONS.NOTIFICATIONS, notification.id), { ...notification, read: true })
+      }
+    }
   } catch (error) {
-    console.error("Error marking all notifications as read:", error)
+    console.error("[Firebase] Error marking all notifications as read:", error)
   }
 }
 
-// Mock data loading function
+// ============================================
+// FORMS (web_forms)
+// ============================================
+
+export async function getForms(): Promise<Form[]> {
+  try {
+    return await getFromFirestore<Form[]>("web_forms", [])
+  } catch (error) {
+    console.error("[Firebase] Error getting forms:", error)
+    return []
+  }
+}
+
+export async function saveForm(form: Omit<Form, "id" | "createdAt" | "updatedAt">): Promise<Form> {
+  try {
+    const db = getDb()
+    const newForm: Form = {
+      ...form,
+      id: `form-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+    await setDoc(doc(db, "web_forms", newForm.id), newForm)
+    return newForm
+  } catch (error) {
+    console.error("[Firebase] Error saving form:", error)
+    throw error
+  }
+}
+
+export async function updateForm(id: string, updates: Partial<Omit<Form, "id" | "createdAt">>): Promise<void> {
+  try {
+    await saveToFirestore("web_forms", id, { ...updates, updatedAt: new Date().toISOString() })
+  } catch (error) {
+    console.error("[Firebase] Error updating form:", error)
+    throw error
+  }
+}
+
+export async function deleteForm(id: string): Promise<void> {
+  try {
+    await deleteFromFirestore("web_forms", id)
+    // Also delete all submissions for this form
+    const submissions = await getFormSubmissions(id)
+    for (const submission of submissions) {
+      await deleteFormSubmission(submission.id)
+    }
+  } catch (error) {
+    console.error("[Firebase] Error deleting form:", error)
+    throw error
+  }
+}
+
+// ============================================
+// FORM SUBMISSIONS (web_form_submissions)
+// ============================================
+
+export async function getFormSubmissions(formId?: string): Promise<FormSubmission[]> {
+  try {
+    const submissions = await getFromFirestore<FormSubmission[]>("web_form_submissions", [])
+    if (formId) {
+      return submissions.filter((s) => s.formId === formId)
+    }
+    return submissions
+  } catch (error) {
+    console.error("[Firebase] Error getting form submissions:", error)
+    return []
+  }
+}
+
+export async function saveFormSubmission(submission: Omit<FormSubmission, "id" | "submittedAt" | "status">): Promise<FormSubmission> {
+  try {
+    const db = getDb()
+    const newSubmission: FormSubmission = {
+      ...submission,
+      id: `submission-${Date.now()}`,
+      submittedAt: new Date().toISOString(),
+      status: "new",
+    }
+    await setDoc(doc(db, "web_form_submissions", newSubmission.id), newSubmission)
+    return newSubmission
+  } catch (error) {
+    console.error("[Firebase] Error saving form submission:", error)
+    throw error
+  }
+}
+
+export async function updateFormSubmission(id: string, updates: Partial<Omit<FormSubmission, "id" | "submittedAt">>): Promise<void> {
+  try {
+    await saveToFirestore("web_form_submissions", id, updates)
+  } catch (error) {
+    console.error("[Firebase] Error updating form submission:", error)
+    throw error
+  }
+}
+
+export async function deleteFormSubmission(id: string): Promise<void> {
+  try {
+    await deleteFromFirestore("web_form_submissions", id)
+  } catch (error) {
+    console.error("[Firebase] Error deleting form submission:", error)
+    throw error
+  }
+}
+
+// ============================================
+// MAINTENANCE SETTINGS
+// ============================================
+
+const DEFAULT_MAINTENANCE_SETTINGS: MaintenanceSettings = {
+  enabled: false,
+  titleAr: "الموقع تحت الصيانة",
+  titleEn: "Site Under Maintenance",
+  messageAr: "نقوم حالياً بإجراء بعض التحسينات. سنعود قريباً!",
+  messageEn: "We are currently making some improvements. We'll be back soon!",
+  showCountdown: false,
+  countdownDate: undefined,
+  showContactInfo: true,
+  contactEmail: "",
+  contactPhone: "",
+  showSocialLinks: true,
+  backgroundImage: "",
+  logoImage: "/logo.webp",
+  primaryColor: "#3b82f6",
+  secondaryColor: "#8b5cf6",
+}
+
+export function getMaintenanceSettings(): MaintenanceSettings {
+  return getFromLocalStorage<MaintenanceSettings>("maintenanceSettings", DEFAULT_MAINTENANCE_SETTINGS)
+}
+
+export function saveMaintenanceSettings(settings: MaintenanceSettings): void {
+  saveToLocalStorage("maintenanceSettings", settings)
+  dispatchStorageChange("maintenanceSettings", settings)
+}
+
+export function isMaintenanceMode(): boolean {
+  const settings = getMaintenanceSettings()
+  return settings.enabled
+}
+
+// ============================================
+// MOCK DATA (deprecated)
+// ============================================
+
 export async function loadMockupData(): Promise<void> {
-  try {
-    console.log("[v0] Loading real data from Firebase...")
-
-    // Initialize Firebase with all default data
-    // Removed Firebase initialization, as it's no longer used
-    // const { initializeFirebaseData } = await import("@/lib/firebase-client")
-    // await initializeFirebaseData()
-
-    console.log("[v0] Successfully loaded data from Firebase")
-  } catch (error) {
-    console.error("Error loading data from Firebase:", error)
-    throw error
-  }
-}
-
-// Enhanced Employment Application functions (rewritten for Firebase)
-export async function deleteEnhancedEmploymentApplication(id: string): Promise<void> {
-  try {
-    // Removed Firebase deleteDoc, using localStorage via storage-adapter
-    const applications = getFromLocalStorage<EnhancedEmploymentApplication[]>(COLLECTIONS.ENHANCED_APPLICATIONS, [])
-    const filtered = applications.filter((app) => app.id !== id)
-    saveToLocalStorage(COLLECTIONS.ENHANCED_APPLICATIONS, filtered)
-  } catch (error) {
-    console.error("Error deleting enhanced employment application:", error)
-    throw error
-  }
-}
-
-export async function updateEnhancedEmploymentApplication(
-  id: string,
-  updates: Partial<EnhancedEmploymentApplication>,
-): Promise<void> {
-  try {
-    // Removed Firebase updateDoc, using localStorage via storage-adapter
-    const applications = getFromLocalStorage<EnhancedEmploymentApplication[]>(COLLECTIONS.ENHANCED_APPLICATIONS, [])
-    const index = applications.findIndex((app) => app.id === id)
-    if (index !== -1) {
-      applications[index] = { ...applications[index], ...updates }
-      saveToLocalStorage(COLLECTIONS.ENHANCED_APPLICATIONS, applications)
-    }
-  } catch (error) {
-    console.error("Error updating enhanced employment application:", error)
-    throw error
-  }
-}
-
-// Service Request functions (rewritten for Firebase)
-export async function deleteServiceRequest(id: string): Promise<void> {
-  try {
-    // Removed Firebase deleteDoc, using localStorage via storage-adapter
-    const requests = getFromLocalStorage<ServiceRequest[]>(COLLECTIONS.SERVICE_REQUESTS, [])
-    const filtered = requests.filter((req) => req.id !== id)
-    saveToLocalStorage(COLLECTIONS.SERVICE_REQUESTS, filtered)
-  } catch (error) {
-    console.error("Error deleting service request:", error)
-    throw error
-  }
-}
-
-export async function updateServiceRequest(id: string, updates: Partial<ServiceRequest>): Promise<void> {
-  try {
-    // Removed Firebase updateDoc, using localStorage via storage-adapter
-    const requests = getFromLocalStorage<ServiceRequest[]>(COLLECTIONS.SERVICE_REQUESTS, [])
-    const index = requests.findIndex((req) => req.id === id)
-    if (index !== -1) {
-      requests[index] = { ...requests[index], ...updates }
-      saveToLocalStorage(COLLECTIONS.SERVICE_REQUESTS, requests)
-    }
-  } catch (error) {
-    console.error("Error updating service request:", error)
-    throw error
-  }
-}
-
-export async function updateEmploymentApplicationStatus(
-  id: string,
-  status: EmploymentApplication["status"] | "pending" | "reviewed" | "accepted" | "rejected",
-): Promise<void> {
-  try {
-    // Removed Firebase updateDoc, using localStorage via storage-adapter
-    const applications = getFromLocalStorage<EmploymentApplication[]>(COLLECTIONS.EMPLOYMENT_APPLICATIONS, [])
-    const index = applications.findIndex((app) => app.id === id)
-    if (index !== -1) {
-      applications[index] = { ...applications[index], status: status as EmploymentApplication["status"] }
-      saveToLocalStorage(COLLECTIONS.EMPLOYMENT_APPLICATIONS, applications)
-    }
-  } catch (error) {
-    console.error("Error updating employment application status:", error)
-    throw error
-  }
-}
-
-export async function updateServiceRequestStatus(id: string, status: ServiceRequest["status"]): Promise<void> {
-  try {
-    // Removed Firebase updateDoc, using localStorage via storage-adapter
-    const requests = getFromLocalStorage<ServiceRequest[]>(COLLECTIONS.SERVICE_REQUESTS, [])
-    const index = requests.findIndex((req) => req.id === id)
-    if (index !== -1) {
-      requests[index] = { ...requests[index], status }
-      saveToLocalStorage(COLLECTIONS.SERVICE_REQUESTS, requests)
-    }
-  } catch (error) {
-    console.error("Error updating service request status:", error)
-    throw error
-  }
-}
-
-export async function getDynamicPageBySlug(slug: string): Promise<DynamicPage | null> {
-  console.log("[v0] Attempting to fetch page by slug:", slug)
-  try {
-    const firestore = await loadFirestore()
-    if (!firestore) {
-      console.log("[v0] Firestore not available, using localStorage fallback")
-      throw new Error("Firestore not available")
-    }
-
-    console.log("[v0] Firestore loaded, fetching from collection:", COLLECTIONS.PAGES)
-    const { collection, query, where, getDocs } = firestore
-    const db = firestore.getDb()
-    const pagesCollection = collection(db, COLLECTIONS.PAGES)
-    const q = query(pagesCollection, where("slug", "==", slug))
-    const snapshot = await getDocs(q)
-
-    if (snapshot.empty) {
-      console.log("[v0] No page found with slug:", slug)
-      return null
-    }
-
-    const page = snapshot.docs[0].data() as DynamicPage
-    console.log("[v0] Found page in Firestore:", page.title)
-    return page
-  } catch (error) {
-    console.error("[v0] Error getting dynamic page by slug from Firestore:", error)
-    console.log("[v0] Falling back to localStorage...")
-    // Fallback to localStorage
-    const pages = getFromLocalStorage<DynamicPage[]>(COLLECTIONS.PAGES, [])
-    const page = pages.find((p) => p.slug === slug)
-    if (page) {
-      console.log("[v0] Found page in localStorage:", page.title)
-    } else {
-      console.log("[v0] No page found in localStorage with slug:", slug)
-    }
-    return page || null
-  }
+  console.log("[Firebase] loadMockupData is deprecated in Firebase mode")
 }

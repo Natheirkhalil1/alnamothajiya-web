@@ -5,20 +5,90 @@ import { ZoomIn, Sparkles, ChevronDown, ChevronUp } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { getGalleryImages, type GalleryImage } from "@/lib/storage"
+import { getGalleryImages, getMediaItems, type GalleryImage, type MediaItem } from "@/lib/storage"
 import { useLanguage } from "@/lib/language-context"
 
-export function GallerySection() {
+// Unified type for gallery display
+interface GalleryDisplayItem {
+  id: string
+  image: string
+  titleAr: string
+  titleEn: string
+  descriptionAr: string
+  descriptionEn: string
+  category?: string
+}
+
+export function GallerySection({ content }: { content?: any }) {
   const { language } = useLanguage()
-  const [galleryItems, setGalleryItems] = useState<GalleryImage[]>([])
-  const [selectedItem, setSelectedItem] = useState<GalleryImage | null>(null)
-  const [activeCategory, setActiveCategory] = useState<string>("الكل")
+  const [galleryItems, setGalleryItems] = useState<GalleryDisplayItem[]>(content?.images || [])
+  const [selectedItem, setSelectedItem] = useState<GalleryDisplayItem | null>(null)
+  const [activeCategory, setActiveCategory] = useState<string>(language === "ar" ? "الكل" : "All")
   const [visibleCount, setVisibleCount] = useState(6)
 
   useEffect(() => {
+    console.log("[v0] GallerySection received content:", content)
+    console.log("[v0] GallerySection images:", content?.images)
+
+    if (content?.images) {
+      console.log("[v0] GallerySection using provided content with", content.images.length, "images")
+      setGalleryItems(content.images)
+      return
+    }
+
+    console.log("[v0] GallerySection loading from media library and gallery storage")
     const loadGalleryData = async () => {
-      const images = await getGalleryImages()
-      setGalleryItems(images)
+      // Load from both Media library and legacy gallery images
+      const [mediaItems, legacyImages] = await Promise.all([
+        getMediaItems(),
+        getGalleryImages(),
+      ])
+
+      // Convert media items to gallery display format (only images)
+      const mediaGalleryItems: GalleryDisplayItem[] = mediaItems
+        .filter((item) => item.type === "image")
+        .map((item) => ({
+          id: item.id,
+          image: item.url,
+          titleAr: item.titleAr || item.originalName,
+          titleEn: item.titleEn || item.originalName,
+          descriptionAr: item.descriptionAr || "",
+          descriptionEn: item.descriptionEn || "",
+          category: item.category,
+        }))
+
+      // Convert legacy gallery images
+      const legacyGalleryItems: GalleryDisplayItem[] = legacyImages.map((item) => ({
+        id: item.id,
+        image: item.image,
+        titleAr: item.titleAr,
+        titleEn: item.titleEn,
+        descriptionAr: item.descriptionAr,
+        descriptionEn: item.descriptionEn,
+        category: item.category,
+      }))
+
+      // Combine both, avoiding duplicates by URL
+      const seenUrls = new Set<string>()
+      const combinedItems: GalleryDisplayItem[] = []
+
+      // Add media items first (newer)
+      for (const item of mediaGalleryItems) {
+        if (!seenUrls.has(item.image)) {
+          seenUrls.add(item.image)
+          combinedItems.push(item)
+        }
+      }
+
+      // Add legacy items that aren't duplicates
+      for (const item of legacyGalleryItems) {
+        if (!seenUrls.has(item.image)) {
+          seenUrls.add(item.image)
+          combinedItems.push(item)
+        }
+      }
+
+      setGalleryItems(combinedItems)
     }
 
     loadGalleryData()
@@ -34,18 +104,21 @@ export function GallerySection() {
       window.removeEventListener("localStorageChange", handleStorageChange)
       window.removeEventListener("storage", handleStorageChange)
     }
-  }, [])
+  }, [content])
 
   useEffect(() => {
     setVisibleCount(6)
   }, [activeCategory])
 
-  const categories = ["الكل", ...Array.from(new Set(galleryItems.map((item) => item.category || "عام")))]
+  const allLabel = language === "ar" ? "الكل" : "All"
+  const defaultCategory = language === "ar" ? "عام" : "General"
+
+  const categories = [allLabel, ...Array.from(new Set(galleryItems.map((item) => item.category || defaultCategory)))]
 
   const filteredItems =
-    activeCategory === "الكل"
+    activeCategory === allLabel
       ? galleryItems
-      : galleryItems.filter((item) => (item.category || "عام") === activeCategory)
+      : galleryItems.filter((item) => (item.category || defaultCategory) === activeCategory)
 
   const displayedItems = filteredItems.slice(0, visibleCount)
   const hasMore = filteredItems.length > visibleCount
@@ -76,16 +149,16 @@ export function GallerySection() {
           <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 rounded-full mb-6 border border-primary/20 backdrop-blur-sm animate-shimmer">
             <Sparkles className="w-4 h-4 text-primary animate-pulse" />
             <span className="text-sm font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              معرض الصور
+              {language === "ar" ? "مكتبة الوسائط" : "Media Library"}
             </span>
           </div>
           <h2 className="text-4xl md:text-6xl font-bold mb-6 text-balance">
             <span className="bg-gradient-to-r from-foreground via-foreground/90 to-foreground bg-clip-text text-transparent">
-              استكشف مرافقنا وأنشطتنا
+              {language === "ar" ? "استكشف مرافقنا وأنشطتنا" : "Explore Our Facilities and Activities"}
             </span>
           </h2>
           <p className="text-lg md:text-xl text-muted-foreground leading-relaxed text-pretty">
-            جولة مصورة في مرافق المدرسة وأنشطتها المتنوعة
+            {language === "ar" ? "جولة مصورة في مرافق المدرسة وأنشطتها المتنوعة" : "A visual tour of our school facilities and various activities"}
           </p>
         </div>
 
@@ -111,8 +184,12 @@ export function GallerySection() {
         {filteredItems.length === 0 ? (
           <div className="text-center py-20 bg-background/50 rounded-2xl border-2 border-dashed border-border">
             <Sparkles className="w-20 h-20 text-muted-foreground/30 mx-auto mb-6" />
-            <h3 className="text-xl font-bold text-foreground mb-2">لا توجد صور</h3>
-            <p className="text-muted-foreground">لم يتم إضافة صور في هذا القسم بعد</p>
+            <h3 className="text-xl font-bold text-foreground mb-2">
+              {language === "ar" ? "لا توجد صور" : "No images"}
+            </h3>
+            <p className="text-muted-foreground">
+              {language === "ar" ? "لم يتم إضافة صور في هذا القسم بعد" : "No images have been added to this section yet"}
+            </p>
           </div>
         ) : (
           <>
@@ -218,7 +295,7 @@ export function GallerySection() {
           <div className="relative aspect-video rounded-xl overflow-hidden shadow-2xl">
             <img
               src={selectedItem?.image || "/placeholder.svg"}
-              alt={selectedItem && (language === "ar" ? selectedItem.titleAr : selectedItem.titleEn)}
+              alt={selectedItem ? (language === "ar" ? selectedItem.titleAr : selectedItem.titleEn) : ""}
               className="w-full h-full object-cover"
             />
           </div>
@@ -232,7 +309,7 @@ export function GallerySection() {
                 onClick={() => setSelectedItem(null)}
                 className="hover:bg-primary hover:text-primary-foreground transition-all duration-300"
               >
-                إغلاق
+                {language === "ar" ? "إغلاق" : "Close"}
               </Button>
             </div>
           )}
