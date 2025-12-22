@@ -1,6 +1,6 @@
 import * as React from "react"
 import { Block, DepartmentWelcomeBlock } from "../types"
-import { InputField, TextareaField, SelectField, createId, StylingGroup, applyBlockStyles } from "../utils"
+import { InputField, ImageField, TextareaField, SelectField, createId, StylingGroup, applyBlockStyles } from "../utils"
 import { Stethoscope, Heart, Home, Activity, GraduationCap, Book, Library, PenTool, Calculator, FlaskConical, Microscope, Dna, Palette, Music, Camera, Drama, Brush, Trophy, Medal, Dumbbell, Laptop, Cpu, Code, Wifi, Database, User, Users, Star, Sun, Moon, Globe, Map, Phone, Calendar, Clock, Bell, Search, Settings, Info, HelpCircle, CheckCircle, AlertCircle, XCircle, Pill, Syringe, Thermometer, Ambulance, Hospital, Briefcase, Building, Bus, Car, Coffee, CreditCard, DollarSign, FileText, Gift, Headphones, Image, Key, Lock, MapPin, Mic, Monitor, MousePointer, Package, Printer, Radio, Scissors, ShoppingBag, ShoppingCart, Smartphone, Speaker, Tag, Ticket, Wrench, Truck, Tv, Umbrella, Video, Wallet, Watch, Zap } from "lucide-react"
 
 const iconMap: Record<string, any> = {
@@ -41,7 +41,7 @@ export function DepartmentWelcomeEditor({ block, onChange }: { block: Department
             />
             <InputField label="العنوان" value={block.title} onChange={(v) => update({ title: v })} />
             <TextareaField label="الوصف" value={block.description} onChange={(v) => update({ description: v })} rows={3} />
-            <InputField label="رابط الصورة (اختياري)" value={block.imageUrl ?? ""} onChange={(v) => update({ imageUrl: v || undefined })} />
+            <ImageField label="رابط الصورة (اختياري)" value={block.imageUrl ?? ""} onChange={(v) => update({ imageUrl: v || undefined })} />
 
             <div className="mt-3 space-y-2">
                 <div className="flex items-center justify-between">

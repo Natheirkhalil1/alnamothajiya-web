@@ -3,6 +3,7 @@ import { Block, AboutSectionBlock } from "../types"
 import { nmTheme } from "../theme"
 import {
     InputField,
+    ImageField,
     TextareaField,
     SectionContainer,
     createId,
@@ -11,6 +12,8 @@ import {
 } from "../utils"
 import { IconPicker } from "../icon-picker"
 import { IconByName } from "../icon-system"
+import { useEditingLanguage } from "../editing-language-context"
+import { useLanguage } from "@/lib/language-context"
 
 export function AboutSectionEditor({
     block,
@@ -19,6 +22,8 @@ export function AboutSectionEditor({
     block: AboutSectionBlock
     onChange: (b: Block) => void
 }) {
+    const { editingLanguage } = useEditingLanguage()
+    const isAr = editingLanguage === "ar"
     const update = (patch: Partial<AboutSectionBlock>) => onChange({ ...block, ...patch })
     const updateFeatures = (updater: (features: AboutSectionBlock["featureCards"]) => AboutSectionBlock["featureCards"]) =>
         onChange({ ...block, featureCards: updater(block.featureCards) })
@@ -26,16 +31,25 @@ export function AboutSectionEditor({
         onChange({ ...block, stats: updater(block.stats) })
 
     return (
-        <div className="space-y-3 text-[11px]">
-            <InputField label="العنوان" value={block.titleAr} onChange={(v) => update({ titleAr: v })} />
-            <TextareaField label="الوصف" value={block.descriptionAr} onChange={(v) => update({ descriptionAr: v })} rows={3} />
+        <div className="space-y-3 text-[11px]" dir={isAr ? "rtl" : "ltr"}>
+            <InputField
+                label={isAr ? "العنوان" : "Title"}
+                value={isAr ? block.titleAr : (block.titleEn ?? "")}
+                onChange={(v) => update(isAr ? { titleAr: v } : { titleEn: v })}
+            />
+            <TextareaField
+                label={isAr ? "الوصف" : "Description"}
+                value={isAr ? block.descriptionAr : (block.descriptionEn ?? "")}
+                onChange={(v) => update(isAr ? { descriptionAr: v } : { descriptionEn: v })}
+                rows={3}
+            />
 
-            <InputField label="رابط الصورة" value={block.image} onChange={(v) => update({ image: v })} />
+            <ImageField label={isAr ? "الصورة" : "Image"} value={block.image} onChange={(v) => update({ image: v })} />
 
             {/* Features */}
             <div className="mt-3 space-y-2">
                 <div className="flex items-center justify-between">
-                    <span className="font-medium text-slate-700">المميزات</span>
+                    <span className="font-medium text-slate-700">{isAr ? "المميزات" : "Features"}</span>
                     <button
                         type="button"
                         onClick={() =>
@@ -53,13 +67,13 @@ export function AboutSectionEditor({
                         }
                         className="rounded-full border border-slate-300 bg-white px-2 py-0.5 text-[11px]"
                     >
-                        + إضافة ميزة
+                        {isAr ? "+ إضافة ميزة" : "+ Add Feature"}
                     </button>
                 </div>
-                {block.featureCards.map((feature) => (
+                {(block.featureCards || []).map((feature) => (
                     <div key={feature.id} className="space-y-1 rounded-md border border-slate-200 bg-slate-50/60 p-2">
                         <div className="flex flex-col gap-1">
-                            <span className="text-[11px] text-slate-700">الأيقونة</span>
+                            <span className="text-[11px] text-slate-700">{isAr ? "الأيقونة" : "Icon"}</span>
                             <IconPicker
                                 value={feature.icon ?? undefined}
                                 onChange={(v) =>
@@ -70,17 +84,17 @@ export function AboutSectionEditor({
                             />
                         </div>
                         <InputField
-                            label="العنوان"
-                            value={feature.titleAr}
+                            label={isAr ? "العنوان" : "Title"}
+                            value={isAr ? feature.titleAr : feature.titleEn}
                             onChange={(v) =>
-                                updateFeatures((features) => features.map((f) => (f.id === feature.id ? { ...f, titleAr: v } : f)))
+                                updateFeatures((features) => features.map((f) => (f.id === feature.id ? (isAr ? { ...f, titleAr: v } : { ...f, titleEn: v }) : f)))
                             }
                         />
                         <TextareaField
-                            label="الوصف"
-                            value={feature.descriptionAr}
+                            label={isAr ? "الوصف" : "Description"}
+                            value={isAr ? feature.descriptionAr : feature.descriptionEn}
                             onChange={(v) =>
-                                updateFeatures((features) => features.map((f) => (f.id === feature.id ? { ...f, descriptionAr: v } : f)))
+                                updateFeatures((features) => features.map((f) => (f.id === feature.id ? (isAr ? { ...f, descriptionAr: v } : { ...f, descriptionEn: v }) : f)))
                             }
                             rows={2}
                         />
@@ -89,7 +103,7 @@ export function AboutSectionEditor({
                             onClick={() => updateFeatures((features) => features.filter((f) => f.id !== feature.id))}
                             className="text-[11px] text-red-500"
                         >
-                            حذف الميزة
+                            {isAr ? "حذف الميزة" : "Delete Feature"}
                         </button>
                     </div>
                 ))}
@@ -98,7 +112,7 @@ export function AboutSectionEditor({
             {/* Stats */}
             <div className="mt-3 space-y-2">
                 <div className="flex items-center justify-between">
-                    <span className="font-medium text-slate-700">الإحصائيات</span>
+                    <span className="font-medium text-slate-700">{isAr ? "الإحصائيات" : "Statistics"}</span>
                     <button
                         type="button"
                         onClick={() =>
@@ -114,23 +128,23 @@ export function AboutSectionEditor({
                         }
                         className="rounded-full border border-slate-300 bg-white px-2 py-0.5 text-[11px]"
                     >
-                        + إضافة إحصائية
+                        {isAr ? "+ إضافة إحصائية" : "+ Add Stat"}
                     </button>
                 </div>
-                {block.stats.map((stat) => (
+                {(block.stats || []).map((stat) => (
                     <div key={stat.id} className="space-y-1 rounded-md border border-slate-200 bg-slate-50/60 p-2">
                         <InputField
-                            label="الرقم"
+                            label={isAr ? "الرقم" : "Number"}
                             value={stat.number}
                             onChange={(v) =>
                                 updateStats((stats) => stats.map((s) => (s.id === stat.id ? { ...s, number: v } : s)))
                             }
                         />
                         <InputField
-                            label="العنوان"
-                            value={stat.labelAr}
+                            label={isAr ? "العنوان" : "Label"}
+                            value={isAr ? stat.labelAr : stat.labelEn}
                             onChange={(v) =>
-                                updateStats((stats) => stats.map((s) => (s.id === stat.id ? { ...s, labelAr: v } : s)))
+                                updateStats((stats) => stats.map((s) => (s.id === stat.id ? (isAr ? { ...s, labelAr: v } : { ...s, labelEn: v }) : s)))
                             }
                         />
                         <button
@@ -138,7 +152,7 @@ export function AboutSectionEditor({
                             onClick={() => updateStats((stats) => stats.filter((s) => s.id !== stat.id))}
                             className="text-[11px] text-red-500"
                         >
-                            حذف الإحصائية
+                            {isAr ? "حذف الإحصائية" : "Delete Stat"}
                         </button>
                     </div>
                 ))}
@@ -153,13 +167,13 @@ export function AboutSectionEditor({
                     className="h-4 w-4"
                 />
                 <label htmlFor="showBadge" className="text-[11px] text-slate-700">
-                    عرض شارة ISO
+                    {isAr ? "عرض شارة ISO" : "Show ISO Badge"}
                 </label>
             </div>
 
             {block.showBadge && (
                 <InputField
-                    label="نص الشارة"
+                    label={isAr ? "نص الشارة" : "Badge Text"}
                     value={block.badgeText ?? "ISO 9001:2015"}
                     onChange={(v) => update({ badgeText: v })}
                 />
@@ -171,7 +185,12 @@ export function AboutSectionEditor({
 }
 
 export function AboutSectionView({ block }: { block: AboutSectionBlock }) {
+    const { language } = useLanguage()
     const { hoverStyles, ...blockProps } = applyBlockStyles(block.blockStyles)
+
+    // Get language-specific content
+    const title = language === "ar" ? block.titleAr : (block.titleEn || block.titleAr)
+    const description = language === "ar" ? block.descriptionAr : (block.descriptionEn || block.descriptionAr)
 
     const gradients = [
         { gradient: "from-blue-500/20 to-cyan-500/20", iconBg: "from-blue-500 to-cyan-500" },
@@ -203,7 +222,7 @@ export function AboutSectionView({ block }: { block: AboutSectionBlock }) {
                                 <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                                 <img
                                     src={block.image || "/placeholder.svg"}
-                                    alt={block.titleAr}
+                                    alt={title}
                                     className="w-full h-auto transform group-hover:scale-110 transition-transform duration-1000"
                                 />
 
@@ -229,7 +248,7 @@ export function AboutSectionView({ block }: { block: AboutSectionBlock }) {
                                             {stat.number}
                                         </div>
                                         <div className="text-sm font-medium text-muted-foreground mt-1">
-                                            {stat.labelAr}
+                                            {language === "ar" ? stat.labelAr : (stat.labelEn || stat.labelAr)}
                                         </div>
                                     </div>
                                 ))}
@@ -241,11 +260,11 @@ export function AboutSectionView({ block }: { block: AboutSectionBlock }) {
                             <div className="space-y-6">
                                 <h2 className="text-5xl md:text-6xl font-bold leading-tight animate-slide-up">
                                     <span className="bg-gradient-to-r from-foreground via-foreground/90 to-foreground/80 bg-clip-text text-transparent">
-                                        {block.titleAr}
+                                        {title}
                                     </span>
                                 </h2>
                                 <p className="text-xl text-muted-foreground leading-relaxed animate-fade-in" style={{ animationDelay: "200ms" }}>
-                                    {block.descriptionAr}
+                                    {description}
                                 </p>
 
                                 {/* Additional stats */}
@@ -257,7 +276,7 @@ export function AboutSectionView({ block }: { block: AboutSectionBlock }) {
                                             style={{ animationDelay: `${(index + 2) * 100}ms` }}
                                         >
                                             <div className="text-2xl font-bold text-primary">{stat.number}</div>
-                                            <div className="text-xs text-muted-foreground mt-1">{stat.labelAr}</div>
+                                            <div className="text-xs text-muted-foreground mt-1">{language === "ar" ? stat.labelAr : (stat.labelEn || stat.labelAr)}</div>
                                         </div>
                                     ))}
                                 </div>
@@ -265,7 +284,7 @@ export function AboutSectionView({ block }: { block: AboutSectionBlock }) {
 
                             {/* Feature Cards */}
                             <div className="grid sm:grid-cols-2 gap-5">
-                                {block.featureCards.map((feature, index) => {
+                                {(block.featureCards || []).map((feature, index) => {
                                     const colorScheme = gradients[index % gradients.length]
                                     return (
                                         <div
@@ -281,10 +300,10 @@ export function AboutSectionView({ block }: { block: AboutSectionBlock }) {
                                                 </div>
                                                 <div className="flex-1">
                                                     <h3 className="font-bold text-lg text-foreground mb-2 group-hover:text-primary transition-colors">
-                                                        {feature.titleAr}
+                                                        {language === "ar" ? feature.titleAr : (feature.titleEn || feature.titleAr)}
                                                     </h3>
                                                     <p className="text-sm text-muted-foreground leading-relaxed">
-                                                        {feature.descriptionAr}
+                                                        {language === "ar" ? feature.descriptionAr : (feature.descriptionEn || feature.descriptionAr)}
                                                     </p>
                                                 </div>
                                             </div>

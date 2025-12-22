@@ -22,7 +22,7 @@
 
 import * as React from "react"
 import { motion } from "framer-motion"
-import { useLanguage } from "@/lib/language-context";
+import { useLanguage, LanguageProvider } from "@/lib/language-context";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { BlockStyles, BlockAnimations } from "@/lib/types/blocks"
@@ -39,6 +39,56 @@ import { nmTheme } from "./page-builder/theme"
 import { createId, InputField, TextareaField, SelectField, SectionContainer, blockLabel, createDefaultBlock, ColorPalette, BLOCK_COLORS, TEXT_COLORS, SPACING_PRESETS, SHADOW_PRESETS, BORDER_WIDTH_PRESETS, BORDER_RADIUS_PRESETS, ANIMATION_PRESETS, DURATION_PRESETS } from "./page-builder/utils"
 import { blockCategories } from "./page-builder/block-categories"
 import { AddBlockModal } from "./page-builder/add-block-modal"
+import { EditingLanguageProvider, useEditingLanguage } from "./page-builder/editing-language-context"
+
+// Helper to normalize column slots data that may be corrupted from Firestore
+function normalizeColumnSlots(data: any): Block[][] {
+    if (!data) return []
+    // Handle case where columnSlots itself is an object (corrupted from Firestore)
+    let slots = data
+    if (!Array.isArray(slots) && typeof slots === "object") {
+        const restored: any[] = []
+        for (const [key, value] of Object.entries(slots as Record<string, any>)) {
+            if (key === "__isNestedArray") continue
+            const index = parseInt(key, 10)
+            if (!isNaN(index)) {
+                restored[index] = value
+            }
+        }
+        slots = restored
+    }
+    if (!Array.isArray(slots)) return []
+    return slots.map(normalizeColumnBlocks)
+}
+
+// Helper to normalize column blocks data that may be corrupted from Firestore
+function normalizeColumnBlocks(data: any): Block[] {
+    if (!data) return []
+    // Already an array
+    if (Array.isArray(data)) return data
+    // JSON string (from previous fix attempt)
+    if (typeof data === "string") {
+        try {
+            const parsed = JSON.parse(data)
+            return Array.isArray(parsed) ? parsed : []
+        } catch {
+            return []
+        }
+    }
+    // Object with __isNestedArray marker or numeric keys
+    if (typeof data === "object") {
+        const result: Block[] = []
+        for (const [key, value] of Object.entries(data)) {
+            if (key === "__isNestedArray") continue
+            const index = parseInt(key, 10)
+            if (!isNaN(index)) {
+                result[index] = value as Block
+            }
+        }
+        return result
+    }
+    return []
+}
 
 
 /* ========================================================================
@@ -57,6 +107,7 @@ interface PageBlocksProps {
   onOpenTemplates?: () => void
   onOpenCss?: () => void
   onOpenJs?: () => void
+  editingLanguage?: "ar" | "en" // language for editing mode
 }
 
 /**
@@ -64,7 +115,7 @@ interface PageBlocksProps {
  * - mode="view" -> render only
  * - mode="edit" -> editor + live preview
  */
-export function PageBlocks({ mode, value, onChange, className, customCss, customJs, onOpenTemplates, onOpenCss, onOpenJs }: PageBlocksProps) {
+export function PageBlocks({ mode, value, onChange, className, customCss, customJs, onOpenTemplates, onOpenCss, onOpenJs, editingLanguage = "ar" }: PageBlocksProps) {
   const { language } = useLanguage()
   const [isModalOpen, setIsModalOpen] = React.useState(false)
   const [settingsBlockId, setSettingsBlockId] = React.useState<string | null>(null)
@@ -103,15 +154,27 @@ export function PageBlocks({ mode, value, onChange, className, customCss, custom
   }, [isEdit, customJs])
 
   if (!isEdit) {
+    // In view mode, show blocks based on active language
+    // Use editingLanguage prop if provided (for preview), otherwise fall back to language context
+    const viewLanguage = editingLanguage || language
+    const blocksToRender = viewLanguage === "ar" ? (value.blocksAr || value.blocks || []) : (value.blocksEn || value.blocks || [])
     return (
-      <div className={className}>
-        {customCss && (
-          <style dangerouslySetInnerHTML={{ __html: customCss }} />
-        )}
-        <BlocksRenderer blocks={value.blocks} />
-      </div>
+      <LanguageProvider initialLanguage={viewLanguage}>
+        <div className={className}>
+          {customCss && (
+            <style dangerouslySetInnerHTML={{ __html: customCss }} />
+          )}
+          <BlocksRenderer blocks={blocksToRender} />
+        </div>
+      </LanguageProvider>
     )
   }
+
+  // In edit mode, work with the blocks for the active editing language
+  // Fallback to empty array if blocks don't exist yet, or to legacy blocks array
+  const currentBlocks = editingLanguage === "ar"
+    ? (value.blocksAr || value.blocks || [])
+    : (value.blocksEn || value.blocks || [])
 
   const findBlockByPath = (blocks: Block[], path: string[]): Block | null => {
     if (!blocks || path.length === 0) return null
@@ -122,11 +185,24 @@ export function PageBlocks({ mode, value, onChange, className, customCss, custom
     if (!containerBlock || (containerBlock.kind !== "columns" && containerBlock.kind !== "grid")) {
       return null
     }
-    // Search through nested blocks
+    // Search through nested blocks in columnSlots
+    // Path format: [containerId, columnIndex, nestedBlockId]
     const container = containerBlock as ColumnsBlock | GridBlock
-    if (!container.blocks) return null
+    const columnSlots = normalizeColumnSlots(container.columnSlots)
 
-    return findBlockByPath(container.blocks, path.slice(1))
+    if (path.length >= 3) {
+      const columnIndex = parseInt(path[1], 10)
+      const nestedBlockId = path[2]
+      const columnBlocks = columnSlots[columnIndex] || []
+      return columnBlocks.find((b) => b.id === nestedBlockId) || null
+    }
+
+    // Fallback to legacy blocks property if it exists
+    if (container.blocks) {
+      return findBlockByPath(container.blocks, path.slice(1))
+    }
+
+    return null
   }
 
   const updateBlockByPath = (blocks: Block[], path: string[], updater: (b: Block) => Block): Block[] => {
@@ -139,11 +215,28 @@ export function PageBlocks({ mode, value, onChange, className, customCss, custom
       if (b.kind !== "columns" && b.kind !== "grid") return b
 
       const container = b as ColumnsBlock | GridBlock
+
+      // Handle columnSlots (new structure)
+      // Path format: [containerId, columnIndex, nestedBlockId]
+      if (path.length >= 3 && container.columnSlots) {
+        const columnIndex = parseInt(path[1], 10)
+        const nestedBlockId = path[2]
+        // Normalize columnSlots to handle corrupted Firestore data
+        const normalizedSlots = normalizeColumnSlots(container.columnSlots)
+        const newColumnSlots = [...normalizedSlots]
+
+        if (newColumnSlots[columnIndex]) {
+          newColumnSlots[columnIndex] = newColumnSlots[columnIndex].map((nestedBlock) =>
+            nestedBlock.id === nestedBlockId ? updater(nestedBlock) : nestedBlock
+          )
+        }
+
+        return { ...container, columnSlots: newColumnSlots }
+      }
+
+      // Fallback to legacy blocks property
       if (!container.blocks) return b
-
-      // Update the nested block
       const updatedBlocks = updateBlockByPath(container.blocks, path.slice(1), updater)
-
       return { ...container, blocks: updatedBlocks }
     })
   }
@@ -153,43 +246,49 @@ export function PageBlocks({ mode, value, onChange, className, customCss, custom
     setSettingsBlockId(block.id)
   }
 
+  // Helper to update blocks for current language
+  const updateBlocks = (newBlocks: Block[]) => {
+    if (!onChange) return
+    onChange(editingLanguage === "ar"
+      ? { ...value, blocksAr: newBlocks, blocksEn: value.blocksEn || [] }
+      : { ...value, blocksAr: value.blocksAr || [], blocksEn: newBlocks })
+  }
+
   const handleUpdateBlock = (id: string, updater: (b: Block) => Block) => {
     if (!onChange) return
     if (settingsBlockPath && settingsBlockPath.length > 1) {
-      const blocks = updateBlockByPath(value.blocks, settingsBlockPath, updater)
-      onChange({ blocks })
+      const blocks = updateBlockByPath(currentBlocks, settingsBlockPath, updater)
+      updateBlocks(blocks)
     } else {
-      const blocks = value.blocks.map((b) => (b.id === id ? updater(b) : b))
-      onChange({ blocks })
+      const blocks = currentBlocks.map((b) => (b.id === id ? updater(b) : b))
+      updateBlocks(blocks)
     }
   }
 
   const handleRemoveBlock = (id: string) => {
-    if (!onChange) return
-    onChange({ blocks: value.blocks.filter((b) => b.id !== id) })
+    const blocks = currentBlocks.filter((b) => b.id !== id)
+    updateBlocks(blocks)
   }
 
   const handleMoveBlock = (id: string, direction: "up" | "down") => {
-    if (!onChange) return
-    const idx = value.blocks.findIndex((b) => b.id === id)
+    const idx = currentBlocks.findIndex((b) => b.id === id)
     if (idx === -1) return
     const newIdx = direction === "up" ? idx - 1 : idx + 1
-    if (newIdx < 0 || newIdx >= value.blocks.length) return
-    const arr = [...value.blocks]
+    if (newIdx < 0 || newIdx >= currentBlocks.length) return
+    const arr = [...currentBlocks]
     const [item] = arr.splice(idx, 1)
     arr.splice(newIdx, 0, item)
-    onChange({ blocks: arr })
+    updateBlocks(arr)
   }
 
   const handleCloneBlock = (id: string) => {
-    if (!onChange) return
-    const block = value.blocks.find((b) => b.id === id)
+    const block = currentBlocks.find((b) => b.id === id)
     if (!block) return
     const clonedBlock = { ...block, id: `${block.kind}-${Date.now()}` }
-    const idx = value.blocks.findIndex((b) => b.id === id)
-    const arr = [...value.blocks]
+    const idx = currentBlocks.findIndex((b) => b.id === id)
+    const arr = [...currentBlocks]
     arr.splice(idx + 1, 0, clonedBlock)
-    onChange({ blocks: arr })
+    updateBlocks(arr)
   }
 
   const handleDragStart = (e: React.DragEvent, blockId: string) => {
@@ -206,100 +305,134 @@ export function PageBlocks({ mode, value, onChange, className, customCss, custom
     e.preventDefault()
     if (!onChange || !draggedBlockId) return
 
-    const sourceIndex = value.blocks.findIndex((b) => b.id === draggedBlockId)
+    const sourceIndex = currentBlocks.findIndex((b) => b.id === draggedBlockId)
     if (sourceIndex === -1 || sourceIndex === targetIndex) {
       setDraggedBlockId(null)
       setHoveredIndex(null)
       return
     }
 
-    const arr = [...value.blocks]
+    const arr = [...currentBlocks]
     const [item] = arr.splice(sourceIndex, 1)
     arr.splice(targetIndex, 0, item)
-    onChange({ blocks: arr })
+    updateBlocks(arr)
     setDraggedBlockId(null)
     setHoveredIndex(null)
   }
 
   const addBlock = (kind: BlockKind) => {
     if (!onChange) return
-    const newBlock = createDefaultBlock(kind, language)
+    const newBlock = createDefaultBlock(kind, editingLanguage)
 
-    // Adding to top level
-    onChange({ blocks: [...value.blocks, newBlock] })
-    setSettingsBlockId(newBlock.id)
-    setSettingsBlockPath([newBlock.id])
+    // Check if we're adding to a container column
+    const addingToColumn = (window as any).__addingToColumn as { containerId: string; columnIndex: number } | undefined
+
+    if (addingToColumn) {
+      // Adding to a container's column slot
+      const { containerId, columnIndex } = addingToColumn
+      const containerBlock = currentBlocks.find((b) => b.id === containerId) as ColumnsBlock | GridBlock | undefined
+
+      if (containerBlock && containerBlock.columnSlots) {
+        // Normalize columnSlots to handle corrupted Firestore data
+        const normalizedSlots = normalizeColumnSlots(containerBlock.columnSlots)
+        const updatedSlots = normalizedSlots.map((col, idx) =>
+          idx === columnIndex ? [...col, newBlock] : col
+        )
+        const updatedContainer = { ...containerBlock, columnSlots: updatedSlots }
+        const updatedBlocks = currentBlocks.map((b) => (b.id === containerId ? updatedContainer : b))
+        updateBlocks(updatedBlocks)
+        setSettingsBlockId(newBlock.id)
+        setSettingsBlockPath([containerId, newBlock.id])
+      }
+
+      // Clean up the global variable
+      delete (window as any).__addingToColumn
+    } else {
+      // Adding to current language blocks (top level)
+      const updatedBlocks = [...currentBlocks, newBlock]
+      updateBlocks(updatedBlocks)
+      setSettingsBlockId(newBlock.id)
+      setSettingsBlockPath([newBlock.id])
+    }
 
     setIsModalOpen(false)
   }
 
   const settingsBlock = settingsBlockId
     ? settingsBlockPath
-      ? findBlockByPath(value.blocks, settingsBlockPath)
-      : value.blocks.find((b) => b.id === settingsBlockId)
+      ? findBlockByPath(currentBlocks, settingsBlockPath)
+      : currentBlocks.find((b) => b.id === settingsBlockId)
     : null
 
   return (
-    <div className={className}>
-      <div className="sticky top-0 z-50 mb-6 flex items-center justify-between rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 font-semibold text-white shadow-lg transition-all hover:shadow-xl active:scale-95"
-          >
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            {language === "ar" ? "إضافة بلوك جديد" : "Add New Block"}
-          </button>
-
-          {onOpenTemplates && (
+    <div className={className} dir="rtl">
+      <div className="sticky top-0 z-50 mb-6 space-y-3">
+        {/* Main Toolbar */}
+        <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={onOpenTemplates}
-              className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-3 font-semibold text-white shadow-lg transition-all hover:shadow-xl active:scale-95"
-              title={language === "ar" ? "الأقسام الجاهزة" : "Ready-Made Templates"}
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 font-semibold text-white shadow-lg transition-all hover:shadow-xl active:scale-95"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              <span className="hidden sm:inline">{language === "ar" ? "قوالب" : "Templates"}</span>
+              {language === "ar" ? "إضافة بلوك جديد" : "Add New Block"}
             </button>
-          )}
 
-          {onOpenCss && (
-            <button
-              type="button"
-              onClick={onOpenCss}
-              className="flex items-center justify-center rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 p-3 text-white shadow-lg transition-all hover:shadow-xl active:scale-95"
-              title="CSS مخصص"
-            >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-              </svg>
-            </button>
-          )}
+            {onOpenTemplates && (
+              <button
+                type="button"
+                onClick={onOpenTemplates}
+                className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-3 font-semibold text-white shadow-lg transition-all hover:shadow-xl active:scale-95"
+                title={language === "ar" ? "الأقسام الجاهزة" : "Ready-Made Templates"}
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
+                <span className="hidden sm:inline">{language === "ar" ? "قوالب" : "Templates"}</span>
+              </button>
+            )}
 
-          {onOpenJs && (
-            <button
-              type="button"
-              onClick={onOpenJs}
-              className="flex items-center justify-center rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 p-3 text-white shadow-lg transition-all hover:shadow-xl active:scale-95"
-              title="JavaScript مخصص"
-            >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
-              </svg>
-            </button>
-          )}
+            {onOpenCss && (
+              <button
+                type="button"
+                onClick={onOpenCss}
+                className="flex items-center justify-center rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 p-3 text-white shadow-lg transition-all hover:shadow-xl active:scale-95"
+                title="CSS مخصص"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+              </button>
+            )}
+
+            {onOpenJs && (
+              <button
+                type="button"
+                onClick={onOpenJs}
+                className="flex items-center justify-center rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 p-3 text-white shadow-lg transition-all hover:shadow-xl active:scale-95"
+                title="JavaScript مخصص"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
+                </svg>
+              </button>
+            )}
+          </div>
+          <span className="text-sm text-slate-500">
+            {currentBlocks.length} {currentBlocks.length === 1 ? "بلوك" : "بلوكات"}
+          </span>
         </div>
-        <span className="text-sm text-slate-500">
-          {value.blocks.length} {value.blocks.length === 1 ? "بلوك" : "بلوكات"}
-        </span>
+
       </div>
 
-      <AddBlockModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onAddBlock={addBlock} />
+      <AddBlockModal isOpen={isModalOpen} onClose={() => {
+        setIsModalOpen(false)
+        // Clean up the global variable when modal is closed without adding
+        delete (window as any).__addingToColumn
+      }} onAddBlock={addBlock} />
 
       <Dialog
         open={!!settingsBlock}
@@ -313,7 +446,29 @@ export function PageBlocks({ mode, value, onChange, className, customCss, custom
         <DialogContent className="max-h-[80vh] max-w-4xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-right">
-              إعدادات {settingsBlock ? blockLabel(settingsBlock.kind) : ""}
+              {/* Show breadcrumb for nested blocks */}
+              {settingsBlockPath && settingsBlockPath.length > 1 && (
+                <button
+                  onClick={() => {
+                    // Go back to container block
+                    const containerBlock = currentBlocks.find((b) => b.id === settingsBlockPath[0])
+                    if (containerBlock) {
+                      setSettingsBlockId(containerBlock.id)
+                      setSettingsBlockPath(null)
+                    }
+                  }}
+                  className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 mb-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  {(() => {
+                    const containerBlock = currentBlocks.find((b) => b.id === settingsBlockPath[0])
+                    return containerBlock ? `العودة إلى ${blockLabel(containerBlock.kind)}` : "العودة"
+                  })()}
+                </button>
+              )}
+              <span className="block">إعدادات {settingsBlock ? blockLabel(settingsBlock.kind) : ""}</span>
             </DialogTitle>
           </DialogHeader>
           {settingsBlock && (
@@ -325,11 +480,13 @@ export function PageBlocks({ mode, value, onChange, className, customCss, custom
               </TabsList>
 
               <TabsContent value="content" className="space-y-4 mt-4">
-                <BlockEditor
-                  block={settingsBlock}
-                  onChange={(updatedBlock) => handleUpdateBlock(settingsBlock.id, () => updatedBlock)}
-                  onNestedBlockSettings={handleNestedBlockSettings}
-                />
+                <EditingLanguageProvider editingLanguage={editingLanguage}>
+                  <BlockEditor
+                    block={settingsBlock}
+                    onChange={(updatedBlock) => handleUpdateBlock(settingsBlock.id, () => updatedBlock)}
+                    onNestedBlockSettings={handleNestedBlockSettings}
+                  />
+                </EditingLanguageProvider>
               </TabsContent>
 
               <TabsContent value="style" className="space-y-4 mt-4">
@@ -351,13 +508,19 @@ export function PageBlocks({ mode, value, onChange, className, customCss, custom
       </Dialog>
 
       <div className="space-y-4">
-        {value.blocks.map((block, index) => {
+        {currentBlocks.map((block, index) => {
           const isContainerBlock = block.kind === "columns" || block.kind === "grid"
 
           // For container blocks (Columns/Grid), render with nested blocks visible
           if (isContainerBlock) {
             const containerBlock = block as ColumnsBlock | GridBlock
             const containerColor = block.kind === "columns" ? "blue" : "purple"
+            // Normalize columnSlots to handle corrupted Firestore data, ensure proper number of columns
+            let columnSlots = normalizeColumnSlots(containerBlock.columnSlots)
+            // Ensure we have the right number of columns
+            while (columnSlots.length < containerBlock.columns) {
+              columnSlots.push([])
+            }
 
             return (
               <div
@@ -466,7 +629,7 @@ export function PageBlocks({ mode, value, onChange, className, customCss, custom
                         'grid-cols-4'
                       }`}
                   >
-                    {containerBlock.columnSlots.map((columnBlocks, columnIndex) => (
+                    {columnSlots.map((columnBlocks, columnIndex) => (
                       <div
                         key={columnIndex}
                         className="flex flex-col gap-2 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50/50 p-3 min-h-[200px]"
@@ -518,13 +681,13 @@ export function PageBlocks({ mode, value, onChange, className, customCss, custom
                                         onClick={() => {
                                           if (!onChange) return
                                           const clonedNested = { ...nestedBlock, id: `${nestedBlock.kind}-${Date.now()}` }
-                                          const updatedSlots = containerBlock.columnSlots.map((col, idx) =>
+                                          const updatedSlots = columnSlots.map((col, idx) =>
                                             idx === columnIndex
                                               ? [...col.slice(0, blockIndex + 1), clonedNested, ...col.slice(blockIndex + 1)]
                                               : col
                                           )
                                           const updatedContainer = { ...containerBlock, columnSlots: updatedSlots }
-                                          onChange({ blocks: value.blocks.map((b) => (b.id === block.id ? updatedContainer : b)) })
+                                          updateBlocks(currentBlocks.map((b) => (b.id === block.id ? updatedContainer : b)))
                                         }}
                                         className="flex h-7 w-7 items-center justify-center rounded text-slate-500 transition-colors hover:bg-green-50 hover:text-green-600"
                                         title="نسخ"
@@ -539,11 +702,11 @@ export function PageBlocks({ mode, value, onChange, className, customCss, custom
                                         type="button"
                                         onClick={() => {
                                           if (!onChange) return
-                                          const updatedSlots = containerBlock.columnSlots.map((col, idx) =>
+                                          const updatedSlots = columnSlots.map((col, idx) =>
                                             idx === columnIndex ? col.filter((b) => b.id !== nestedBlock.id) : col
                                           )
                                           const updatedContainer = { ...containerBlock, columnSlots: updatedSlots }
-                                          onChange({ blocks: value.blocks.map((b) => (b.id === block.id ? updatedContainer : b)) })
+                                          updateBlocks(currentBlocks.map((b) => (b.id === block.id ? updatedContainer : b)))
                                         }}
                                         className="flex h-7 w-7 items-center justify-center rounded text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600"
                                         title="حذف"
@@ -607,7 +770,7 @@ export function PageBlocks({ mode, value, onChange, className, customCss, custom
             >
               {/* Block content with rendered preview */}
               <div className="relative">
-                <BlocksRenderer blocks={[block]} />
+                <BlocksRenderer blocks={[block]} language={editingLanguage} />
 
                 {/* Improved Control Toolbar (Top Left) */}
                 <div className="absolute left-4 top-4 z-20 flex items-center gap-1 rounded-md bg-white p-1 shadow-md ring-1 ring-slate-200 opacity-0 transition-all duration-200 group-hover:opacity-100">
@@ -1266,7 +1429,8 @@ function ColumnsEditor({
   onChange: (b: Block) => void
   onNestedBlockSettings?: (blockPath: string[], block: Block) => void
 }) {
-  const { language } = useLanguage()
+  const { editingLanguage } = useEditingLanguage()
+  const language = editingLanguage
   const [isModalOpen, setIsModalOpen] = React.useState(false)
   const [draggedBlockId, setDraggedBlockId] = React.useState<string | null>(null)
   const [hoveredIndex, setHoveredIndex] = React.useState<number | null>(null)
@@ -1397,7 +1561,7 @@ function ColumnsEditor({
               } bg-white shadow-sm hover:shadow-md`}
           >
             <div className="relative">
-              <BlocksRenderer blocks={[nestedBlock]} />
+              <BlocksRenderer blocks={[nestedBlock]} language={language} />
 
               <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover:bg-black/40 group-hover:opacity-100">
                 <div className="flex gap-1.5">
@@ -1511,7 +1675,8 @@ function GridEditor({
   onChange: (b: Block) => void
   onNestedBlockSettings?: (blockPath: string[], block: Block) => void
 }) {
-  const { language } = useLanguage()
+  const { editingLanguage } = useEditingLanguage()
+  const language = editingLanguage
   const [isModalOpen, setIsModalOpen] = React.useState(false)
   const [draggedBlockId, setDraggedBlockId] = React.useState<string | null>(null)
   const [hoveredIndex, setHoveredIndex] = React.useState<number | null>(null)
@@ -1642,7 +1807,7 @@ function GridEditor({
               } bg-white shadow-sm hover:shadow-md`}
           >
             <div className="relative">
-              <BlocksRenderer blocks={[nestedBlock]} />
+              <BlocksRenderer blocks={[nestedBlock]} language={language} />
 
               <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover:bg-black/40 group-hover:opacity-100">
                 <div className="flex gap-1.5">
@@ -1791,8 +1956,8 @@ function JsonBlockEditor({
  * 6) RENDERER (View UI for all blocks)
  * ======================================================================*/
 
-export function BlocksRenderer({ blocks }: { blocks: Block[] }) {
-  return (
+export function BlocksRenderer({ blocks, language }: { blocks: Block[]; language?: "ar" | "en" }) {
+  const content = (
     <>
       {blocks.map((block) => {
         const blockStyles = (block as any).blockStyles || {}
@@ -1838,6 +2003,12 @@ export function BlocksRenderer({ blocks }: { blocks: Block[] }) {
       })}
     </>
   )
+
+  // Wrap with LanguageProvider if language is specified to override context
+  if (language) {
+    return <LanguageProvider initialLanguage={language}>{content}</LanguageProvider>
+  }
+  return content
 }
 
 // BlockView component

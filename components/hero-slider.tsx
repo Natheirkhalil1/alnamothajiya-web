@@ -80,17 +80,17 @@ export function HeroSlider({
             index === currentSlide ? "opacity-100" : "opacity-0"
           }`}
         >
-          {/* Improved overlay background with better gradient */}
-          <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/70 to-background/90" />
-          <div className="absolute inset-0 bg-gradient-to-r from-primary via-transparent to-accent/5" />
-
+          {/* Background Image */}
           <img
             src={slide.image || "/placeholder.svg"}
             alt={language === "ar" ? slide.titleAr : slide.titleEn}
             className="w-full h-full object-cover"
           />
 
-          <div className="absolute inset-0 flex items-center justify-center">
+          {/* Subtle overlay for better text readability */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/40" />
+
+          <div className="absolute inset-0 flex items-center justify-center z-10">
             <div className="container mx-auto px-4">
               <div className="max-w-5xl mx-auto text-center">
                 <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
@@ -171,8 +171,11 @@ export function HeroSlider({
         </>
       )}
 
+      {/* Bottom Overlay for Navigation Area */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/50 via-black/30 to-transparent z-10 pointer-events-none" />
+
       {showDots && (
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-3 bg-background/60 backdrop-blur-xl px-6 py-4 rounded-full border-2 border-primary/30 shadow-2xl">
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-3 z-20">
           {slides.map((_, index) => (
             <button
               key={index}
@@ -180,7 +183,7 @@ export function HeroSlider({
               className={`h-3 rounded-full transition-all duration-500 ${
                 index === currentSlide
                   ? "bg-gradient-to-r from-primary to-accent w-12 shadow-lg shadow-primary/50"
-                  : "bg-muted-foreground/40 w-3 hover:bg-muted-foreground/70 hover:w-6"
+                  : "bg-white/40 w-3 hover:bg-white/60 hover:w-6"
               }`}
             />
           ))}

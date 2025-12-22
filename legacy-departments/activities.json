@@ -1,0 +1,132 @@
+{
+  "titleAr": "الأنشطة اللامنهجية",
+  "titleEn": "Extracurricular Activities",
+  "slug": "departments-activities",
+  "descriptionAr": "يتم في هذا القسم تنظيم رحلات أسبوعية للطلاب وأنشطة اجتماعية متنوعة",
+  "descriptionEn": "This section organizes weekly trips for students and various social activities",
+  "blocksAr": [
+    {
+      "id": "activities-welcome-ar",
+      "kind": "department-welcome",
+      "icon": "sparkles",
+      "title": "مرحباً بكم في قسم الأنشطة اللامنهجية - حيث المتعة والتعلم",
+      "description": "يتم في هذا القسم تنظيم رحلات أسبوعية للطلاب خارج المدرسة وترتيب عملية نقلهم وحاجاتهم في الرحلة، بالإضافة إلى الأنشطة الاجتماعية المتنوعة التي تساعد على التكيف والدمج الاجتماعي.",
+      "imageUrl": "/special-needs-students-on-educational-field-trip-w.jpg",
+      "stats": [
+        { "id": "stat-1", "value": "2+", "label": "قسم فرعي", "onClick": "#subsections" },
+        { "id": "stat-2", "value": "24/7", "label": "خدمة مستمرة", "onClick": "#contact" },
+        { "id": "stat-3", "value": "100%", "label": "التزام بالجودة", "onClick": "#cta" }
+      ]
+    },
+    {
+      "id": "activities-subsections-ar",
+      "kind": "department-subsections",
+      "header": {
+        "title": "الأقسام الفرعية",
+        "subtitle": "تعرف على جميع الخدمات والبرامج المتخصصة التي نقدمها",
+        "centered": true
+      },
+      "departmentColor": "from-purple-600 via-violet-600 to-indigo-600",
+      "items": [
+        {
+          "id": "subsection-weekly-trips-ar",
+          "icon": "sparkles",
+          "titleAr": "الرحلات الأسبوعية",
+          "titleEn": "Weekly Trips",
+          "descriptionAr": "يتم في هذا القسم تنظيم رحلات أسبوعية للطلاب خارج المدرسة وترتيب عملية نقلهم وحاجاتهم في الرحلة.",
+          "descriptionEn": "In this section, weekly trips are organized for students outside the school, arranging their transportation and needs during the trip.",
+          "image": "/special-needs-students-on-educational-field-trip-w.jpg"
+        },
+        {
+          "id": "subsection-social-activities-ar",
+          "icon": "users",
+          "titleAr": "الأنشطة الاجتماعية",
+          "titleEn": "Social Activities",
+          "descriptionAr": "نشاطات لا منهجية متنوعة تساعد على التكيف والدمج الاجتماعي.",
+          "descriptionEn": "Various extracurricular activities that help with adaptation and social integration.",
+          "image": "/special-needs-students-in-social-activities-and-ga.jpg"
+        }
+      ]
+    },
+    {
+      "id": "activities-cta-ar",
+      "kind": "department-cta",
+      "title": "هل لديك استفسار؟",
+      "description": "نحن هنا للإجابة على جميع استفساراتكم ومساعدتكم في اختيار البرنامج المناسب لاحتياجاتكم",
+      "primaryButtonLabel": "تواصل معنا الآن",
+      "primaryButtonHref": "/#contact",
+      "secondaryButtonLabel": "العودة للرئيسية",
+      "secondaryButtonHref": "/",
+      "contactInfo": {
+        "phone": "4122002",
+        "email": "info@namothajia.com",
+        "address": "عمان، الأردن"
+      }
+    }
+  ],
+  "blocksEn": [
+    {
+      "id": "activities-welcome-en",
+      "kind": "department-welcome",
+      "icon": "sparkles",
+      "title": "Welcome to Extracurricular Activities - Where Fun Meets Learning",
+      "description": "In this section, weekly trips are organized for students outside the school, arranging their transportation and needs. Plus various social activities that help with adaptation and social integration.",
+      "imageUrl": "/special-needs-students-on-educational-field-trip-w.jpg",
+      "stats": [
+        { "id": "stat-1", "value": "2+", "label": "Subsections", "onClick": "#subsections" },
+        { "id": "stat-2", "value": "24/7", "label": "Continuous Service", "onClick": "#contact" },
+        { "id": "stat-3", "value": "100%", "label": "Quality Commitment", "onClick": "#cta" }
+      ]
+    },
+    {
+      "id": "activities-subsections-en",
+      "kind": "department-subsections",
+      "header": {
+        "title": "Subsections",
+        "subtitle": "Discover all specialized services and programs we offer",
+        "centered": true
+      },
+      "departmentColor": "from-purple-600 via-violet-600 to-indigo-600",
+      "items": [
+        {
+          "id": "subsection-weekly-trips-en",
+          "icon": "sparkles",
+          "titleAr": "الرحلات الأسبوعية",
+          "titleEn": "Weekly Trips",
+          "descriptionAr": "يتم في هذا القسم تنظيم رحلات أسبوعية للطلاب خارج المدرسة وترتيب عملية نقلهم وحاجاتهم في الرحلة.",
+          "descriptionEn": "In this section, weekly trips are organized for students outside the school, arranging their transportation and needs during the trip.",
+          "image": "/special-needs-students-on-educational-field-trip-w.jpg"
+        },
+        {
+          "id": "subsection-social-activities-en",
+          "icon": "users",
+          "titleAr": "الأنشطة الاجتماعية",
+          "titleEn": "Social Activities",
+          "descriptionAr": "نشاطات لا منهجية متنوعة تساعد على التكيف والدمج الاجتماعي.",
+          "descriptionEn": "Various extracurricular activities that help with adaptation and social integration.",
+          "image": "/special-needs-students-in-social-activities-and-ga.jpg"
+        }
+      ]
+    },
+    {
+      "id": "activities-cta-en",
+      "kind": "department-cta",
+      "title": "Have a Question?",
+      "description": "We are here to answer all your questions and help you choose the right program for your needs",
+      "primaryButtonLabel": "Contact Us Now",
+      "primaryButtonHref": "/#contact",
+      "secondaryButtonLabel": "Back to Home",
+      "secondaryButtonHref": "/",
+      "contactInfo": {
+        "phone": "4122002",
+        "email": "info@namothajia.com",
+        "address": "Amman, Jordan"
+      }
+    }
+  ],
+  "metadata": {
+    "icon": "sparkles",
+    "color": "from-purple-600 via-violet-600 to-indigo-600",
+    "type": "activities"
+  }
+}

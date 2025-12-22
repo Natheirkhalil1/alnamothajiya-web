@@ -13,9 +13,10 @@ export function IconPointsEditor({
     onChange: (b: Block) => void
 }) {
     const header = block.header ?? {}
+    const items = block.items || []
     const updateHeader = (patch: Partial<SectionHeader>) => onChange({ ...block, header: { ...header, ...patch } })
     const updateItems = (updater: (items: IconPointsBlock["items"]) => IconPointsBlock["items"]) =>
-        onChange({ ...block, items: updater(block.items) })
+        onChange({ ...block, items: updater(items) })
 
     return (
         <div className="space-y-3 text-[11px]">
@@ -41,7 +42,7 @@ export function IconPointsEditor({
                         + إضافة نقطة
                     </button>
                 </div>
-                {block.items.map((item) => (
+                {items.map((item) => (
                     <div key={item.id} className="space-y-1 rounded-md border border-slate-200 bg-slate-50/60 p-2">
                         <div className="flex flex-col gap-1">
                             <span className="text-[11px] text-slate-700">الأيقونة</span>
@@ -81,7 +82,8 @@ export function IconPointsEditor({
 
 export function IconPointsView({ block }: { block: IconPointsBlock }) {
     const header = block.header
-    const itemCount = block.items.length
+    const items = block.items || []
+    const itemCount = items.length
     let colsClass = "grid-cols-1"
     if (itemCount >= 2) colsClass = "md:grid-cols-2"
     if (itemCount >= 3) colsClass = "lg:grid-cols-3"
@@ -98,7 +100,7 @@ export function IconPointsView({ block }: { block: IconPointsBlock }) {
                     </div>
                 )}
                 <div className={`grid ${colsClass} gap-6`}>
-                    {block.items.map((item) => (
+                    {items.map((item) => (
                         <div key={item.id} className="text-center">
                             {item.icon && (
                                 <div className="mb-3 flex justify-center">

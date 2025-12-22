@@ -12,21 +12,26 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguageState] = useState<Language>("ar")
+export function LanguageProvider({ children, initialLanguage = "ar" }: { children: ReactNode; initialLanguage?: Language }) {
+  const [language, setLanguageState] = useState<Language>(initialLanguage)
 
+  // Update language when initialLanguage prop changes (e.g., when navigating between /ar and /en)
   useEffect(() => {
-    const savedLang = localStorage.getItem("language") as Language
-    if (savedLang && (savedLang === "ar" || savedLang === "en")) {
-      setLanguageState(savedLang)
-    }
-  }, [])
+    console.log("[v0] LanguageProvider - initialLanguage changed to:", initialLanguage)
+    setLanguageState(initialLanguage)
+    localStorage.setItem("language", initialLanguage)
+    document.documentElement.lang = initialLanguage
+    document.documentElement.dir = initialLanguage === "ar" ? "rtl" : "ltr"
+  }, [initialLanguage])
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang)
     localStorage.setItem("language", lang)
     document.documentElement.lang = lang
     document.documentElement.dir = lang === "ar" ? "rtl" : "ltr"
+
+    // We might want to redirect here if the user changes language via UI
+    // But the UI component calling this should handle the redirect.
   }
 
   const value: LanguageContextType = {

@@ -1,7 +1,9 @@
 import * as React from "react"
 import { Block, DepartmentSubsectionsBlock } from "../types"
-import { InputField, TextareaField, SelectField, createId, StylingGroup, applyBlockStyles } from "../utils"
-import { Stethoscope, Heart, Home, Activity, GraduationCap, Book, Library, PenTool, Calculator, FlaskConical, Microscope, Dna, Palette, Music, Camera, Drama, Brush, Trophy, Medal, Dumbbell, Laptop, Cpu, Code, Wifi, Database, User, Users, Star, Sun, Moon, Globe, Map, Phone, Calendar, Clock, Bell, Search, Settings, Info, HelpCircle, CheckCircle, AlertCircle, XCircle, Pill, Syringe, Thermometer, Ambulance, Hospital, Briefcase, Building, Bus, Car, Coffee, CreditCard, DollarSign, FileText, Gift, Headphones, Image, Key, Lock, MapPin, Mic, Monitor, MousePointer, Package, Printer, Radio, Scissors, ShoppingBag, ShoppingCart, Smartphone, Speaker, Tag, Ticket, Wrench, Truck, Tv, Umbrella, Video, Wallet, Watch, Zap, Grid3x3, ArrowLeft, Sparkles } from "lucide-react"
+import { InputField, ImageField, TextareaField, SelectField, createId, StylingGroup, applyBlockStyles } from "../utils"
+import { Stethoscope, Heart, Home, Activity, GraduationCap, Book, Library, PenTool, Calculator, FlaskConical, Microscope, Dna, Palette, Music, Camera, Drama, Brush, Trophy, Medal, Dumbbell, Laptop, Cpu, Code, Wifi, Database, User, Users, Star, Sun, Moon, Globe, Map, Phone, Calendar, Clock, Bell, Search, Settings, Info, HelpCircle, CheckCircle, AlertCircle, XCircle, Pill, Syringe, Thermometer, Ambulance, Hospital, Briefcase, Building, Bus, Car, Coffee, CreditCard, DollarSign, FileText, Gift, Headphones, Image, Key, Lock, MapPin, Mic, Monitor, MousePointer, Package, Printer, Radio, Scissors, ShoppingBag, ShoppingCart, Smartphone, Speaker, Tag, Ticket, Wrench, Truck, Tv, Umbrella, Video, Wallet, Watch, Zap, Grid3x3, ArrowLeft, ArrowRight, Sparkles } from "lucide-react"
+import { useEditingLanguage } from "../editing-language-context"
+import { useLanguage } from "@/lib/language-context"
 
 const iconMap: Record<string, any> = {
     stethoscope: Stethoscope, heart: Heart, pill: Pill, syringe: Syringe, thermometer: Thermometer,
@@ -22,11 +24,14 @@ const iconMap: Record<string, any> = {
 }
 
 export function DepartmentSubsectionsEditor({ block, onChange }: { block: DepartmentSubsectionsBlock; onChange: (b: Block) => void }) {
+    const { editingLanguage } = useEditingLanguage()
+    const isAr = editingLanguage === "ar"
     const header = block.header ?? {}
+    const items = block.items || []
     const updateHeader = (patch: Partial<typeof header>) => onChange({ ...block, header: { ...header, ...patch } })
     const update = (patch: Partial<DepartmentSubsectionsBlock>) => onChange({ ...block, ...patch })
     const updateItems = (updater: (items: DepartmentSubsectionsBlock["items"]) => DepartmentSubsectionsBlock["items"]) =>
-        onChange({ ...block, items: updater(block.items) })
+        onChange({ ...block, items: updater(items) })
 
     const iconOptions = Object.keys(iconMap).sort().map(name => ({
         value: name,
@@ -34,14 +39,22 @@ export function DepartmentSubsectionsEditor({ block, onChange }: { block: Depart
     }))
 
     return (
-        <div className="space-y-3 text-[11px]">
-            <InputField label="العنوان" value={header.title ?? ""} onChange={(v) => updateHeader({ title: v || undefined })} />
-            <InputField label="الوصف" value={header.description ?? ""} onChange={(v) => updateHeader({ description: v || undefined })} />
-            <InputField label="لون القسم (gradient)" value={block.departmentColor ?? ""} onChange={(v) => update({ departmentColor: v || undefined })} placeholder="from-red-600 via-rose-600 to-pink-600" />
+        <div className="space-y-3 text-[11px]" dir={isAr ? "rtl" : "ltr"}>
+            <InputField
+                label={isAr ? "العنوان" : "Title"}
+                value={isAr ? (header.title ?? "") : (header.titleEn ?? "")}
+                onChange={(v) => updateHeader(isAr ? { title: v || undefined } : { titleEn: v || undefined })}
+            />
+            <InputField
+                label={isAr ? "الوصف" : "Description"}
+                value={isAr ? (header.description ?? "") : (header.descriptionEn ?? "")}
+                onChange={(v) => updateHeader(isAr ? { description: v || undefined } : { descriptionEn: v || undefined })}
+            />
+            <InputField label={isAr ? "لون القسم (gradient)" : "Department Color (gradient)"} value={block.departmentColor ?? ""} onChange={(v) => update({ departmentColor: v || undefined })} placeholder="from-red-600 via-rose-600 to-pink-600" />
 
             <div className="mt-3 space-y-2">
                 <div className="flex items-center justify-between">
-                    <span className="font-medium text-slate-700">الأقسام الفرعية</span>
+                    <span className="font-medium text-slate-700">{isAr ? "الأقسام الفرعية" : "Subsections"}</span>
                     <button
                         type="button"
                         onClick={() =>
@@ -58,71 +71,46 @@ export function DepartmentSubsectionsEditor({ block, onChange }: { block: Depart
                         }
                         className="rounded-full border border-slate-300 bg-white px-2 py-0.5 text-[11px]"
                     >
-                        + إضافة قسم فرعي
+                        {isAr ? "+ إضافة قسم فرعي" : "+ Add Subsection"}
                     </button>
                 </div>
-                {block.items.map((item) => (
+                {items.map((item) => (
                     <div key={item.id} className="space-y-1 rounded-md border border-slate-200 bg-slate-50/60 p-2">
                         <SelectField
-                            label="الأيقونة"
+                            label={isAr ? "الأيقونة" : "Icon"}
                             value={item.icon || ""}
                             onChange={(v) =>
                                 updateItems((items) =>
                                     items.map((it) => (it.id === item.id ? { ...it, icon: v || undefined } : it))
                                 )
                             }
-                            options={[{ value: "", label: "بدون أيقونة" }, ...iconOptions]}
-                        />
-                        <div className="grid grid-cols-2 gap-2">
-                            <InputField
-                                label="العنوان (عربي)"
-                                value={item.titleAr}
-                                onChange={(v) =>
-                                    updateItems((items) => items.map((it) => (it.id === item.id ? { ...it, titleAr: v } : it)))
-                                }
-                            />
-                            <InputField
-                                label="العنوان (English)"
-                                value={item.titleEn}
-                                onChange={(v) =>
-                                    updateItems((items) => items.map((it) => (it.id === item.id ? { ...it, titleEn: v } : it)))
-                                }
-                            />
-                        </div>
-                        <TextareaField
-                            label="الوصف (عربي)"
-                            value={item.descriptionAr}
-                            onChange={(v) =>
-                                updateItems((items) => items.map((it) => (it.id === item.id ? { ...it, descriptionAr: v } : it)))
-                            }
-                            rows={2}
-                        />
-                        <TextareaField
-                            label="الوصف (English)"
-                            value={item.descriptionEn}
-                            onChange={(v) =>
-                                updateItems((items) => items.map((it) => (it.id === item.id ? { ...it, descriptionEn: v } : it)))
-                            }
-                            rows={2}
-                        />
-                        <TextareaField
-                            label="الوصف التفصيلي (عربي - اختياري)"
-                            value={item.detailedDescriptionAr ?? ""}
-                            onChange={(v) =>
-                                updateItems((items) => items.map((it) => (it.id === item.id ? { ...it, detailedDescriptionAr: v || undefined } : it)))
-                            }
-                            rows={3}
-                        />
-                        <TextareaField
-                            label="الوصف التفصيلي (English - اختياري)"
-                            value={item.detailedDescriptionEn ?? ""}
-                            onChange={(v) =>
-                                updateItems((items) => items.map((it) => (it.id === item.id ? { ...it, detailedDescriptionEn: v || undefined } : it)))
-                            }
-                            rows={3}
+                            options={[{ value: "", label: isAr ? "بدون أيقونة" : "No icon" }, ...iconOptions]}
                         />
                         <InputField
-                            label="رابط الصورة (اختياري)"
+                            label={isAr ? "العنوان" : "Title"}
+                            value={isAr ? item.titleAr : item.titleEn}
+                            onChange={(v) =>
+                                updateItems((items) => items.map((it) => (it.id === item.id ? (isAr ? { ...it, titleAr: v } : { ...it, titleEn: v }) : it)))
+                            }
+                        />
+                        <TextareaField
+                            label={isAr ? "الوصف" : "Description"}
+                            value={isAr ? item.descriptionAr : item.descriptionEn}
+                            onChange={(v) =>
+                                updateItems((items) => items.map((it) => (it.id === item.id ? (isAr ? { ...it, descriptionAr: v } : { ...it, descriptionEn: v }) : it)))
+                            }
+                            rows={2}
+                        />
+                        <TextareaField
+                            label={isAr ? "الوصف التفصيلي (اختياري)" : "Detailed Description (optional)"}
+                            value={isAr ? (item.detailedDescriptionAr ?? "") : (item.detailedDescriptionEn ?? "")}
+                            onChange={(v) =>
+                                updateItems((items) => items.map((it) => (it.id === item.id ? (isAr ? { ...it, detailedDescriptionAr: v || undefined } : { ...it, detailedDescriptionEn: v || undefined }) : it)))
+                            }
+                            rows={3}
+                        />
+                        <ImageField
+                            label={isAr ? "رابط الصورة (اختياري)" : "Image URL (optional)"}
                             value={item.image ?? ""}
                             onChange={(v) =>
                                 updateItems((items) => items.map((it) => (it.id === item.id ? { ...it, image: v || undefined } : it)))
@@ -133,7 +121,7 @@ export function DepartmentSubsectionsEditor({ block, onChange }: { block: Depart
                             onClick={() => updateItems((items) => items.filter((it) => it.id !== item.id))}
                             className="text-[11px] text-red-500"
                         >
-                            حذف القسم الفرعي
+                            {isAr ? "حذف القسم الفرعي" : "Delete Subsection"}
                         </button>
                     </div>
                 ))}
@@ -145,15 +133,34 @@ export function DepartmentSubsectionsEditor({ block, onChange }: { block: Depart
 }
 
 export function DepartmentSubsectionsView({ block }: { block: DepartmentSubsectionsBlock }) {
+    const { language } = useLanguage()
     const [selectedSubsection, setSelectedSubsection] = React.useState<number | "all">("all")
     const { hoverStyles, ...blockProps } = applyBlockStyles(block.blockStyles)
     const header = block.header
+    const items = block.items || []
+
+    // Language-specific helpers
+    const getHeaderTitle = () => language === "ar" ? (header?.title || "استكشف خدماتنا") : (header?.titleEn || header?.title || "Explore Our Services")
+    const getHeaderDescription = () => language === "ar" ? (header?.description || "الأقسام الفرعية") : (header?.descriptionEn || header?.description || "Subsections")
+    const getSelectSectionText = () => language === "ar" ? "اختر القسم" : "Select Section"
+    const getShowAllText = () => language === "ar" ? "عرض الكل" : "Show All"
+    const getViewDetailsText = () => language === "ar" ? "عرض التفاصيل" : "View Details"
+    const getAboutSectionText = () => language === "ar" ? "نبذة عن القسم" : "About This Section"
+    const getSpecializedServiceText = () => language === "ar" ? "خدمة متخصصة" : "Specialized Service"
+    const getQualifiedStaffText = () => language === "ar" ? "كوادر مؤهلة" : "Qualified Staff"
+    const getInterestedText = () => language === "ar" ? "هل أنت مهتم؟" : "Interested?"
+    const getContactUsText = () => language === "ar" ? "تواصل معنا للمزيد من المعلومات" : "Contact Us for More Information"
+    const getTeamReadyText = () => language === "ar" ? "فريقنا المتخصص جاهز للإجابة على جميع استفساراتكم ومساعدتكم" : "Our specialized team is ready to answer all your questions and help you"
+    const getInquireText = () => language === "ar" ? "استفسر عن هذه الخدمة" : "Inquire About This Service"
+    const getSubTitle = (item: any) => language === "ar" ? item.titleAr : (item.titleEn || item.titleAr)
+    const getSubDescription = (item: any) => language === "ar" ? item.descriptionAr : (item.descriptionEn || item.descriptionAr)
+    const getSubDetailedDescription = (item: any) => language === "ar" ? (item.detailedDescriptionAr || item.descriptionAr) : (item.detailedDescriptionEn || item.detailedDescriptionAr || item.descriptionEn || item.descriptionAr)
 
     const displayedSubsections =
         selectedSubsection === "all"
-            ? block.items
-            : selectedSubsection >= 0 && selectedSubsection < block.items.length
-                ? [block.items[selectedSubsection as number]]
+            ? items
+            : selectedSubsection >= 0 && selectedSubsection < items.length
+                ? [items[selectedSubsection as number]]
                 : []
 
     const handleSubsectionSelect = (index: number | "all") => {
@@ -171,7 +178,7 @@ export function DepartmentSubsectionsView({ block }: { block: DepartmentSubsecti
     return (
         <>
             {hoverStyles && <style>{hoverStyles}</style>}
-            <section className="py-32 relative overflow-hidden" {...blockProps}>
+            <section className="py-32 relative overflow-hidden" {...blockProps} dir={language === "ar" ? "rtl" : "ltr"}>
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(59,130,246,0.1),transparent_50%)] animate-pulse-slow" />
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(168,85,247,0.1),transparent_50%)] animate-pulse-slow delay-1000" />
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(34,197,94,0.08),transparent_70%)]" />
@@ -184,12 +191,12 @@ export function DepartmentSubsectionsView({ block }: { block: DepartmentSubsecti
                                     className={`px-10 py-4 bg-gradient-to-r ${departmentColor} rounded-full text-white font-bold text-xl shadow-xl hover:scale-110 transition-transform duration-500 cursor-pointer relative overflow-hidden group`}
                                 >
                                     <div className="absolute inset-0 bg-white/20 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                                    <span className="relative z-10">{header.title || "استكشف خدماتنا"}</span>
+                                    <span className="relative z-10">{getHeaderTitle()}</span>
                                 </div>
                             </div>
 
                             <h2 className="text-6xl md:text-7xl font-bold mb-8 bg-gradient-to-r from-foreground via-primary to-accent bg-clip-text text-transparent animate-gradient-x">
-                                {header.description || "الأقسام الفرعية"}
+                                {getHeaderDescription()}
                             </h2>
                         </div>
                     )}
@@ -197,7 +204,7 @@ export function DepartmentSubsectionsView({ block }: { block: DepartmentSubsecti
                     <div className="mb-16">
                         <div className="flex items-center justify-center gap-4 mb-8">
                             <Grid3x3 className="w-6 h-6 text-primary animate-pulse" />
-                            <h3 className="text-2xl font-bold text-center">اختر القسم</h3>
+                            <h3 className="text-2xl font-bold text-center">{getSelectSectionText()}</h3>
                         </div>
 
                         <div className="flex flex-wrap gap-4 justify-center max-w-6xl mx-auto">
@@ -211,12 +218,12 @@ export function DepartmentSubsectionsView({ block }: { block: DepartmentSubsecti
                                 <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
                                 <div className="flex items-center gap-3 relative z-10">
                                     <Grid3x3 className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
-                                    <span>عرض الكل</span>
-                                    <span className="px-3 py-1 bg-white/20 rounded-full text-sm">{block.items.length}</span>
+                                    <span>{getShowAllText()}</span>
+                                    <span className="px-3 py-1 bg-white/20 rounded-full text-sm">{items.length}</span>
                                 </div>
                             </button>
 
-                            {block.items.map((subsection, index) => {
+                            {items.map((subsection, index) => {
                                 const SubIcon = subsection.icon && iconMap[subsection.icon] ? iconMap[subsection.icon] : Activity
                                 return (
                                     <button
@@ -230,7 +237,7 @@ export function DepartmentSubsectionsView({ block }: { block: DepartmentSubsecti
                                         <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
                                         <div className="flex items-center gap-2 relative z-10">
                                             <SubIcon className="w-5 h-5 group-hover:scale-125 transition-transform" />
-                                            <span className="text-sm md:text-base">{subsection.titleAr}</span>
+                                            <span className="text-sm md:text-base">{getSubTitle(subsection)}</span>
                                         </div>
                                     </button>
                                 )
@@ -253,32 +260,36 @@ export function DepartmentSubsectionsView({ block }: { block: DepartmentSubsecti
                                                 <div className="relative h-64 overflow-hidden">
                                                     <img
                                                         src={subsection.image}
-                                                        alt={subsection.titleAr}
+                                                        alt={getSubTitle(subsection)}
                                                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                                     />
                                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
 
-                                                    <div className={`absolute top-4 right-4 p-4 bg-gradient-to-br ${departmentColor} rounded-2xl shadow-xl group-hover:scale-110 group-hover:rotate-12 transition-all duration-500`}>
+                                                    <div className={`absolute top-4 ${language === "ar" ? "right-4" : "left-4"} p-4 bg-gradient-to-br ${departmentColor} rounded-2xl shadow-xl group-hover:scale-110 group-hover:rotate-12 transition-all duration-500`}>
                                                         <SubIcon className="w-8 h-8 text-white" />
                                                     </div>
 
                                                     <div className="absolute bottom-0 left-0 right-0 p-6">
-                                                        <h3 className="text-2xl font-bold text-white mb-2">{subsection.titleAr}</h3>
+                                                        <h3 className="text-2xl font-bold text-white mb-2">{getSubTitle(subsection)}</h3>
                                                     </div>
                                                 </div>
                                             )}
 
                                             <div className="p-6">
                                                 {!subsection.image && (
-                                                    <h3 className="text-2xl font-bold mb-4">{subsection.titleAr}</h3>
+                                                    <h3 className="text-2xl font-bold mb-4">{getSubTitle(subsection)}</h3>
                                                 )}
                                                 <p className="text-base text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-3 mb-4">
-                                                    {subsection.descriptionAr}
+                                                    {getSubDescription(subsection)}
                                                 </p>
 
                                                 <div className="mt-4 flex items-center gap-2 text-primary font-semibold group-hover:gap-4 transition-all">
-                                                    <span>عرض التفاصيل</span>
-                                                    <ArrowLeft className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
+                                                    <span>{getViewDetailsText()}</span>
+                                                    {language === "ar" ? (
+                                                        <ArrowLeft className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
+                                                    ) : (
+                                                        <ArrowRight className="w-5 h-5 group-hover:-translate-x-2 transition-transform" />
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -295,7 +306,7 @@ export function DepartmentSubsectionsView({ block }: { block: DepartmentSubsecti
                                                 <div className="relative h-[600px] rounded-3xl overflow-hidden shadow-2xl group">
                                                     <img
                                                         src={subsection.image}
-                                                        alt={subsection.titleAr}
+                                                        alt={getSubTitle(subsection)}
                                                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                                     />
 
@@ -311,14 +322,14 @@ export function DepartmentSubsectionsView({ block }: { block: DepartmentSubsecti
 
                                                             <div className="flex-1">
                                                                 <h3 className="text-5xl md:text-6xl font-bold text-white mb-4 drop-shadow-2xl">
-                                                                    {subsection.titleAr}
+                                                                    {getSubTitle(subsection)}
                                                                 </h3>
                                                                 <div className="flex flex-wrap gap-3">
                                                                     <div className="px-6 py-2 bg-white/20 backdrop-blur-md rounded-full border border-white/30">
-                                                                        <span className="text-white font-semibold">خدمة متخصصة</span>
+                                                                        <span className="text-white font-semibold">{getSpecializedServiceText()}</span>
                                                                     </div>
                                                                     <div className="px-6 py-2 bg-white/20 backdrop-blur-md rounded-full border border-white/30">
-                                                                        <span className="text-white font-semibold">كوادر مؤهلة</span>
+                                                                        <span className="text-white font-semibold">{getQualifiedStaffText()}</span>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -334,11 +345,11 @@ export function DepartmentSubsectionsView({ block }: { block: DepartmentSubsecti
                                                 <div className="relative z-10">
                                                     <div className="flex items-center gap-4 mb-6">
                                                         <div className="h-1 w-20 bg-gradient-to-r from-primary to-accent rounded-full" />
-                                                        <h4 className="text-2xl font-bold text-gray-900 dark:text-white">نبذة عن القسم</h4>
+                                                        <h4 className="text-2xl font-bold text-gray-900 dark:text-white">{getAboutSectionText()}</h4>
                                                     </div>
 
                                                     <p className="text-xl text-gray-700 dark:text-gray-300 leading-relaxed">
-                                                        {subsection.detailedDescriptionAr || subsection.descriptionAr}
+                                                        {getSubDetailedDescription(subsection)}
                                                     </p>
                                                 </div>
                                             </div>
@@ -349,22 +360,26 @@ export function DepartmentSubsectionsView({ block }: { block: DepartmentSubsecti
                                                 <div className="relative z-10">
                                                     <div className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-primary/20 to-accent/20 rounded-full mb-6">
                                                         <Sparkles className="w-6 h-6 text-primary animate-pulse" />
-                                                        <span className="text-xl font-bold">هل أنت مهتم؟</span>
+                                                        <span className="text-xl font-bold">{getInterestedText()}</span>
                                                     </div>
 
                                                     <h4 className="text-4xl font-bold mb-4 bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
-                                                        تواصل معنا للمزيد من المعلومات
+                                                        {getContactUsText()}
                                                     </h4>
 
                                                     <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-                                                        فريقنا المتخصص جاهز للإجابة على جميع استفساراتكم ومساعدتكم
+                                                        {getTeamReadyText()}
                                                     </p>
 
                                                     <button className="inline-flex items-center justify-center px-12 py-7 text-xl font-bold bg-gradient-to-r from-primary via-accent to-primary hover:from-primary/90 hover:via-accent/90 hover:to-primary/90 text-white shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-110 rounded-full group relative overflow-hidden">
                                                         <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                                                        <Phone className="w-7 h-7 ml-3 group-hover:rotate-12 transition-transform relative z-10" />
-                                                        <span className="relative z-10">استفسر عن هذه الخدمة</span>
-                                                        <ArrowLeft className="w-7 h-7 mr-3 group-hover:translate-x-2 transition-transform relative z-10" />
+                                                        <Phone className={`w-7 h-7 ${language === "ar" ? "ml-3" : "mr-3"} group-hover:rotate-12 transition-transform relative z-10`} />
+                                                        <span className="relative z-10">{getInquireText()}</span>
+                                                        {language === "ar" ? (
+                                                            <ArrowLeft className="w-7 h-7 mr-3 group-hover:translate-x-2 transition-transform relative z-10" />
+                                                        ) : (
+                                                            <ArrowRight className="w-7 h-7 ml-3 group-hover:-translate-x-2 transition-transform relative z-10" />
+                                                        )}
                                                     </button>
                                                 </div>
                                             </div>

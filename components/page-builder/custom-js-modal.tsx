@@ -11,10 +11,12 @@ interface CustomJsModalProps {
     onClose: () => void
     initialJs: string
     onSave: (js: string) => void
+    language?: "ar" | "en"
 }
 
-export function CustomJsModal({ open, onClose, initialJs, onSave }: CustomJsModalProps) {
+export function CustomJsModal({ open, onClose, initialJs, onSave, language = "ar" }: CustomJsModalProps) {
     const [jsCode, setJsCode] = useState(initialJs)
+    const isAr = language === "ar"
 
     const handleSave = () => {
         onSave(jsCode)
@@ -37,7 +39,7 @@ export function CustomJsModal({ open, onClose, initialJs, onSave }: CustomJsModa
                 <div className="border-b p-4 flex items-center justify-between bg-white sticky top-0 z-10">
                     <div className="flex items-center gap-2">
                         <Code className="h-5 w-5" />
-                        <h2 className="text-xl font-bold">محرر JavaScript المخصص</h2>
+                        <h2 className="text-xl font-bold">{isAr ? "محرر JavaScript المخصص" : "Custom JavaScript Editor"}</h2>
                     </div>
                     <Button variant="ghost" size="icon" onClick={onClose}>
                         <span className="sr-only">Close</span>
@@ -47,11 +49,11 @@ export function CustomJsModal({ open, onClose, initialJs, onSave }: CustomJsModa
                     </Button>
                 </div>
 
-                <div className="m-4 flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
+                <div className="m-4 flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800" dir={isAr ? "rtl" : "ltr"}>
                     <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" />
                     <div>
-                        <p className="font-semibold">تحذير أمني:</p>
-                        <p>سيتم تنفيذ الكود JavaScript فقط في الصفحة المعاينة والصفحة المنشورة. تأكد من كتابة كود آمن وموثوق.</p>
+                        <p className="font-semibold">{isAr ? "تحذير أمني:" : "Security Warning:"}</p>
+                        <p>{isAr ? "سيتم تنفيذ الكود JavaScript فقط في الصفحة المعاينة والصفحة المنشورة. تأكد من كتابة كود آمن وموثوق." : "JavaScript code will be executed only on preview and published pages. Make sure to write safe and trusted code."}</p>
                     </div>
                 </div>
 
@@ -90,22 +92,22 @@ export function CustomJsModal({ open, onClose, initialJs, onSave }: CustomJsModa
                     />
                 </div>
 
-                <div className="mx-4 my-4 text-xs text-slate-500 space-y-1 p-3 bg-slate-50 rounded-lg border">
-                    <p className="font-semibold">💡 نصائح:</p>
-                    <ul className="list-disc list-inside space-y-1 mr-2">
-                        <li>يمكنك استخدام <code className="bg-slate-200 px-1 rounded">document.querySelector()</code> للوصول إلى عناصر الصفحة</li>
-                        <li>استخدم <code className="bg-slate-200 px-1 rounded">addEventListener()</code> لإضافة مستمعي الأحداث</li>
-                        <li>سيتم تنفيذ الكود بعد تحميل الصفحة بالكامل</li>
-                        <li>تجنب الكود الذي قد يؤثر على أداء الصفحة</li>
+                <div className="mx-4 my-4 text-xs text-slate-500 space-y-1 p-3 bg-slate-50 rounded-lg border" dir={isAr ? "rtl" : "ltr"}>
+                    <p className="font-semibold">💡 {isAr ? "نصائح:" : "Tips:"}</p>
+                    <ul className={`list-disc list-inside space-y-1 ${isAr ? "mr-2" : "ml-2"}`}>
+                        <li>{isAr ? <>يمكنك استخدام <code className="bg-slate-200 px-1 rounded">document.querySelector()</code> للوصول إلى عناصر الصفحة</> : <>Use <code className="bg-slate-200 px-1 rounded">document.querySelector()</code> to access page elements</>}</li>
+                        <li>{isAr ? <>استخدم <code className="bg-slate-200 px-1 rounded">addEventListener()</code> لإضافة مستمعي الأحداث</> : <>Use <code className="bg-slate-200 px-1 rounded">addEventListener()</code> to add event listeners</>}</li>
+                        <li>{isAr ? "سيتم تنفيذ الكود بعد تحميل الصفحة بالكامل" : "Code will execute after the page is fully loaded"}</li>
+                        <li>{isAr ? "تجنب الكود الذي قد يؤثر على أداء الصفحة" : "Avoid code that may impact page performance"}</li>
                     </ul>
                 </div>
 
                 <div className="border-t p-4 flex justify-end gap-2 bg-gray-50">
                     <Button variant="outline" onClick={handleCancel}>
-                        إلغاء
+                        {isAr ? "إلغاء" : "Cancel"}
                     </Button>
                     <Button onClick={handleSave} className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-                        حفظ التغييرات
+                        {isAr ? "حفظ التغييرات" : "Save Changes"}
                     </Button>
                 </div>
             </div>

@@ -17,6 +17,11 @@ const excludedPaths = [
   "/privacy-policy",
   "/terms",
   "/terms-of-service",
+  "/check-storage",
+  "/maintenance",
+  "/jobs",
+  "/departments",
+  "/pages",
 ]
 
 export async function middleware(request: NextRequest) {
@@ -26,7 +31,7 @@ export async function middleware(request: NextRequest) {
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/static") ||
-    pathname.match(/\.(png|jpg|jpeg|gif|svg|ico|css|js|webp|woff|woff2|ttf|eot)$/)
+    pathname.match(/\.(png|jpg|jpeg|gif|svg|ico|css|js|webp|woff|woff2|ttf|eot|html)$/)
   ) {
     return NextResponse.next()
   }

@@ -2,6 +2,8 @@ import * as React from "react"
 import { Block, CtaStripBlock } from "../types"
 import { nmTheme } from "../theme"
 import { InputField, TextareaField, SelectField, SectionContainer, applyBlockStyles } from "../utils"
+import { useEditingLanguage } from "../editing-language-context"
+import { useLanguage } from "@/lib/language-context"
 
 export function CtaStripEditor({
     block,
@@ -10,32 +12,38 @@ export function CtaStripEditor({
     block: CtaStripBlock
     onChange: (b: Block) => void
 }) {
+    const { editingLanguage } = useEditingLanguage()
+    const isAr = editingLanguage === "ar"
     const update = (patch: Partial<CtaStripBlock>) => onChange({ ...block, ...patch })
 
     return (
-        <div className="space-y-3 text-[11px]">
+        <div className="space-y-3 text-[11px]" dir={isAr ? "rtl" : "ltr"}>
             {/* Content Section */}
             <div className="space-y-2">
-                <InputField label="العنوان" value={block.title} onChange={(v) => update({ title: v })} />
+                <InputField
+                    label={isAr ? "العنوان" : "Title"}
+                    value={isAr ? block.title : (block.titleEn ?? "")}
+                    onChange={(v) => update(isAr ? { title: v } : { titleEn: v })}
+                />
                 <TextareaField
-                    label="النص"
-                    value={block.text ?? ""}
-                    onChange={(v) => update({ text: v || undefined })}
+                    label={isAr ? "النص" : "Text"}
+                    value={isAr ? (block.text ?? "") : (block.textEn ?? "")}
+                    onChange={(v) => update(isAr ? { text: v || undefined } : { textEn: v || undefined })}
                     rows={3}
                 />
             </div>
 
             {/* Primary CTA */}
             <div className="rounded border border-blue-200 bg-blue-50/30 p-2 space-y-2">
-                <div className="text-xs font-semibold text-blue-700">الزر الأساسي</div>
+                <div className="text-xs font-semibold text-blue-700">{isAr ? "الزر الأساسي" : "Primary Button"}</div>
                 <div className="grid gap-2 md:grid-cols-2">
                     <InputField
-                        label="النص"
-                        value={block.primaryCtaLabel}
-                        onChange={(v) => update({ primaryCtaLabel: v })}
+                        label={isAr ? "النص" : "Label"}
+                        value={isAr ? block.primaryCtaLabel : (block.primaryCtaLabelEn ?? "")}
+                        onChange={(v) => update(isAr ? { primaryCtaLabel: v } : { primaryCtaLabelEn: v })}
                     />
                     <InputField
-                        label="الرابط"
+                        label={isAr ? "الرابط" : "Link"}
                         value={block.primaryCtaHref}
                         onChange={(v) => update({ primaryCtaHref: v })}
                     />
@@ -44,15 +52,15 @@ export function CtaStripEditor({
 
             {/* Secondary CTA */}
             <div className="rounded border border-slate-200 bg-slate-50/30 p-2 space-y-2">
-                <div className="text-xs font-semibold text-slate-700">الزر الثانوي (اختياري)</div>
+                <div className="text-xs font-semibold text-slate-700">{isAr ? "الزر الثانوي (اختياري)" : "Secondary Button (optional)"}</div>
                 <div className="grid gap-2 md:grid-cols-2">
                     <InputField
-                        label="النص"
-                        value={block.secondaryCtaLabel ?? ""}
-                        onChange={(v) => update({ secondaryCtaLabel: v || undefined })}
+                        label={isAr ? "النص" : "Label"}
+                        value={isAr ? (block.secondaryCtaLabel ?? "") : (block.secondaryCtaLabelEn ?? "")}
+                        onChange={(v) => update(isAr ? { secondaryCtaLabel: v || undefined } : { secondaryCtaLabelEn: v || undefined })}
                     />
                     <InputField
-                        label="الرابط"
+                        label={isAr ? "الرابط" : "Link"}
                         value={block.secondaryCtaHref ?? ""}
                         onChange={(v) => update({ secondaryCtaHref: v || undefined })}
                     />
@@ -61,22 +69,22 @@ export function CtaStripEditor({
 
             {/* Styling Options */}
             <div className="rounded border border-purple-200 bg-purple-50/30 p-2 space-y-2">
-                <div className="text-xs font-semibold text-purple-700">التنسيق</div>
+                <div className="text-xs font-semibold text-purple-700">{isAr ? "التنسيق" : "Styling"}</div>
 
                 <SelectField
-                    label="النمط"
+                    label={isAr ? "النمط" : "Variant"}
                     value={block.variant ?? "default"}
                     onChange={(v) => update({ variant: v as "default" | "gradient" | "outlined" })}
                     options={[
-                        { value: "default", label: "افتراضي" },
-                        { value: "gradient", label: "متدرج" },
-                        { value: "outlined", label: "محدد" },
+                        { value: "default", label: isAr ? "افتراضي" : "Default" },
+                        { value: "gradient", label: isAr ? "متدرج" : "Gradient" },
+                        { value: "outlined", label: isAr ? "محدد" : "Outlined" },
                     ]}
                 />
 
                 <div className="grid gap-2 md:grid-cols-2">
                     <div className="space-y-1">
-                        <label className="text-[10px] font-medium text-slate-700">لون الخلفية</label>
+                        <label className="text-[10px] font-medium text-slate-700">{isAr ? "لون الخلفية" : "Background Color"}</label>
                         <input
                             type="color"
                             value={block.backgroundColor ?? "#3b82f6"}
@@ -86,25 +94,25 @@ export function CtaStripEditor({
                     </div>
 
                     <SelectField
-                        label="المحاذاة"
+                        label={isAr ? "المحاذاة" : "Alignment"}
                         value={block.alignment ?? "left"}
                         onChange={(v) => update({ alignment: v as "left" | "center" | "right" })}
                         options={[
-                            { value: "left", label: "يسار" },
-                            { value: "center", label: "وسط" },
-                            { value: "right", label: "يمين" },
+                            { value: "left", label: isAr ? "يسار" : "Left" },
+                            { value: "center", label: isAr ? "وسط" : "Center" },
+                            { value: "right", label: isAr ? "يمين" : "Right" },
                         ]}
                     />
                 </div>
 
                 <SelectField
-                    label="الحجم"
+                    label={isAr ? "الحجم" : "Size"}
                     value={block.size ?? "md"}
                     onChange={(v) => update({ size: v as "sm" | "md" | "lg" })}
                     options={[
-                        { value: "sm", label: "صغير" },
-                        { value: "md", label: "متوسط" },
-                        { value: "lg", label: "كبير" },
+                        { value: "sm", label: isAr ? "صغير" : "Small" },
+                        { value: "md", label: isAr ? "متوسط" : "Medium" },
+                        { value: "lg", label: isAr ? "كبير" : "Large" },
                     ]}
                 />
             </div>
@@ -113,11 +121,18 @@ export function CtaStripEditor({
 }
 
 export function CtaStripView({ block }: { block: CtaStripBlock }) {
+    const { language } = useLanguage()
     const variant = block.variant ?? "default"
     const alignment = block.alignment ?? "left"
     const size = block.size ?? "md"
     const bgColor = block.backgroundColor ?? "#3b82f6"
     const { hoverStyles, ...blockProps } = applyBlockStyles(block.blockStyles)
+
+    // Language-specific helpers
+    const getTitle = () => language === "ar" ? block.title : (block.titleEn || block.title)
+    const getText = () => language === "ar" ? block.text : (block.textEn || block.text)
+    const getPrimaryLabel = () => language === "ar" ? block.primaryCtaLabel : (block.primaryCtaLabelEn || block.primaryCtaLabel)
+    const getSecondaryLabel = () => language === "ar" ? block.secondaryCtaLabel : (block.secondaryCtaLabelEn || block.secondaryCtaLabel)
 
     // Size classes
     const sizeClasses = {
@@ -163,14 +178,14 @@ export function CtaStripView({ block }: { block: CtaStripBlock }) {
         <>
             {hoverStyles && <style>{hoverStyles}</style>}
             <SectionContainer {...blockProps} className={`${sizes.padding} ${blockProps.className || ""}`} style={{ ...variantStyles, ...blockProps.style }}>
-                <div className={`flex flex-col gap-4 md:flex-row md:justify-between ${alignClasses[alignment]}`}>
+                <div className={`flex flex-col gap-4 md:flex-row md:justify-between ${alignClasses[alignment]}`} dir={language === "ar" ? "rtl" : "ltr"}>
                     <div className="flex-1">
                         <h2 className={`${sizes.title} font-bold mb-2`} style={{ color: textColor }}>
-                            {block.title}
+                            {getTitle()}
                         </h2>
-                        {block.text && (
+                        {getText() && (
                             <p className={`${sizes.text} opacity-90`} style={{ color: textColor }}>
-                                {block.text}
+                                {getText()}
                             </p>
                         )}
                     </div>
@@ -183,9 +198,9 @@ export function CtaStripView({ block }: { block: CtaStripBlock }) {
                                 color: variant === "outlined" ? "white" : bgColor,
                             }}
                         >
-                            {block.primaryCtaLabel}
+                            {getPrimaryLabel()}
                         </a>
-                        {block.secondaryCtaLabel && block.secondaryCtaHref && (
+                        {getSecondaryLabel() && block.secondaryCtaHref && (
                             <a
                                 href={block.secondaryCtaHref}
                                 className={`${sizes.button} rounded-lg font-semibold transition hover:opacity-80`}
@@ -195,7 +210,7 @@ export function CtaStripView({ block }: { block: CtaStripBlock }) {
                                     border: `2px solid ${textColor}`,
                                 }}
                             >
-                                {block.secondaryCtaLabel}
+                                {getSecondaryLabel()}
                             </a>
                         )}
                     </div>

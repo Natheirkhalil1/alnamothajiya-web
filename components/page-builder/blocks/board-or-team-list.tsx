@@ -1,7 +1,7 @@
 import * as React from "react"
 import { Block, BoardOrTeamListBlock, SectionHeader } from "../types"
 import { nmTheme } from "../theme"
-import { InputField, TextareaField, SectionContainer, createId, applyBlockStyles } from "../utils"
+import { InputField, ImageField, TextareaField, SectionContainer, createId, applyBlockStyles } from "../utils"
 
 export function BoardOrTeamListEditor({
     block,
@@ -58,7 +58,7 @@ export function BoardOrTeamListEditor({
                             }
                             rows={2}
                         />
-                        <InputField
+                        <ImageField
                             label="صورة"
                             value={item.imageUrl ?? ""}
                             onChange={(v) =>

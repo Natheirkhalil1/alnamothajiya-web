@@ -2,6 +2,8 @@ import * as React from "react"
 import { Block, SectionHeaderBlock } from "../types"
 import { nmTheme } from "../theme"
 import { InputField, SelectField, TextareaField, SectionContainer, applyBlockStyles } from "../utils"
+import { useEditingLanguage } from "../editing-language-context"
+import { useLanguage } from "@/lib/language-context"
 
 export function SectionHeaderEditor({
     block,
@@ -10,26 +12,36 @@ export function SectionHeaderEditor({
     block: SectionHeaderBlock
     onChange: (b: Block) => void
 }) {
+    const { editingLanguage } = useEditingLanguage()
     const update = (patch: Partial<SectionHeaderBlock>) => onChange({ ...block, ...patch })
+    const isAr = editingLanguage === "ar"
 
     return (
-        <div className="space-y-3 text-[11px]">
-            <InputField label="Eyebrow" value={block.eyebrow ?? ""} onChange={(v) => update({ eyebrow: v || undefined })} />
-            <InputField label="عنوان" value={block.title ?? ""} onChange={(v) => update({ title: v || undefined })} />
+        <div className="space-y-3 text-[11px]" dir={isAr ? "rtl" : "ltr"}>
+            <InputField
+                label={isAr ? "العنوان الفرعي" : "Eyebrow"}
+                value={isAr ? (block.eyebrowAr ?? "") : (block.eyebrowEn ?? "")}
+                onChange={(v) => update(isAr ? { eyebrowAr: v || undefined } : { eyebrowEn: v || undefined })}
+            />
+            <InputField
+                label={isAr ? "العنوان" : "Title"}
+                value={isAr ? (block.titleAr ?? "") : (block.titleEn ?? "")}
+                onChange={(v) => update(isAr ? { titleAr: v || undefined } : { titleEn: v || undefined })}
+            />
             <TextareaField
-                label="وصف"
-                value={block.description ?? ""}
-                onChange={(v) => update({ description: v || undefined })}
+                label={isAr ? "الوصف" : "Description"}
+                value={isAr ? (block.descriptionAr ?? "") : (block.descriptionEn ?? "")}
+                onChange={(v) => update(isAr ? { descriptionAr: v || undefined } : { descriptionEn: v || undefined })}
                 rows={3}
             />
             <SelectField
-                label="المحاذاة"
+                label={isAr ? "المحاذاة" : "Alignment"}
                 value={block.align ?? "center"}
                 onChange={(v) => update({ align: v as "left" | "center" | "right" })}
                 options={[
-                    { value: "left", label: "يسار" },
-                    { value: "center", label: "وسط" },
-                    { value: "right", label: "يمين" },
+                    { value: "left", label: isAr ? "يسار" : "Left" },
+                    { value: "center", label: isAr ? "وسط" : "Center" },
+                    { value: "right", label: isAr ? "يمين" : "Right" },
                 ]}
             />
         </div>
@@ -37,7 +49,20 @@ export function SectionHeaderEditor({
 }
 
 export function SectionHeaderView({ block }: { block: SectionHeaderBlock }) {
+    const { language } = useLanguage()
     const { hoverStyles, ...blockProps } = applyBlockStyles(block.blockStyles)
+
+    // Get language-specific content with fallback
+    const eyebrow = language === "ar" ? (block.eyebrowAr || block.eyebrow) : (block.eyebrowEn || block.eyebrow)
+    const title = language === "ar" ? (block.titleAr || block.title) : (block.titleEn || block.title)
+    const description = language === "ar" ? (block.descriptionAr || block.description) : (block.descriptionEn || block.description)
+
+    // Use logical properties for RTL support
+    const getAlignment = () => {
+        if (block.align === "center") return "text-center"
+        if (block.align === "right") return "text-end"
+        return "text-start"
+    }
 
     return (
         <>
@@ -45,17 +70,18 @@ export function SectionHeaderView({ block }: { block: SectionHeaderBlock }) {
             <SectionContainer>
                 <div
                     {...blockProps}
-                    className={`mb-8 ${block.align === "center" ? "text-center" : block.align === "right" ? "text-right" : "text-left"} ${blockProps.className || ""}`}
+                    className={`mb-8 ${getAlignment()} ${blockProps.className || ""}`}
+                    dir={language === "ar" ? "rtl" : "ltr"}
                 >
-                    {block.eyebrow && (
-                        <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-emerald-600">{block.eyebrow}</p>
+                    {eyebrow && (
+                        <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-emerald-600">{eyebrow}</p>
                     )}
-                    <h2 className={nmTheme.textSection.title}>{block.title}</h2>
-                    {block.description && (
+                    {title && <h2 className={nmTheme.textSection.title}>{title}</h2>}
+                    {description && (
                         <p
                             className={`mt-3 ${block.align === "center" ? "mx-auto" : ""} max-w-2xl ${nmTheme.textSection.description}`}
                         >
-                            {block.description}
+                            {description}
                         </p>
                     )}
                 </div>

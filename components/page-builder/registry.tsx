@@ -54,7 +54,14 @@ import {
     FormCheckboxEditor, FormCheckboxView,
     FormRadioEditor, FormRadioView,
     FormButtonEditor, FormButtonView,
+    DynamicFormEditor, DynamicFormView,
 } from "./blocks/form-blocks"
+import { JobApplicationFormEditor, JobApplicationFormView } from "./blocks/job-application-form"
+import { InfoCardEditor, InfoCardView } from "./blocks/info-card"
+import { FirebaseNewsEditor, FirebaseNewsView } from "./blocks/firebase-news"
+import { FirebaseAchievementsEditor, FirebaseAchievementsView } from "./blocks/firebase-achievements"
+import { FirebaseGalleryEditor, FirebaseGalleryView } from "./blocks/firebase-gallery"
+import { FirebaseHeroSliderEditor, FirebaseHeroSliderView } from "./blocks/firebase-hero-slider"
 
 // Type definitions for block components
 export type BlockEditorComponent = React.ComponentType<{
@@ -282,6 +289,34 @@ export const blockRegistry: Record<BlockKind, BlockRegistryEntry> = {
     "form-button": {
         Editor: FormButtonEditor as BlockEditorComponent,
         View: FormButtonView as BlockViewComponent,
+    },
+    "dynamic-form": {
+        Editor: DynamicFormEditor as BlockEditorComponent,
+        View: DynamicFormView as BlockViewComponent,
+    },
+    "job-application-form": {
+        Editor: JobApplicationFormEditor as BlockEditorComponent,
+        View: JobApplicationFormView as BlockViewComponent,
+    },
+    "info-card": {
+        Editor: InfoCardEditor as BlockEditorComponent,
+        View: InfoCardView as BlockViewComponent,
+    },
+    "firebase-news": {
+        Editor: FirebaseNewsEditor as BlockEditorComponent,
+        View: FirebaseNewsView as BlockViewComponent,
+    },
+    "firebase-achievements": {
+        Editor: FirebaseAchievementsEditor as BlockEditorComponent,
+        View: FirebaseAchievementsView as BlockViewComponent,
+    },
+    "firebase-gallery": {
+        Editor: FirebaseGalleryEditor as BlockEditorComponent,
+        View: FirebaseGalleryView as BlockViewComponent,
+    },
+    "firebase-hero-slider": {
+        Editor: FirebaseHeroSliderEditor as BlockEditorComponent,
+        View: FirebaseHeroSliderView as BlockViewComponent,
     },
 }
 

@@ -1,8 +1,9 @@
 import * as React from "react"
 import { Block, GalleryMasonryBlock, SectionHeader } from "../types"
 import { nmTheme } from "../theme"
-import { InputField, TextareaField, SectionContainer, createId, applyBlockStyles } from "../utils"
-import { X, ChevronLeft, ChevronRight } from "lucide-react"
+import { InputField, ImageField, TextareaField, SectionContainer, createId, applyBlockStyles } from "../utils"
+import { X, ChevronLeft, ChevronRight, ZoomIn } from "lucide-react"
+import { useLanguage } from "@/lib/language-context"
 
 export function GalleryMasonryEditor({
     block,
@@ -12,9 +13,10 @@ export function GalleryMasonryEditor({
     onChange: (b: Block) => void
 }) {
     const header = block.header ?? {}
+    const items = block.items || []
     const updateHeader = (patch: Partial<SectionHeader>) => onChange({ ...block, header: { ...header, ...patch } })
     const updateItems = (updater: (items: GalleryMasonryBlock["items"]) => GalleryMasonryBlock["items"]) =>
-        onChange({ ...block, items: updater(block.items) })
+        onChange({ ...block, items: updater(items) })
 
     return (
         <div className="space-y-3 text-[11px]">
@@ -84,9 +86,9 @@ export function GalleryMasonryEditor({
                         + إضافة صورة
                     </button>
                 </div>
-                {(block.items || []).map((item) => (
+                {items.map((item) => (
                     <div key={item.id} className="space-y-2 rounded-md border border-slate-200 bg-slate-50/60 p-3">
-                        <InputField
+                        <ImageField
                             label="رابط الصورة"
                             value={item.imageUrl}
                             onChange={(v) => updateItems((items) => items.map((i) => (i.id === item.id ? { ...i, imageUrl: v } : i)))}
@@ -131,31 +133,38 @@ export function GalleryMasonryEditor({
 }
 
 export function GalleryMasonryView({ block }: { block: GalleryMasonryBlock }) {
+    const { language } = useLanguage()
+    const isAr = language === "ar"
     const [selectedCategory, setSelectedCategory] = React.useState<string | "all">("all")
     const [lightboxIndex, setLightboxIndex] = React.useState<number | null>(null)
     const header = block.header
+    const items = block.items || []
     const { hoverStyles, ...blockProps } = applyBlockStyles(block.blockStyles)
     const captionPosition = block.captionPosition ?? "over"
     const showLightbox = block.showLightbox ?? true
 
+    // Get localized text
+    const getHeaderTitle = () => isAr ? header?.title : (header?.titleEn || header?.title)
+    const getHeaderDescription = () => isAr ? header?.description : (header?.descriptionEn || header?.description)
+
     // Get unique categories
     const categories = React.useMemo(() => {
         const cats = new Set<string>()
-        block.items.forEach((item) => {
+        items.forEach((item) => {
             if (item.category) {
                 cats.add(item.category)
             }
         })
         return Array.from(cats).sort()
-    }, [block.items])
+    }, [items])
 
     // Filter items based on selected category
     const filteredItems = React.useMemo(() => {
         if (selectedCategory === "all") {
-            return block.items
+            return items
         }
-        return block.items.filter((item) => item.category === selectedCategory)
-    }, [block.items, selectedCategory])
+        return items.filter((item) => item.category === selectedCategory)
+    }, [items, selectedCategory])
 
     // Keyboard navigation for lightbox
     React.useEffect(() => {
@@ -194,12 +203,12 @@ export function GalleryMasonryView({ block }: { block: GalleryMasonryBlock }) {
     return (
         <>
             {hoverStyles && <style>{hoverStyles}</style>}
-            <SectionContainer {...blockProps} className={blockProps.className || ""}>
-                {header?.title && (
+            <SectionContainer {...blockProps} className={blockProps.className || ""} dir={isAr ? "rtl" : "ltr"}>
+                {getHeaderTitle() && (
                     <div className="mb-8 text-center">
-                        <h2 className={`mb-3 ${nmTheme.textSection.title}`}>{header.title}</h2>
-                        {header.description && (
-                            <p className={`mx-auto max-w-2xl ${nmTheme.textSection.description}`}>{header.description}</p>
+                        <h2 className={`mb-3 ${nmTheme.textSection.title}`}>{getHeaderTitle()}</h2>
+                        {getHeaderDescription() && (
+                            <p className={`mx-auto max-w-2xl ${nmTheme.textSection.description}`}>{getHeaderDescription()}</p>
                         )}
                     </div>
                 )}
@@ -210,20 +219,20 @@ export function GalleryMasonryView({ block }: { block: GalleryMasonryBlock }) {
                         <button
                             onClick={() => setSelectedCategory("all")}
                             className={`px-6 py-3 rounded-full font-semibold transition-all duration-300 hover:scale-105 ${selectedCategory === "all"
-                                    ? "bg-gradient-to-r from-primary to-accent text-white shadow-lg"
+                                    ? "bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-lg"
                                     : "bg-muted hover:bg-muted/80 text-foreground border-2 border-border"
                                 }`}
                         >
-                            الكل ({block.items.length})
+                            {isAr ? "الكل" : "All"} ({items.length})
                         </button>
                         {categories.map((category) => {
-                            const count = block.items.filter((item) => item.category === category).length
+                            const count = items.filter((item) => item.category === category).length
                             return (
                                 <button
                                     key={category}
                                     onClick={() => setSelectedCategory(category)}
                                     className={`px-6 py-3 rounded-full font-semibold transition-all duration-300 hover:scale-105 ${selectedCategory === category
-                                            ? "bg-gradient-to-r from-primary to-accent text-white shadow-lg"
+                                            ? "bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-lg"
                                             : "bg-muted hover:bg-muted/80 text-foreground border-2 border-border"
                                         }`}
                                 >
@@ -234,50 +243,75 @@ export function GalleryMasonryView({ block }: { block: GalleryMasonryBlock }) {
                     </div>
                 )}
 
-                <div className="columns-2 gap-4 md:columns-3 lg:columns-4">
+                <div className="columns-2 gap-6 md:columns-3 lg:columns-4">
                     {filteredItems.map((item, index) => (
-                        <div key={item.id} className="mb-4 break-inside-avoid animate-in fade-in duration-500">
+                        <div key={item.id} className="mb-6 break-inside-avoid animate-in fade-in duration-500">
                             <div
-                                className={`group relative overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-all duration-300 ${showLightbox ? "cursor-pointer" : ""
-                                    }`}
+                                className={`group bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-teal-500/10 transition-all duration-500 hover:-translate-y-1 overflow-hidden border border-slate-200/50 dark:border-slate-700/50 hover:border-teal-400 dark:hover:border-teal-400 relative ${showLightbox ? "cursor-pointer" : ""}`}
                                 onClick={() => openLightbox(index)}
                             >
-                                <img
-                                    src={item.imageUrl || "/placeholder.svg"}
-                                    alt={item.alt ?? ""}
-                                    className="w-full transition-transform duration-500 group-hover:scale-110"
-                                />
+                                {/* Decorative corner accents */}
+                                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-teal-500/20 via-emerald-500/10 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10" />
+                                <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-emerald-500/20 via-teal-500/10 to-transparent rounded-tr-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10" />
+                                {/* Shine effect */}
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000 pointer-events-none z-10" />
 
-                                {/* Category Badge - Top Right */}
-                                {item.category && (
-                                    <div className="absolute top-3 right-3 z-10">
-                                        <span className="inline-block px-3 py-1 bg-black/60 backdrop-blur-sm rounded-full text-xs text-white font-semibold shadow-lg">
-                                            {item.category}
-                                        </span>
+                                {/* Image Container */}
+                                <div className="relative overflow-hidden">
+                                    {/* Category Badge */}
+                                    {item.category && (
+                                        <div className="absolute top-4 end-4 z-20">
+                                            <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium bg-teal-500 text-white shadow-lg">
+                                                {item.category}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    {/* Image */}
+                                    <img
+                                        src={item.imageUrl || "/placeholder.svg"}
+                                        alt={item.alt ?? ""}
+                                        className="w-full transition-transform duration-500 group-hover:scale-110"
+                                    />
+
+                                    {/* Hover Overlay with Zoom Icon - only visible on hover */}
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                        <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center transform scale-0 group-hover:scale-100 transition-transform duration-300 shadow-lg">
+                                            <ZoomIn className="w-6 h-6 text-teal-600" />
+                                        </div>
                                     </div>
-                                )}
 
-                                {/* Caption Over Image */}
-                                {captionPosition === "over" && item.caption && (
-                                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-4">
-                                        <p className="text-sm font-medium text-white">{item.caption}</p>
+                                    {/* Caption Over Image */}
+                                    {captionPosition === "over" && item.caption && (
+                                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-4">
+                                            <p className="text-sm font-medium text-white">{item.caption}</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Content Area - Caption Under Image */}
+                                {captionPosition === "under" && (item.alt || item.caption) && (
+                                    <div className="p-5 text-start">
+                                        {item.alt && (
+                                            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2 group-hover:text-teal-600 transition-colors duration-300">
+                                                {item.alt}
+                                            </h3>
+                                        )}
+                                        {item.caption && (
+                                            <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                                                {item.caption}
+                                            </p>
+                                        )}
                                     </div>
                                 )}
                             </div>
-
-                            {/* Caption Under Image */}
-                            {captionPosition === "under" && item.caption && (
-                                <div className="mt-2 px-2">
-                                    <p className="text-sm font-medium text-foreground">{item.caption}</p>
-                                </div>
-                            )}
                         </div>
                     ))}
                 </div>
 
                 {filteredItems.length === 0 && (
                     <div className="text-center py-12">
-                        <p className="text-muted-foreground text-lg">لا توجد صور في هذه الفئة</p>
+                        <p className="text-muted-foreground text-lg">{isAr ? "لا توجد صور في هذه الفئة" : "No images in this category"}</p>
                     </div>
                 )}
             </SectionContainer>

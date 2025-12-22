@@ -57,6 +57,14 @@ export type BlockKind =
     | "form-checkbox"
     | "form-radio"
     | "form-button"
+    | "dynamic-form"
+    | "job-application-form"
+    | "info-card"
+    // Firebase Data Blocks
+    | "firebase-news"
+    | "firebase-achievements"
+    | "firebase-gallery"
+    | "firebase-hero-slider"
 
 export interface BaseBlock {
     id: string
@@ -70,12 +78,19 @@ export interface BaseBlock {
 }
 
 export interface SectionHeader {
-    eyebrow?: string
-    title?: string
-    description?: string
+    eyebrowAr?: string
+    eyebrowEn?: string
+    titleAr?: string
+    titleEn?: string
+    descriptionAr?: string
+    descriptionEn?: string
     imageUrl?: string
     imageAlt?: string
     align?: "left" | "center" | "right"
+    // Deprecated fields for backward compatibility
+    eyebrow?: string
+    title?: string
+    description?: string
 }
 
 export interface HeroSliderBlock extends BaseBlock {
@@ -83,10 +98,20 @@ export interface HeroSliderBlock extends BaseBlock {
     slides: {
         id: string
         title: string
+        titleEn?: string
         subtitle: string
+        subtitleEn?: string
         description: string
+        descriptionEn?: string
         imageUrl: string
         badgeText?: string
+        badgeTextEn?: string
+        primaryCtaLabel?: string
+        primaryCtaLabelEn?: string
+        primaryCtaHref?: string
+        secondaryCtaLabel?: string
+        secondaryCtaLabelEn?: string
+        secondaryCtaHref?: string
     }[]
     autoplay?: boolean
     interval?: number
@@ -115,16 +140,22 @@ export interface SectionHeaderBlock extends BaseBlock, SectionHeader {
 export interface RichTextBlock extends BaseBlock {
     kind: "rich-text"
     header?: SectionHeader
-    body: string
+    bodyAr: string
+    bodyEn: string
+    // Backward compatibility
+    body?: string
 }
 
 export interface ImageWithTextBlock extends BaseBlock {
     kind: "image-with-text"
     header?: SectionHeader
-    text: string
+    textAr: string
+    textEn: string
     imageUrl: string
     imageAlt?: string
     imageSide?: "left" | "right"
+    // Backward compatibility
+    text?: string
 }
 
 export interface HighlightBannerBlock extends BaseBlock {
@@ -202,11 +233,17 @@ export interface TestimonialsBlock extends BaseBlock {
     layout?: "grid" | "slider"
     autoplay?: boolean
     interval?: number
+    enablePublicSubmission?: boolean
+    enableFirebaseReviews?: boolean
+    useTestimonialsFromDashboard?: boolean
     items: {
         id: string
         quote: string
+        quoteEn?: string
         author: string
+        authorEn?: string
         role?: string
+        roleEn?: string
         avatarUrl?: string
         rating?: number
     }[]
@@ -260,9 +297,12 @@ export interface StaffGridBlock extends BaseBlock {
     items: {
         id: string
         name: string
+        nameEn?: string
         role: string
+        roleEn?: string
         photoUrl?: string
         bioShort?: string
+        bioShortEn?: string
         email?: string
         phone?: string
     }[]
@@ -310,7 +350,9 @@ export interface FaqAccordionBlock extends BaseBlock {
     items: {
         id: string
         question: string
+        questionEn?: string
         answer: string
+        answerEn?: string
     }[]
 }
 
@@ -332,10 +374,12 @@ export interface ContactSectionBlock extends BaseBlock {
     header?: SectionHeader
     info: {
         address?: string
+        addressEn?: string
         phone?: string
         email?: string
         whatsapp?: string
         workingHours?: string
+        workingHoursEn?: string
     }
     showForm?: boolean
 }
@@ -350,10 +394,14 @@ export interface MapBlock extends BaseBlock {
 export interface CtaStripBlock extends BaseBlock {
     kind: "cta-strip"
     title: string
+    titleEn?: string
     text?: string
+    textEn?: string
     primaryCtaLabel: string
+    primaryCtaLabelEn?: string
     primaryCtaHref: string
     secondaryCtaLabel?: string
+    secondaryCtaLabelEn?: string
     secondaryCtaHref?: string
     variant?: "default" | "gradient" | "outlined"
     backgroundColor?: string
@@ -365,14 +413,16 @@ export interface ColumnsBlock extends BaseBlock {
     kind: "columns"
     columns: 2 | 3 | 4
     gap?: "sm" | "md" | "lg"
-    blocks: Block[]
+    columnSlots: Block[][] // Array of arrays - each inner array holds blocks for that column
+    blocks?: Block[] // Deprecated - kept for backward compatibility
 }
 
 export interface GridBlock extends BaseBlock {
     kind: "grid"
     columns: 2 | 3 | 4
     gap?: "sm" | "md" | "lg"
-    blocks: Block[]
+    columnSlots: Block[][] // Array of arrays - each inner array holds blocks for that column
+    blocks?: Block[] // Deprecated - kept for backward compatibility
 }
 
 // Added block interfaces from updates
@@ -443,17 +493,30 @@ export interface CustomHtmlBlock extends BaseBlock {
 
 export interface HeroBasicBlock extends BaseBlock {
     kind: "hero-basic"
-    eyebrow?: string
-    title: string
-    subtitle?: string
-    description?: string
-    primaryCtaLabel?: string
+    eyebrowAr?: string
+    eyebrowEn?: string
+    titleAr: string
+    titleEn: string
+    subtitleAr?: string
+    subtitleEn?: string
+    descriptionAr?: string
+    descriptionEn?: string
+    primaryCtaLabelAr?: string
+    primaryCtaLabelEn?: string
     primaryCtaHref?: string
-    secondaryCtaLabel?: string
+    secondaryCtaLabelAr?: string
+    secondaryCtaLabelEn?: string
     secondaryCtaHref?: string
     imageUrl?: string
     imageAlt?: string
     align?: "left" | "center"
+    // Deprecated fields kept for backward compatibility (optional)
+    title?: string
+    subtitle?: string
+    description?: string
+    eyebrow?: string
+    primaryCtaLabel?: string
+    secondaryCtaLabel?: string
 }
 
 export type Block =
@@ -511,6 +574,29 @@ export type Block =
     | FormCheckboxBlock
     | FormRadioBlock
     | FormButtonBlock
+    | DynamicFormBlock
+    | JobApplicationFormBlock
+    | InfoCardBlock
+    // Firebase Data Blocks
+    | FirebaseNewsBlock
+    | FirebaseAchievementsBlock
+    | FirebaseGalleryBlock
+    | FirebaseHeroSliderBlock
+
+// Info Card Block - Feature card with gradient banner, icon, title, description, and button
+export interface InfoCardBlock extends BaseBlock {
+    kind: "info-card"
+    icon?: string // Icon name or URL
+    titleAr: string
+    titleEn: string
+    descriptionAr: string
+    descriptionEn: string
+    buttonTextAr?: string
+    buttonTextEn?: string
+    buttonLink?: string
+    themeColor: "pink" | "blue" | "teal" | "purple" | "orange" | "green" | "red" | "cyan"
+    showButton?: boolean
+}
 
 // About Section Block
 export interface AboutSectionBlock extends BaseBlock {
@@ -568,6 +654,8 @@ export interface JobsListingBlock extends BaseBlock {
     kind: "jobs-listing"
     header?: SectionHeader
     emptyStateMessage?: string
+    emptyStateMessageEn?: string
+    useJobsFromDashboard?: boolean
     items: {
         id: string
         title: string
@@ -584,6 +672,23 @@ export interface JobsListingBlock extends BaseBlock {
         genderEn?: string
         applyLink?: string
     }[]
+}
+
+// Job Application Form Block
+export interface JobApplicationFormBlock extends BaseBlock {
+    kind: "job-application-form"
+    jobId?: string
+    header?: {
+        title?: string
+        titleEn?: string
+        description?: string
+        descriptionEn?: string
+    }
+    submitButtonText?: string
+    submitButtonTextEn?: string
+    successMessage?: string
+    successMessageEn?: string
+    showAllJobs?: boolean
 }
 
 // Social Icons Block
@@ -767,8 +872,69 @@ export interface FormButtonBlock extends BaseBlock {
     fullWidth?: boolean
 }
 
+// Dynamic Form Block - Loads form from dashboard forms
+export interface DynamicFormBlock extends BaseBlock {
+    kind: "dynamic-form"
+    formId: string
+    submitButtonText?: string
+    submitButtonTextEn?: string
+    successMessage?: string
+    successMessageEn?: string
+    // Customization options for hover effects
+    hoverBorderColor?: "pink" | "purple" | "blue" | "teal" | "emerald" | "orange"
+    hoverShadowColor?: "pink" | "purple" | "blue" | "teal" | "emerald" | "orange"
+}
+
+// Firebase News Block - Displays news from /school_info/namothajia/news
+export interface FirebaseNewsBlock extends BaseBlock {
+    kind: "firebase-news"
+    header?: SectionHeader
+    columns: 2 | 3 | 4
+    maxRows: 1 | 2 | 3
+    themeColor: "rose" | "blue" | "emerald" | "purple" | "amber" | "cyan"
+    showDate?: boolean
+    showImage?: boolean
+}
+
+// Firebase Achievements Block - Displays achievements from /school_info/namothajia/achievements
+export interface FirebaseAchievementsBlock extends BaseBlock {
+    kind: "firebase-achievements"
+    header?: SectionHeader
+    columns: 2 | 3 | 4
+    maxRows: 1 | 2 | 3
+    themeColor: "gold" | "emerald" | "blue" | "purple" | "rose" | "orange"
+    showDate?: boolean
+    showImage?: boolean
+}
+
+// Firebase Gallery Block - Displays gallery from /school_info/namothajia/gallery
+export interface FirebaseGalleryBlock extends BaseBlock {
+    kind: "firebase-gallery"
+    header?: SectionHeader
+    columns: 2 | 3 | 4
+    maxRows: 1 | 2 | 3
+    themeColor: "violet" | "teal" | "pink" | "indigo" | "sky" | "lime"
+    showCaption?: boolean
+    enableLightbox?: boolean
+}
+
+// Firebase Hero Slider Block - Displays hero images from /school_info/namothajia/hero_images
+export interface FirebaseHeroSliderBlock extends BaseBlock {
+    kind: "firebase-hero-slider"
+    autoplay?: boolean
+    interval?: number
+    showDots?: boolean
+    showArrows?: boolean
+    showTitle?: boolean
+    titlePosition?: "top" | "center" | "bottom"
+    height?: "screen" | "large" | "medium"
+}
+
 export interface PageBlocksValue {
-    blocks: Block[]
+    blocksAr: Block[]
+    blocksEn: Block[]
+    // Deprecated - for backward compatibility
+    blocks?: Block[]
 }
 
 export type PageBlocksMode = "view" | "edit"

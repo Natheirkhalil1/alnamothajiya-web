@@ -1,6 +1,6 @@
 import * as React from "react"
 import { Block, HeroSliderBlock } from "../types"
-import { InputField, TextareaField, createId, applyBlockStyles } from "../utils"
+import { InputField, ImageField, TextareaField, createId, applyBlockStyles } from "../utils"
 
 export function HeroSliderEditor({ block, onChange }: { block: HeroSliderBlock; onChange: (b: Block) => void }) {
     const updateSlides = (updater: (slides: HeroSliderBlock["slides"]) => HeroSliderBlock["slides"]) =>
@@ -112,7 +112,7 @@ export function HeroSliderEditor({ block, onChange }: { block: HeroSliderBlock; 
                             }
                             rows={2}
                         />
-                        <InputField
+                        <ImageField
                             label="رابط الصورة"
                             value={slide.imageUrl}
                             onChange={(v) =>
@@ -179,17 +179,17 @@ export function HeroSliderView({ block }: { block: HeroSliderBlock }) {
                         className={`absolute inset-0 transition-opacity duration-1000 ${index === currentSlide ? "opacity-100" : "opacity-0"
                             }`}
                     >
-                        {/* Overlay background with gradient */}
-                        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/70 to-background/90" />
-                        <div className="absolute inset-0 bg-gradient-to-r from-primary via-transparent to-accent/5" />
-
+                        {/* Background Image */}
                         <img
                             src={slide.imageUrl || "/placeholder.svg"}
                             alt={slide.title}
                             className="w-full h-full object-cover"
                         />
 
-                        <div className="absolute inset-0 flex items-center justify-center">
+                        {/* Subtle overlay for better text readability */}
+                        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/40" />
+
+                        <div className="absolute inset-0 flex items-center justify-center z-10">
                             <div className="container mx-auto px-4">
                                 <div className="max-w-5xl mx-auto text-center">
                                     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
@@ -267,7 +267,13 @@ export function HeroSliderView({ block }: { block: HeroSliderBlock }) {
                             className="absolute right-4 top-1/2 -translate-y-1/2 p-4 rounded-full bg-background/10 backdrop-blur-md border border-white/10 text-foreground hover:bg-background/20 transition-all duration-300 hover:scale-110 z-20 hidden md:block group"
                             aria-label="Next slide"
                         >
-                                },
-                            ])
-                        }
-                            className="rounded-full border border-slate-300 bg-white px-2 py-0.5 text-[11px]"
+                            <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                    </>
+                )}
+            </section>
+        </>
+    )
+}

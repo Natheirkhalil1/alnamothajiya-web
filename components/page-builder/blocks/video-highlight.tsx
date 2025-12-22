@@ -1,7 +1,7 @@
 import * as React from "react"
 import { Block, VideoHighlightBlock, SectionHeader } from "../types"
 import { nmTheme } from "../theme"
-import { InputField, SectionContainer, applyBlockStyles } from "../utils"
+import { InputField, ImageField, SectionContainer, applyBlockStyles } from "../utils"
 
 export function VideoHighlightEditor({
     block,
@@ -27,7 +27,7 @@ export function VideoHighlightEditor({
                 value={block.videoUrl ?? ""}
                 onChange={(v) => update({ videoUrl: v || undefined })}
             />
-            <InputField
+            <ImageField
                 label="صورة مصغرة"
                 value={block.thumbnailUrl ?? ""}
                 onChange={(v) => update({ thumbnailUrl: v || undefined })}

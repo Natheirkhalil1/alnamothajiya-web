@@ -1,19 +1,20 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useState, useEffect } from "react"
-// FIREBASE: Firebase imports
-// import type { User } from "firebase/auth"
-// import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth"
-// import { getFirebaseAuth } from "./firebase"
+import { createContext, useContext, useState, useEffect, useRef } from "react"
+import type { User } from "firebase/auth"
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth"
+import { getFirebaseAuth } from "./firebase"
 import type { Employee } from "./storage"
 import { updateEmployee, getEmployeeByEmail } from "./storage"
-import { getFromLocalStorage, saveToLocalStorage, COLLECTIONS } from "./storage-adapter"
 
 interface AuthContextType {
   currentUser: Employee | null
-  firebaseUser: any | null // Changed from User to any for localStorage compatibility
+  firebaseUser: User | null
   isAdmin: boolean
+  isLoading: boolean
+  isAuthenticated: boolean
+  username: string
   login: (email: string, password: string) => Promise<boolean>
   logout: () => void
   hasPermission: (permission: keyof Employee["permissions"]) => boolean
@@ -22,12 +23,24 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+// Key for persisting auth expectation
+const AUTH_PERSISTENCE_KEY = "auth_session_active"
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<Employee | null>(null)
-  const [firebaseUser, setFirebaseUser] = useState<any | null>(null)
+  const [firebaseUser, setFirebaseUser] = useState<User | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
   const [employee, setEmployee] = useState<Employee | null>(null)
+  // Track if we're fetching employee data (for showing loading state)
+  const [isFetchingEmployeeState, setIsFetchingEmployeeState] = useState(false)
+  // Track if onAuthStateChanged has fired at least once
+  const [authInitialized, setAuthInitialized] = useState(false)
+
+  // Track if we're currently fetching employee data to prevent race conditions
+  const isFetchingEmployee = useRef(false)
+  // Track the last known authenticated state to prevent flicker
+  const wasAuthenticated = useRef(false)
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -35,188 +48,156 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return
     }
 
-    console.log("[v0] Checking localStorage auth state...")
-    
-    // LocalStorage implementation (active)
-    const checkAuth = async () => {
-      const storedEmployee = localStorage.getItem("currentEmployee")
-      const sessionTimestamp = localStorage.getItem("sessionTimestamp")
-      
-      if (storedEmployee && sessionTimestamp) {
-        const employee: Employee = JSON.parse(storedEmployee)
-        
-        // Check session expiration (3 days)
-        const threeDaysInMs = 3 * 24 * 60 * 60 * 1000
-        const sessionAge = Date.now() - Number.parseInt(sessionTimestamp)
-        
-        if (sessionAge > threeDaysInMs) {
-          console.log("[v0] Session expired after 3 days, logging out")
-          localStorage.removeItem("currentEmployee")
+    // Check if we had a previous session - if so, stay in loading state until Firebase confirms
+    const hadPreviousSession = localStorage.getItem(AUTH_PERSISTENCE_KEY) === "true"
+    if (hadPreviousSession) {
+      console.log("[Firebase] Previous session detected, waiting for auth restoration...")
+    }
+
+    console.log("[Firebase] Setting up auth state listener...")
+
+    try {
+      const auth = getFirebaseAuth()
+
+      const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
+        console.log("[Firebase] Auth state changed:", user?.email)
+        setAuthInitialized(true)
+        setFirebaseUser(user)
+
+        if (user) {
+          // Mark that we have an active session
+          localStorage.setItem(AUTH_PERSISTENCE_KEY, "true")
+
+          // Prevent multiple concurrent fetches
+          if (isFetchingEmployee.current) {
+            console.log("[Firebase] Already fetching employee, skipping...")
+            return
+          }
+
+          isFetchingEmployee.current = true
+          setIsFetchingEmployeeState(true)
+
+          try {
+            const employeeData = await getEmployeeByEmail(user.email!)
+
+            if (employeeData && employeeData.isActive) {
+              setCurrentUser(employeeData)
+              setEmployee(employeeData)
+              setIsAdmin(employeeData.role === "admin")
+              wasAuthenticated.current = true
+
+              const sessionTimestamp = localStorage.getItem("sessionTimestamp")
+              if (!sessionTimestamp) {
+                localStorage.setItem("sessionTimestamp", Date.now().toString())
+              } else {
+                // Extended to 7 days for better UX
+                const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000
+                const sessionAge = Date.now() - Number.parseInt(sessionTimestamp)
+
+                if (sessionAge > sevenDaysInMs) {
+                  console.log("[Firebase] Session expired after 7 days, logging out")
+                  await signOut(auth)
+                  localStorage.removeItem("sessionTimestamp")
+                  localStorage.removeItem(AUTH_PERSISTENCE_KEY)
+                  setCurrentUser(null)
+                  setEmployee(null)
+                  setIsAdmin(false)
+                  setFirebaseUser(null)
+                  wasAuthenticated.current = false
+                  setLoading(false)
+                  isFetchingEmployee.current = false
+                  return
+                }
+              }
+
+              console.log("[Firebase] Employee loaded:", employeeData.fullName, "Role:", employeeData.role)
+            } else {
+              console.log("[Firebase] Employee not found or inactive")
+              localStorage.removeItem(AUTH_PERSISTENCE_KEY)
+              setCurrentUser(null)
+              setEmployee(null)
+              setIsAdmin(false)
+              wasAuthenticated.current = false
+            }
+          } finally {
+            isFetchingEmployee.current = false
+            setIsFetchingEmployeeState(false)
+          }
+        } else {
+          // No user - clear session markers
+          localStorage.removeItem(AUTH_PERSISTENCE_KEY)
           localStorage.removeItem("sessionTimestamp")
           setCurrentUser(null)
           setEmployee(null)
           setIsAdmin(false)
-          setFirebaseUser(null)
-        } else if (employee.isActive) {
-          console.log("[v0] Employee loaded from localStorage:", employee.fullName, "Role:", employee.role)
-          setCurrentUser(employee)
-          setEmployee(employee)
-          setIsAdmin(employee.role === "admin")
-          setFirebaseUser({ email: employee.email, uid: employee.id })
+          wasAuthenticated.current = false
         }
-      }
-      
+
+        setLoading(false)
+      })
+
+      return () => unsubscribe()
+    } catch (error) {
+      console.error("[Firebase] Error setting up auth:", error)
       setLoading(false)
+      setAuthInitialized(true)
     }
-    
-    checkAuth()
-
-    // FIREBASE: Original Firebase auth state listener
-    // try {
-    //   const auth = getFirebaseAuth()
-    //   
-    //   const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
-    //     console.log("[v0] Auth state changed:", user?.email)
-    //     setFirebaseUser(user)
-
-    //     if (user) {
-    //       const employee = await getEmployeeByEmail(user.email!)
-
-    //       if (employee && employee.isActive) {
-    //         setCurrentUser(employee)
-    //         setEmployee(employee)
-    //         setIsAdmin(employee.role === "admin")
-
-    //         const sessionTimestamp = localStorage.getItem("sessionTimestamp")
-    //         if (!sessionTimestamp) {
-    //           localStorage.setItem("sessionTimestamp", Date.now().toString())
-    //         } else {
-    //           const threeDaysInMs = 3 * 24 * 60 * 60 * 1000
-    //           const sessionAge = Date.now() - Number.parseInt(sessionTimestamp)
-
-    //           if (sessionAge > threeDaysInMs) {
-    //             console.log("[v0] Session expired after 3 days, logging out")
-    //             await signOut(auth)
-    //             localStorage.removeItem("sessionTimestamp")
-    //             setCurrentUser(null)
-    //             setEmployee(null)
-    //             setIsAdmin(false)
-    //             setFirebaseUser(null)
-    //             setLoading(false)
-    //             return
-    //           }
-    //         }
-
-    //         console.log("[v0] Employee loaded:", employee.fullName, "Role:", employee.role)
-    //       } else {
-    //         console.log("[v0] Employee not found or inactive")
-    //         setCurrentUser(null)
-    //         setEmployee(null)
-    //         setIsAdmin(false)
-    //       }
-    //     } else {
-    //       setCurrentUser(null)
-    //       setEmployee(null)
-    //       setIsAdmin(false)
-    //       localStorage.removeItem("sessionTimestamp")
-    //     }
-
-    //     setLoading(false)
-    //   })
-
-    //   return () => unsubscribe()
-    // } catch (error) {
-    //   console.error("[v0] Error setting up auth:", error)
-    //   setLoading(false)
-    // }
   }, [])
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      console.log("[v0] Attempting localStorage login for:", email)
-      
-      // LocalStorage implementation (active)
+      console.log("[Firebase] Attempting login for:", email)
+      const auth = getFirebaseAuth()
+
+      const userCredential = await signInWithEmailAndPassword(auth, email, password)
+      console.log("[Firebase] Firebase auth successful:", userCredential.user.email)
+
       const employee = await getEmployeeByEmail(email)
-      
-      if (employee && employee.isActive && employee.password === password) {
-        console.log("[v0] Password match successful for:", employee.fullName)
-        
+
+      if (employee && employee.isActive) {
         setCurrentUser(employee)
         setEmployee(employee)
         setIsAdmin(employee.role === "admin")
-        setFirebaseUser({ email: employee.email, uid: employee.id })
-        
-        // Store session in localStorage
-        localStorage.setItem("currentEmployee", JSON.stringify(employee))
         localStorage.setItem("sessionTimestamp", Date.now().toString())
+        localStorage.setItem(AUTH_PERSISTENCE_KEY, "true")
+        wasAuthenticated.current = true
 
         await updateEmployee(employee.id, { lastLogin: new Date().toISOString() })
-        console.log("[v0] Login successful for:", employee.fullName)
+        console.log("[Firebase] Login successful for:", employee.fullName)
 
         return true
       } else {
-        console.log("[v0] Invalid credentials or employee not active")
-        throw new Error("INVALID_PASSWORD")
+        console.log("[Firebase] Employee not found or inactive in Firestore")
+        await signOut(auth)
+        throw new Error("EMPLOYEE_NOT_FOUND")
       }
-
-      // FIREBASE: Original Firebase authentication
-      // console.log("[v0] Attempting login for:", email)
-      // const auth = getFirebaseAuth()
-
-      // const userCredential = await signInWithEmailAndPassword(auth, email, password)
-      // console.log("[v0] Firebase auth successful:", userCredential.user.email)
-
-      // const employee = await getEmployeeByEmail(email)
-
-      // if (employee && employee.isActive) {
-      //   setCurrentUser(employee)
-      //   setEmployee(employee)
-      //   setIsAdmin(employee.role === "admin")
-      //   localStorage.setItem("sessionTimestamp", Date.now().toString())
-
-      //   await updateEmployee(employee.id, { lastLogin: new Date().toISOString() })
-      //   console.log("[v0] Login successful for:", employee.fullName)
-
-      //   return true
-      // } else {
-      //   console.log("[v0] Employee not found or inactive in Firestore")
-      //   await signOut(auth)
-      //   throw new Error("EMPLOYEE_NOT_FOUND")
-      // }
     } catch (error: any) {
-      console.error("[v0] Login error:", error.message)
-      if (error.message === "INVALID_PASSWORD") {
+      console.error("[Firebase] Login error:", error.message)
+      if (error.code === "auth/wrong-password" || error.code === "auth/invalid-credential") {
         throw new Error("INVALID_PASSWORD")
+      } else if (error.code === "auth/user-not-found") {
+        throw new Error("USER_NOT_FOUND")
       } else if (error.message === "EMPLOYEE_NOT_FOUND") {
         throw new Error("EMPLOYEE_NOT_FOUND")
       } else {
-        throw new Error("USER_NOT_FOUND")
+        throw new Error("LOGIN_ERROR")
       }
     }
   }
 
   const logout = async () => {
     try {
-      console.log("[v0] Logging out from localStorage")
-      
-      // LocalStorage implementation (active)
-      localStorage.removeItem("currentEmployee")
-      localStorage.removeItem("sessionTimestamp")
+      console.log("[Firebase] Logging out")
+      const auth = getFirebaseAuth()
+      await signOut(auth)
       setCurrentUser(null)
       setEmployee(null)
       setIsAdmin(false)
       setFirebaseUser(null)
-
-      // FIREBASE: Original Firebase logout
-      // const auth = getFirebaseAuth()
-      // await signOut(auth)
-      // setCurrentUser(null)
-      // setEmployee(null)
-      // setIsAdmin(false)
-      // setFirebaseUser(null)
-      // localStorage.removeItem("sessionTimestamp")
+      localStorage.removeItem("sessionTimestamp")
+      localStorage.removeItem(AUTH_PERSISTENCE_KEY)
     } catch (error) {
-      console.error("[v0] Logout error:", error)
+      console.error("[Firebase] Logout error:", error)
     }
   }
 
@@ -226,16 +207,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return currentUser.permissions[permission]
   }
 
-  if (loading) {
+  // Check if we should expect a session (prevents premature redirect)
+  const hadPreviousSession = typeof window !== "undefined" && localStorage.getItem(AUTH_PERSISTENCE_KEY) === "true"
+
+  // Show loading if:
+  // 1. Initial auth check is in progress (loading = true)
+  // 2. We're fetching employee data
+  // 3. We had a previous session but auth hasn't initialized yet (waiting for Firebase to restore)
+  const isLoading = loading || isFetchingEmployeeState || (hadPreviousSession && !authInitialized)
+
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-pulse text-gray-600">Loading...</div>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
       </div>
     )
   }
 
+  // User is authenticated if:
+  // 1. We have a currentUser (fully loaded)
+  // 2. OR firebaseUser exists and we're still fetching employee data
+  // 3. OR we had a previous session and auth is being restored
+  const isAuthenticated = !!currentUser || (!!firebaseUser && (wasAuthenticated.current || isFetchingEmployeeState))
+  const username = currentUser?.fullName || currentUser?.email || ""
+
   return (
-    <AuthContext.Provider value={{ currentUser, firebaseUser, isAdmin, login, logout, hasPermission, employee }}>
+    <AuthContext.Provider value={{
+      currentUser,
+      firebaseUser,
+      isAdmin,
+      isLoading,
+      isAuthenticated,
+      username,
+      login,
+      logout,
+      hasPermission,
+      employee
+    }}>
       {children}
     </AuthContext.Provider>
   )

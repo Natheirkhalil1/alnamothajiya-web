@@ -1,7 +1,7 @@
 import * as React from "react"
 import { Block, HeroSplitBlock } from "../types"
 import { nmTheme } from "../theme"
-import { InputField, SelectField, TextareaField, SectionContainer, applyBlockStyles } from "../utils"
+import { InputField, ImageField, SelectField, TextareaField, SectionContainer, applyBlockStyles } from "../utils"
 
 export function HeroSplitEditor({
     block,
@@ -29,8 +29,8 @@ export function HeroSplitEditor({
                     { value: "right", label: "يمين" },
                 ]}
             />
-            <InputField
-                label="Image URL"
+            <ImageField
+                label="Image"
                 value={block.imageUrl ?? ""}
                 onChange={(v) => update({ imageUrl: v || undefined })}
             />

@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { PageBlocks, type PageBlocksValue } from "./page-blocks-editor-core"
-import type { Block } from "./page-blocks-editor-core"
+import { PageBlocks } from "./page-blocks-editor-core"
+import type { PageBlocksValue, Block } from "./page-builder/types"
 import { Button } from "@/components/ui/button"
 import { Sparkles, Code, FileCode } from "lucide-react"
 import { TemplatesModal } from "./page-builder/templates-modal"
@@ -17,6 +17,7 @@ interface PageBlocksEditorProps {
   customJs?: string
   onCustomCssChange?: (css: string) => void
   onCustomJsChange?: (js: string) => void
+  editingLanguage?: "ar" | "en"
 }
 
 export function PageBlocksEditor({
@@ -25,20 +26,62 @@ export function PageBlocksEditor({
   customCss = "",
   customJs = "",
   onCustomCssChange,
-  onCustomJsChange
+  onCustomJsChange,
+  editingLanguage = "ar"
 }: PageBlocksEditorProps) {
   const [templatesOpen, setTemplatesOpen] = useState(false)
   const [cssModalOpen, setCssModalOpen] = useState(false)
   const [jsModalOpen, setJsModalOpen] = useState(false)
 
-  const value: PageBlocksValue = { blocks }
+  // Pass blocks to the correct language array based on editingLanguage
+  const value: PageBlocksValue = {
+    blocksAr: editingLanguage === "ar" ? blocks : [],
+    blocksEn: editingLanguage === "en" ? blocks : [],
+    blocks // Keep for backward compatibility
+  }
 
   const handleChange = (newValue: PageBlocksValue) => {
-    onChange(newValue.blocks)
+    // Return blocks based on the current editing language
+    if (editingLanguage === "en") {
+      onChange(newValue.blocksEn || [])
+    } else {
+      onChange(newValue.blocksAr || [])
+    }
   }
 
   const handleSelectTemplate = (template: BlockTemplate) => {
-    const newBlocks = [...blocks, ...template.blocks]
+    // Deep clone blocks and regenerate all IDs to avoid conflicts
+    const clonedBlocks = template.blocks.map(block => {
+      const cloned = JSON.parse(JSON.stringify(block))
+      cloned.id = crypto.randomUUID()
+      // Also regenerate IDs for nested items if they exist
+      if (cloned.items && Array.isArray(cloned.items)) {
+        cloned.items = cloned.items.map((item: any) => ({
+          ...item,
+          id: crypto.randomUUID()
+        }))
+      }
+      if (cloned.slides && Array.isArray(cloned.slides)) {
+        cloned.slides = cloned.slides.map((slide: any) => ({
+          ...slide,
+          id: crypto.randomUUID()
+        }))
+      }
+      if (cloned.stats && Array.isArray(cloned.stats)) {
+        cloned.stats = cloned.stats.map((stat: any) => ({
+          ...stat,
+          id: crypto.randomUUID()
+        }))
+      }
+      if (cloned.featureCards && Array.isArray(cloned.featureCards)) {
+        cloned.featureCards = cloned.featureCards.map((card: any) => ({
+          ...card,
+          id: crypto.randomUUID()
+        }))
+      }
+      return cloned
+    })
+    const newBlocks = [...blocks, ...clonedBlocks]
     onChange(newBlocks)
   }
 
@@ -65,6 +108,7 @@ export function PageBlocksEditor({
         onOpenTemplates={() => setTemplatesOpen(true)}
         onOpenCss={() => setCssModalOpen(true)}
         onOpenJs={() => setJsModalOpen(true)}
+        editingLanguage={editingLanguage}
       />
 
       <TemplatesModal
@@ -78,6 +122,7 @@ export function PageBlocksEditor({
         onClose={() => setCssModalOpen(false)}
         initialCss={customCss}
         onSave={handleSaveCss}
+        language={editingLanguage}
       />
 
       <CustomJsModal
@@ -85,9 +130,10 @@ export function PageBlocksEditor({
         onClose={() => setJsModalOpen(false)}
         initialJs={customJs}
         onSave={handleSaveJs}
+        language={editingLanguage}
       />
     </div>
   )
 }
 
-export type { Block } from "./page-blocks-editor-core"
+export type { Block } from "./page-builder/types"

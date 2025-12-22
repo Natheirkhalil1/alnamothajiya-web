@@ -11,10 +11,12 @@ interface CustomCssModalProps {
     onClose: () => void
     initialCss: string
     onSave: (css: string) => void
+    language?: "ar" | "en"
 }
 
-export function CustomCssModal({ open, onClose, initialCss, onSave }: CustomCssModalProps) {
+export function CustomCssModal({ open, onClose, initialCss, onSave, language = "ar" }: CustomCssModalProps) {
     const [cssCode, setCssCode] = useState(initialCss)
+    const isAr = language === "ar"
 
     const handleSave = () => {
         onSave(cssCode)
@@ -37,7 +39,7 @@ export function CustomCssModal({ open, onClose, initialCss, onSave }: CustomCssM
                 <div className="border-b p-4 flex items-center justify-between bg-white sticky top-0 z-10">
                     <div className="flex items-center gap-2">
                         <Code className="h-5 w-5" />
-                        <h2 className="text-xl font-bold">محرر CSS المخصص</h2>
+                        <h2 className="text-xl font-bold">{isAr ? "محرر CSS المخصص" : "Custom CSS Editor"}</h2>
                     </div>
                     <Button variant="ghost" size="icon" onClick={onClose}>
                         <span className="sr-only">Close</span>
@@ -82,21 +84,21 @@ export function CustomCssModal({ open, onClose, initialCss, onSave }: CustomCssM
                     />
                 </div>
 
-                <div className="mx-4 mb-4 text-xs text-slate-500 space-y-1 p-3 bg-slate-50 rounded-lg border">
-                    <p className="font-semibold">💡 نصائح:</p>
-                    <ul className="list-disc list-inside space-y-1 mr-2">
-                        <li>يمكنك استهداف البلوكات باستخدام الأسماء والمعرفات المولدة تلقائياً</li>
-                        <li>سيتم تطبيق الأنماط على الصفحة المعاينة والصفحة المنشورة</li>
-                        <li>استخدم أدوات المطور في المتصفح لمعرفة أسماء الفئات</li>
+                <div className="mx-4 mb-4 text-xs text-slate-500 space-y-1 p-3 bg-slate-50 rounded-lg border" dir={isAr ? "rtl" : "ltr"}>
+                    <p className="font-semibold">💡 {isAr ? "نصائح:" : "Tips:"}</p>
+                    <ul className={`list-disc list-inside space-y-1 ${isAr ? "mr-2" : "ml-2"}`}>
+                        <li>{isAr ? "يمكنك استهداف البلوكات باستخدام الأسماء والمعرفات المولدة تلقائياً" : "You can target blocks using auto-generated class names and IDs"}</li>
+                        <li>{isAr ? "سيتم تطبيق الأنماط على الصفحة المعاينة والصفحة المنشورة" : "Styles will be applied to preview and published pages"}</li>
+                        <li>{isAr ? "استخدم أدوات المطور في المتصفح لمعرفة أسماء الفئات" : "Use browser DevTools to find class names"}</li>
                     </ul>
                 </div>
 
                 <div className="border-t p-4 flex justify-end gap-2 bg-gray-50">
                     <Button variant="outline" onClick={handleCancel}>
-                        إلغاء
+                        {isAr ? "إلغاء" : "Cancel"}
                     </Button>
                     <Button onClick={handleSave} className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-                        حفظ التغييرات
+                        {isAr ? "حفظ التغييرات" : "Save Changes"}
                     </Button>
                 </div>
             </div>

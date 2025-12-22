@@ -1,6 +1,6 @@
 import * as React from "react"
 import { Block, LogosStripBlock, SectionHeader } from "../types"
-import { InputField, SectionContainer, createId, applyBlockStyles } from "../utils"
+import { InputField, ImageField, SectionContainer, createId, applyBlockStyles } from "../utils"
 
 export function LogosStripEditor({
     block,
@@ -39,8 +39,8 @@ export function LogosStripEditor({
                 </div>
                 {block.items.map((item) => (
                     <div key={item.id} className="space-y-1 rounded-md border border-slate-200 bg-slate-50/60 p-2">
-                        <InputField
-                            label="رابط الشعار"
+                        <ImageField
+                            label="الشعار"
                             value={item.logoUrl}
                             onChange={(v) => updateItems((items) => items.map((i) => (i.id === item.id ? { ...i, logoUrl: v } : i)))}
                         />

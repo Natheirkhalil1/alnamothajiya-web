@@ -1,7 +1,10 @@
 import * as React from "react"
 import { Block, ImageWithTextBlock, SectionHeader } from "../types"
 import { nmTheme } from "../theme"
-import { InputField, SelectField, TextareaField, SectionContainer, StylingGroup, applyBlockStyles } from "../utils"
+import { InputField, ImageField, SelectField, TextareaField, SectionContainer, StylingGroup, applyBlockStyles } from "../utils"
+import { MonolingualSectionHeaderEditor, getLocalizedHeader } from "../bilingual-helpers"
+import { useLanguage } from "@/lib/language-context"
+import { useEditingLanguage } from "../editing-language-context"
 
 export function ImageWithTextEditor({
     block,
@@ -10,31 +13,38 @@ export function ImageWithTextEditor({
     block: ImageWithTextBlock
     onChange: (b: Block) => void
 }) {
+    const { editingLanguage } = useEditingLanguage()
+    const isAr = editingLanguage === "ar"
+
     const header = block.header ?? {}
     const updateHeader = (patch: Partial<SectionHeader>) => onChange({ ...block, header: { ...header, ...patch } })
     const update = (patch: Partial<ImageWithTextBlock>) => onChange({ ...block, ...patch })
 
     return (
-        <div className="space-y-3 text-[11px]">
-            <InputField label="العنوان" value={header.title ?? ""} onChange={(v) => updateHeader({ title: v || undefined })} />
-            <InputField label="العنوان الفرعي" value={header.eyebrow ?? ""} onChange={(v) => updateHeader({ eyebrow: v || undefined })} />
-            <TextareaField label="النص" value={block.text} onChange={(v) => update({ text: v })} rows={4} />
+        <div className="space-y-3 text-[11px]" dir={isAr ? "rtl" : "ltr"}>
+            <MonolingualSectionHeaderEditor header={header} onChange={updateHeader} language={editingLanguage} />
+
+            {isAr ? (
+                <TextareaField label="النص" value={block.textAr} onChange={(v) => update({ textAr: v })} rows={4} />
+            ) : (
+                <TextareaField label="Text" value={block.textEn} onChange={(v) => update({ textEn: v })} rows={4} />
+            )}
 
             <div className="grid grid-cols-2 gap-2">
                 <SelectField
-                    label="موقع الصورة"
+                    label={isAr ? "موقع الصورة" : "Image Side"}
                     value={block.imageSide ?? "right"}
                     onChange={(v) => update({ imageSide: v as ImageWithTextBlock["imageSide"] })}
                     options={[
-                        { value: "left", label: "يسار" },
-                        { value: "right", label: "يمين" },
+                        { value: "left", label: isAr ? "يسار" : "Left" },
+                        { value: "right", label: isAr ? "يمين" : "Right" },
                     ]}
                 />
             </div>
 
-            <InputField label="رابط الصورة" value={block.imageUrl} onChange={(v) => update({ imageUrl: v })} />
+            <ImageField label={isAr ? "الصورة" : "Image"} value={block.imageUrl} onChange={(v) => update({ imageUrl: v })} />
             <InputField
-                label="وصف الصورة (Alt)"
+                label={isAr ? "وصف الصورة (Alt)" : "Image Alt Text"}
                 value={block.imageAlt ?? ""}
                 onChange={(v) => update({ imageAlt: v || undefined })}
             />
@@ -45,9 +55,11 @@ export function ImageWithTextEditor({
 }
 
 export function ImageWithTextView({ block }: { block: ImageWithTextBlock }) {
+    const { language } = useLanguage()
     const imageRight = block.imageSide !== "left"
-    const header = block.header
     const { hoverStyles, ...blockProps } = applyBlockStyles(block.blockStyles)
+    const header = getLocalizedHeader(block.header, language)
+    const text = language === "ar" ? (block.textAr || block.text) : (block.textEn || block.text)
 
     return (
         <>
@@ -59,12 +71,15 @@ export function ImageWithTextView({ block }: { block: ImageWithTextBlock }) {
                 padding={block.padding}
                 containerWidth={block.containerWidth}
             >
-                <div className={`grid items-center gap-10 md:grid-cols-2 ${imageRight ? "" : "md:grid-flow-col-dense"}`}>
+                <div
+                    className={`grid items-center gap-10 md:grid-cols-2 ${imageRight ? "" : "md:grid-flow-col-dense"}`}
+                    dir={language === "ar" ? "rtl" : "ltr"}
+                >
                     {!imageRight && (
                         <div>
-                            {header?.eyebrow && <p className={`mb-2 ${nmTheme.hero.eyebrow}`}>{header.eyebrow}</p>}
-                            {header?.title && <h2 className={`mb-3 ${nmTheme.textSection.title}`}>{header.title}</h2>}
-                            <p className={nmTheme.textSection.body}>{block.text}</p>
+                            {header.eyebrow && <p className={`mb-2 ${nmTheme.hero.eyebrow}`}>{header.eyebrow}</p>}
+                            {header.title && <h2 className={`mb-3 ${nmTheme.textSection.title}`}>{header.title}</h2>}
+                            {text && <p className={nmTheme.textSection.body}>{text}</p>}
                         </div>
                     )}
                     <div className="relative h-64 w-full md:h-80">
@@ -76,9 +91,9 @@ export function ImageWithTextView({ block }: { block: ImageWithTextBlock }) {
                     </div>
                     {imageRight && (
                         <div>
-                            {header?.eyebrow && <p className={`mb-2 ${nmTheme.hero.eyebrow}`}>{header.eyebrow}</p>}
-                            {header?.title && <h2 className={`mb-3 ${nmTheme.textSection.title}`}>{header.title}</h2>}
-                            <p className={nmTheme.textSection.body}>{block.text}</p>
+                            {header.eyebrow && <p className={`mb-2 ${nmTheme.hero.eyebrow}`}>{header.eyebrow}</p>}
+                            {header.title && <h2 className={`mb-3 ${nmTheme.textSection.title}`}>{header.title}</h2>}
+                            {text && <p className={nmTheme.textSection.body}>{text}</p>}
                         </div>
                     )}
                 </div>

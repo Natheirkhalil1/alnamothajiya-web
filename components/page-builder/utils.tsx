@@ -1,7 +1,11 @@
 import * as React from "react"
+import { useState } from "react"
 import { Block, BlockKind, BaseBlock } from "./types"
 import { nmTheme } from "./theme"
 import { motion } from "framer-motion"
+import { FolderOpen, X } from "lucide-react"
+import { MediaPicker } from "@/components/media-picker"
+import type { MediaItem } from "@/lib/storage"
 
 export function createId() {
     return Math.random().toString(36).slice(2)
@@ -19,6 +23,7 @@ export function SectionContainer({
     backgroundColor,
     padding = "md",
     containerWidth = "default",
+    dir,
 }: {
     children: React.ReactNode
     className?: string
@@ -26,6 +31,7 @@ export function SectionContainer({
     backgroundColor?: string
     padding?: "none" | "sm" | "md" | "lg" | "xl"
     containerWidth?: "default" | "narrow" | "full"
+    dir?: "ltr" | "rtl"
 }) {
     const paddingClass = {
         none: "py-0",
@@ -50,6 +56,7 @@ export function SectionContainer({
         <section
             className={`relative overflow-hidden ${paddingClass} ${bgClass} ${className}`}
             style={{ ...bgStyle, ...style }}
+            dir={dir}
         >
             <div className={`${widthClass} relative z-10`}>
                 <motion.div
@@ -242,7 +249,7 @@ export function InputField({
             <span>{label}</span>
             <input
                 type={type}
-                value={value}
+                value={value ?? ""}
                 onChange={(e) => onChange(e.target.value)}
                 onBlur={onBlur}
                 placeholder={placeholder}
@@ -250,6 +257,81 @@ export function InputField({
                 className="rounded border border-slate-300 bg-white px-2 py-1 text-[11px]"
             />
         </label>
+    )
+}
+
+export function ImageField({
+    label,
+    value,
+    onChange,
+    placeholder,
+}: {
+    label: string
+    value: string
+    onChange: (v: string) => void
+    placeholder?: string
+}) {
+    const [showPicker, setShowPicker] = useState(false)
+
+    const handleSelect = (item: MediaItem) => {
+        onChange(item.url)
+        setShowPicker(false)
+    }
+
+    const handleClear = (e: React.MouseEvent) => {
+        e.stopPropagation()
+        onChange("")
+    }
+
+    return (
+        <div className="flex flex-col gap-1 text-[11px] text-slate-700">
+            <span>{label}</span>
+            <div className="flex gap-1">
+                <input
+                    type="text"
+                    value={value ?? ""}
+                    onChange={(e) => onChange(e.target.value)}
+                    placeholder={placeholder || "رابط الصورة أو اختر من المكتبة"}
+                    className="flex-1 rounded border border-slate-300 bg-white px-2 py-1 text-[11px]"
+                />
+                <button
+                    type="button"
+                    onClick={() => setShowPicker(true)}
+                    className="flex items-center gap-2 rounded border border-slate-300 bg-emerald-50 hover:bg-emerald-100 px-4 py-3 text-sm text-emerald-700 transition-colors font-medium"
+                    title="اختر من المكتبة"
+                >
+                    <FolderOpen className="w-5 h-5" />
+                    <span>المكتبة</span>
+                </button>
+            </div>
+            {value && (
+                <div className="relative mt-1 rounded border border-slate-200 overflow-hidden bg-slate-50">
+                    <img
+                        src={value}
+                        alt="معاينة"
+                        className="w-full h-20 object-cover"
+                        onError={(e) => {
+                            (e.target as HTMLImageElement).src = "/placeholder.svg"
+                        }}
+                    />
+                    <button
+                        type="button"
+                        onClick={handleClear}
+                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-sm transition-colors"
+                        title="مسح الصورة"
+                    >
+                        <X className="w-3 h-3" />
+                    </button>
+                </div>
+            )}
+            <MediaPicker
+                open={showPicker}
+                onOpenChange={setShowPicker}
+                onSelect={handleSelect}
+                language="ar"
+                filterType="image"
+            />
+        </div>
     )
 }
 
@@ -275,7 +357,7 @@ export function TextareaField({
             <span>{label}</span>
             <textarea
                 rows={rows}
-                value={value}
+                value={value ?? ""}
                 onChange={(e) => onChange(e.target.value)}
                 onBlur={onBlur}
                 placeholder={placeholder}
@@ -302,7 +384,7 @@ export function SelectField({
         <label className="flex flex-col gap-1 text-[11px] text-slate-700">
             <span>{label}</span>
             <select
-                value={value}
+                value={value ?? ""}
                 onChange={(e) => onChange(e.target.value)}
                 className="rounded border border-slate-300 bg-white px-2 py-1 text-[11px]"
             >
@@ -529,6 +611,9 @@ export function blockLabel(kind: BlockKind, language: "ar" | "en" = "ar"): strin
         "form-checkbox": { ar: "مربع اختيار", en: "Checkbox" },
         "form-radio": { ar: "زر اختيار", en: "Radio Button" },
         "form-button": { ar: "زر نموذج", en: "Form Button" },
+        "firebase-news": { ar: "الأخبار", en: "News" },
+        "firebase-achievements": { ar: "الإنجازات", en: "Achievements" },
+        "firebase-gallery": { ar: "معرض الصور", en: "Gallery" },
     }
 
     return labels[kind]?.[language] || labels[kind]?.ar || kind
@@ -548,10 +633,19 @@ export function createDefaultBlock(kind: BlockKind, language: "ar" | "en" = "ar"
             return {
                 id: createId(),
                 kind: "hero-basic",
+                titleAr: "عنوان رئيسي",
+                titleEn: "Main Headline",
+                descriptionAr: "نص تعريفي قصير عن المدرسة أو الصفحة.",
+                descriptionEn: "Short introductory text about the school or page.",
+                eyebrowAr: "نص ترحيبي",
+                eyebrowEn: "Welcome Text",
+                primaryCtaLabelAr: "اقرأ المزيد",
+                primaryCtaLabelEn: "Read More",
+                align: "center",
+                blockStyles: { customId: generateCustomId() },
+                // Backward compatibility
                 title: isAr ? "عنوان رئيسي" : "Main Headline",
                 description: isAr ? "نص تعريفي قصير عن المدرسة أو الصفحة." : "Short introductory text about the school or page.",
-                align: isAr ? "right" : "left",
-                blockStyles: { customId: generateCustomId() },
             }
         case "hero-slider":
             return {
@@ -575,28 +669,39 @@ export function createDefaultBlock(kind: BlockKind, language: "ar" | "en" = "ar"
             return {
                 id: createId(),
                 kind: "section-header",
-                title: isAr ? "عنوان القسم" : "Section Title",
-                description: "",
+                titleAr: "عنوان القسم",
+                titleEn: "Section Title",
+                descriptionAr: "",
+                descriptionEn: "",
                 align: "center",
                 blockStyles: { customId: generateCustomId() },
+                // Backward compatibility
+                title: isAr ? "عنوان القسم" : "Section Title",
+                description: "",
             }
         case "rich-text":
             return {
                 id: createId(),
                 kind: "rich-text",
-                header: { title: isAr ? "عنوان القسم" : "Section Title", description: "" },
-                body: isAr ? "نص الفقرة هنا..." : "Paragraph text here...",
+                header: { titleAr: "عنوان القسم", titleEn: "Section Title", descriptionAr: "", descriptionEn: "", title: isAr ? "عنوان القسم" : "Section Title", description: "" },
+                bodyAr: "نص الفقرة هنا...",
+                bodyEn: "Paragraph text here...",
                 blockStyles: { customId: generateCustomId() },
+                // Backward compatibility
+                body: isAr ? "نص الفقرة هنا..." : "Paragraph text here...",
             }
         case "image-with-text":
             return {
                 id: createId(),
                 kind: "image-with-text",
-                header: { title: isAr ? "عنوان" : "Title", description: "" },
-                text: isAr ? "نص يشرح الصورة والمحتوى." : "Text explaining the image and content.",
+                header: { titleAr: "عنوان", titleEn: "Title", descriptionAr: "", descriptionEn: "", title: isAr ? "عنوان" : "Title", description: "" },
+                textAr: "نص يشرح الصورة والمحتوى.",
+                textEn: "Text explaining the image and content.",
                 imageUrl: "/placeholder.jpg",
                 imageSide: isAr ? "left" : "right",
                 blockStyles: { customId: generateCustomId() },
+                // Backward compatibility
+                text: isAr ? "نص يشرح الصورة والمحتوى." : "Text explaining the image and content.",
             }
         case "highlight-banner":
             return {
@@ -1088,6 +1193,97 @@ export function createDefaultBlock(kind: BlockKind, language: "ar" | "en" = "ar"
                 text: "إرسال",
                 type: "submit",
                 variant: "primary",
+                blockStyles: { customId: generateCustomId() },
+            }
+        case "info-card":
+            return {
+                id: createId(),
+                kind: "info-card",
+                icon: "users",
+                titleAr: "عنوان البطاقة",
+                titleEn: "Card Title",
+                descriptionAr: "وصف البطاقة يظهر هنا",
+                descriptionEn: "Card description goes here",
+                buttonTextAr: "انقر للمزيد",
+                buttonTextEn: "Click for more",
+                buttonLink: "#",
+                themeColor: "pink",
+                showButton: true,
+                blockStyles: { customId: generateCustomId() },
+            }
+        case "dynamic-form":
+            return {
+                id: createId(),
+                kind: "dynamic-form",
+                formId: "",
+                submitButtonText: "إرسال",
+                submitButtonTextEn: "Submit",
+                successMessage: "تم إرسال النموذج بنجاح",
+                successMessageEn: "Form submitted successfully",
+                blockStyles: { customId: generateCustomId() },
+            }
+        case "firebase-news":
+            return {
+                id: createId(),
+                kind: "firebase-news",
+                header: {
+                    titleAr: "آخر الأخبار",
+                    titleEn: "Latest News",
+                    descriptionAr: "تابع آخر أخبارنا ومستجداتنا",
+                    descriptionEn: "Stay updated with our latest news"
+                },
+                columns: 3,
+                maxRows: 2,
+                themeColor: "rose",
+                showDate: true,
+                showImage: true,
+                blockStyles: { customId: generateCustomId() },
+            }
+        case "firebase-achievements":
+            return {
+                id: createId(),
+                kind: "firebase-achievements",
+                header: {
+                    titleAr: "إنجازاتنا",
+                    titleEn: "Our Achievements",
+                    descriptionAr: "نفخر بإنجازاتنا المتميزة",
+                    descriptionEn: "We are proud of our outstanding achievements"
+                },
+                columns: 3,
+                maxRows: 2,
+                themeColor: "gold",
+                showDate: true,
+                showImage: true,
+                blockStyles: { customId: generateCustomId() },
+            }
+        case "firebase-gallery":
+            return {
+                id: createId(),
+                kind: "firebase-gallery",
+                header: {
+                    titleAr: "معرض الصور",
+                    titleEn: "Photo Gallery",
+                    descriptionAr: "لحظات مميزة من فعالياتنا",
+                    descriptionEn: "Special moments from our events"
+                },
+                columns: 3,
+                maxRows: 2,
+                themeColor: "violet",
+                showCaption: true,
+                enableLightbox: true,
+                blockStyles: { customId: generateCustomId() },
+            }
+        case "firebase-hero-slider":
+            return {
+                id: createId(),
+                kind: "firebase-hero-slider",
+                autoplay: true,
+                interval: 5000,
+                showDots: true,
+                showArrows: true,
+                showTitle: true,
+                titlePosition: "center",
+                height: "screen",
                 blockStyles: { customId: generateCustomId() },
             }
         default: {

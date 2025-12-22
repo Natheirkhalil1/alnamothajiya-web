@@ -2,8 +2,8 @@
 
 import { use, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import type { DynamicPage } from "@/lib/storage"
-import { getDynamicPageBySlug } from "@/lib/storage"
+import type { LocalizedPage } from "@/lib/storage"
+import { getLocalizedPageBySlug, isPageHomepage } from "@/lib/storage"
 import { LayoutWrapper } from "@/components/layout-wrapper"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -13,18 +13,25 @@ import { ArrowRight, ArrowLeft } from "lucide-react"
 export default function DynamicPageView({ params }: { params: Promise<{ lang: string; slug: string }> }) {
     const { lang, slug } = use(params)
     const router = useRouter()
-    const [page, setPage] = useState<DynamicPage | null>(null)
+    const [page, setPage] = useState<LocalizedPage | null>(null)
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
         async function loadPage() {
             console.log("[v0] Loading page with slug:", slug, "lang:", lang)
 
+            // Check if this page is the homepage - redirect to root URL
+            if (isPageHomepage(slug)) {
+                console.log("[v0] Page is homepage, redirecting to root")
+                router.replace(`/${lang}`)
+                return
+            }
+
             try {
-                const pageData = await getDynamicPageBySlug(slug)
+                const pageData = await getLocalizedPageBySlug(slug, lang as "ar" | "en")
 
                 if (pageData) {
-                    console.log("[v0] Found page:", pageData.titleEn || pageData.titleAr)
+                    console.log("[v0] Found page:", pageData.title)
                     setPage(pageData)
                 } else {
                     console.log("[v0] Page not found")
@@ -39,7 +46,7 @@ export default function DynamicPageView({ params }: { params: Promise<{ lang: st
         }
 
         loadPage()
-    }, [slug, lang])
+    }, [slug, lang, router])
 
     if (loading) {
         return (
@@ -72,33 +79,35 @@ export default function DynamicPageView({ params }: { params: Promise<{ lang: st
         )
     }
 
-    // Determine which blocks to render based on language
-    // Priority: blocksAr/blocksEn > blocks (fallback for backward compatibility)
-    const blocksToRender = lang === "ar"
-        ? (page.blocksAr && page.blocksAr.length > 0 ? page.blocksAr : page.blocks || [])
-        : (page.blocksEn && page.blocksEn.length > 0 ? page.blocksEn : page.blocks || [])
-
     return (
         <LayoutWrapper>
-            <main className="min-h-screen" dir={lang === "ar" ? "rtl" : "ltr"}>
-                {blocksToRender.length > 0 ? (
-                    <PageBlocks mode="view" value={{ blocks: blocksToRender }} />
+            <main className="min-h-screen" dir={page.dir}>
+                {page.blocks.length > 0 ? (
+                    <PageBlocks
+                        mode="view"
+                        value={{
+                            blocks: page.blocks as any,
+                            blocksAr: page.lang === "ar" ? page.blocks as any : [],
+                            blocksEn: page.lang === "en" ? page.blocks as any : []
+                        }}
+                        editingLanguage={page.lang}
+                    />
                 ) : (
                     <div className="min-h-screen bg-background">
                         <div className="container mx-auto px-4 py-12">
                             <div className="mb-12">
                                 <h1 className="text-5xl font-bold text-foreground mb-4">
-                                    {lang === "ar" ? page.titleAr : page.titleEn}
+                                    {page.title}
                                 </h1>
                                 <p className="text-xl text-muted-foreground">
-                                    {lang === "ar" ? page.descriptionAr : page.descriptionEn}
+                                    {page.description}
                                 </p>
                             </div>
 
                             <Card className="p-8 md:p-12">
                                 <div className="prose prose-lg max-w-none dark:prose-invert">
                                     <div className="whitespace-pre-wrap leading-relaxed">
-                                        {lang === "ar" ? page.contentAr : page.contentEn}
+                                        {page.content}
                                     </div>
                                 </div>
                             </Card>

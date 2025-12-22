@@ -11,9 +11,10 @@ export function StepsHorizontalEditor({
     onChange: (b: Block) => void
 }) {
     const header = block.header ?? {}
+    const items = block.items || []
     const updateHeader = (patch: Partial<SectionHeader>) => onChange({ ...block, header: { ...header, ...patch } })
     const updateItems = (updater: (items: StepsHorizontalBlock["items"]) => StepsHorizontalBlock["items"]) =>
-        onChange({ ...block, items: updater(block.items) })
+        onChange({ ...block, items: updater(items) })
 
     return (
         <div className="space-y-3 text-[11px]">
@@ -24,11 +25,11 @@ export function StepsHorizontalEditor({
                     <button
                         type="button"
                         onClick={() =>
-                            updateItems((items) => [
-                                ...items,
+                            updateItems((currentItems) => [
+                                ...currentItems,
                                 {
                                     id: createId(),
-                                    stepNumber: items.length + 1,
+                                    stepNumber: currentItems.length + 1,
                                     title: "خطوة جديدة",
                                 },
                             ])
@@ -38,7 +39,7 @@ export function StepsHorizontalEditor({
                         + إضافة خطوة
                     </button>
                 </div>
-                {block.items.map((item) => (
+                {items.map((item) => (
                     <div key={item.id} className="space-y-1 rounded-md border border-slate-200 bg-slate-50/60 p-2">
                         <InputField
                             label="العنوان"
@@ -69,6 +70,7 @@ export function StepsHorizontalEditor({
 
 export function StepsHorizontalView({ block }: { block: StepsHorizontalBlock }) {
     const header = block.header
+    const items = block.items || []
     const { hoverStyles, ...blockProps } = applyBlockStyles(block.blockStyles)
 
     return (
@@ -84,13 +86,13 @@ export function StepsHorizontalView({ block }: { block: StepsHorizontalBlock }) 
                     </div>
                 )}
                 <div className="flex flex-col gap-6 md:flex-row md:items-start">
-                    {block.items.map((item, index) => (
+                    {items.map((item, index) => (
                         <div key={item.id} className="flex-1">
                             <div className="mb-3 flex items-center gap-3">
                                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 text-lg font-bold text-white">
                                     {index + 1}
                                 </div>
-                                {index < block.items.length - 1 && <div className="hidden h-0.5 flex-grow bg-slate-200 md:block"></div>}
+                                {index < items.length - 1 && <div className="hidden h-0.5 flex-grow bg-slate-200 md:block"></div>}
                             </div>
                             <h3 className="mb-2 text-lg font-semibold text-slate-900">{item.title}</h3>
                             <p className="text-sm text-slate-600">{item.description}</p>
