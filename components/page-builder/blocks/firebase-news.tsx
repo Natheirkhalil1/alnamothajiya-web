@@ -305,9 +305,8 @@ function CardImageSlider({
                                     e.stopPropagation()
                                     setCurrentIndex(idx)
                                 }}
-                                className={`w-1.5 h-1.5 rounded-full transition-all ${
-                                    idx === currentIndex ? "bg-white w-4" : "bg-white/50"
-                                }`}
+                                className={`w-1.5 h-1.5 rounded-full transition-all ${idx === currentIndex ? "bg-white w-4" : "bg-white/50"
+                                    }`}
                             />
                         ))}
                     </div>
@@ -566,13 +565,8 @@ export function FirebaseNewsView({ block }: { block: FirebaseNewsBlock }) {
                         )}
 
                         {/* Grid */}
-                        <motion.div
+                        <div
                             ref={sliderRef}
-                            key={currentIndex}
-                            initial={{ opacity: 0, x: isAr ? -20 : 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: isAr ? 20 : -20 }}
-                            transition={{ duration: 0.3 }}
                             className={`grid gap-6 ${gridCols}`}
                         >
                             {visibleItems.map((item, index) => {
@@ -581,10 +575,11 @@ export function FirebaseNewsView({ block }: { block: FirebaseNewsBlock }) {
 
                                 return (
                                     <motion.div
-                                        key={item.id}
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: index * 0.05 }}
+                                        key={`${item.id}-${currentIndex}`}
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.95 }}
+                                        transition={{ duration: 0.4, delay: index * 0.05 }}
                                         className={`group relative bg-gradient-to-br ${theme.cardBg} rounded-2xl overflow-hidden shadow-lg ${theme.shadow} ${theme.hover} hover:shadow-xl transition-all duration-500 hover:-translate-y-2 cursor-pointer`}
                                         onClick={() => openDialog(item)}
                                     >
@@ -649,7 +644,7 @@ export function FirebaseNewsView({ block }: { block: FirebaseNewsBlock }) {
                                     </motion.div>
                                 )
                             })}
-                        </motion.div>
+                        </div>
 
                         {/* Dots pagination - show current position in infinite loop */}
                         {hasMultipleItems && (
@@ -658,11 +653,10 @@ export function FirebaseNewsView({ block }: { block: FirebaseNewsBlock }) {
                                     <button
                                         key={idx}
                                         onClick={() => setCurrentIndex(idx)}
-                                        className={`w-2.5 h-2.5 rounded-full transition-all ${
-                                            idx === currentIndex
-                                                ? `${theme.dots} w-8`
-                                                : `${theme.dotsInactive} hover:${theme.dots}`
-                                        }`}
+                                        className={`w-2.5 h-2.5 rounded-full transition-all ${idx === currentIndex
+                                            ? `${theme.dots} w-8`
+                                            : `${theme.dotsInactive} hover:${theme.dots}`
+                                            }`}
                                     />
                                 ))}
                             </div>
@@ -682,129 +676,128 @@ export function FirebaseNewsView({ block }: { block: FirebaseNewsBlock }) {
                                 style={{ zIndex: 99999, isolation: "isolate" }}
                                 onClick={closeDialog}
                             >
-                            {/* Close button */}
-                            <button
-                                onClick={closeDialog}
-                                className="absolute top-4 right-4 z-20 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-                            >
-                                <X className="w-6 h-6 text-white" />
-                            </button>
+                                {/* Close button */}
+                                <button
+                                    onClick={closeDialog}
+                                    className="absolute top-4 right-4 z-20 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                                >
+                                    <X className="w-6 h-6 text-white" />
+                                </button>
 
-                            <div
-                                className="relative w-full max-w-4xl my-8"
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                {/* Image Slider */}
-                                {(() => {
-                                    const images = getItemImages(selectedItem)
-                                    const hasMultipleImages = images.length > 1
-                                    const category = getCategory(selectedItem)
+                                <div
+                                    className="relative w-full max-w-4xl my-8"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    {/* Image Slider */}
+                                    {(() => {
+                                        const images = getItemImages(selectedItem)
+                                        const hasMultipleImages = images.length > 1
+                                        const category = getCategory(selectedItem)
 
-                                    return (
-                                        <div className="relative">
-                                            {images.length > 0 ? (
-                                                <div className="relative aspect-video rounded-t-2xl overflow-hidden">
-                                                    {/* Navigation buttons */}
-                                                    {hasMultipleImages && (
-                                                        <>
-                                                            <button
-                                                                onClick={isAr ? nextDialogImage : prevDialogImage}
-                                                                className={`absolute ${isAr ? "right-4" : "left-4"} top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center transition-colors`}
-                                                            >
-                                                                {isAr ? <ChevronRight className="w-6 h-6 text-white" /> : <ChevronLeft className="w-6 h-6 text-white" />}
-                                                            </button>
-                                                            <button
-                                                                onClick={isAr ? prevDialogImage : nextDialogImage}
-                                                                className={`absolute ${isAr ? "left-4" : "right-4"} top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center transition-colors`}
-                                                            >
-                                                                {isAr ? <ChevronLeft className="w-6 h-6 text-white" /> : <ChevronRight className="w-6 h-6 text-white" />}
-                                                            </button>
-                                                        </>
-                                                    )}
+                                        return (
+                                            <div className="relative">
+                                                {images.length > 0 ? (
+                                                    <div className="relative aspect-video rounded-t-2xl overflow-hidden">
+                                                        {/* Navigation buttons */}
+                                                        {hasMultipleImages && (
+                                                            <>
+                                                                <button
+                                                                    onClick={isAr ? nextDialogImage : prevDialogImage}
+                                                                    className={`absolute ${isAr ? "right-4" : "left-4"} top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center transition-colors`}
+                                                                >
+                                                                    {isAr ? <ChevronRight className="w-6 h-6 text-white" /> : <ChevronLeft className="w-6 h-6 text-white" />}
+                                                                </button>
+                                                                <button
+                                                                    onClick={isAr ? prevDialogImage : nextDialogImage}
+                                                                    className={`absolute ${isAr ? "left-4" : "right-4"} top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center transition-colors`}
+                                                                >
+                                                                    {isAr ? <ChevronLeft className="w-6 h-6 text-white" /> : <ChevronRight className="w-6 h-6 text-white" />}
+                                                                </button>
+                                                            </>
+                                                        )}
 
-                                                    {/* Image */}
-                                                    <AnimatePresence mode="wait">
-                                                        <motion.img
-                                                            key={dialogImageIndex}
-                                                            initial={{ opacity: 0 }}
-                                                            animate={{ opacity: 1 }}
-                                                            exit={{ opacity: 0 }}
-                                                            src={images[dialogImageIndex]}
-                                                            alt={getTitle(selectedItem)}
-                                                            className="w-full h-full object-cover"
-                                                        />
-                                                    </AnimatePresence>
+                                                        {/* Image */}
+                                                        <AnimatePresence mode="wait">
+                                                            <motion.img
+                                                                key={dialogImageIndex}
+                                                                initial={{ opacity: 0 }}
+                                                                animate={{ opacity: 1 }}
+                                                                exit={{ opacity: 0 }}
+                                                                src={images[dialogImageIndex]}
+                                                                alt={getTitle(selectedItem)}
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        </AnimatePresence>
 
-                                                    {/* Overlay gradient - only lower fourth */}
-                                                    <div className={`absolute bottom-0 left-0 right-0 h-1/4 bg-gradient-to-t from-black/80 to-transparent`} />
+                                                        {/* Overlay gradient - only lower fourth */}
+                                                        <div className={`absolute bottom-0 left-0 right-0 h-1/4 bg-gradient-to-t from-black/80 to-transparent`} />
 
-                                                    {/* Category badge */}
-                                                    {category && (
-                                                        <div className={`absolute top-4 ${isAr ? "right-4" : "left-4"}`}>
-                                                            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium ${theme.categoryBadge} shadow-lg`}>
-                                                                <Tag className="w-4 h-4" />
-                                                                {category}
-                                                            </span>
-                                                        </div>
-                                                    )}
-
-                                                    {/* Image counter */}
-                                                    {hasMultipleImages && (
-                                                        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1">
-                                                            <span className="text-white text-sm">
-                                                                {dialogImageIndex + 1} / {images.length}
-                                                            </span>
-                                                        </div>
-                                                    )}
-
-                                                    {/* Content overlay at bottom */}
-                                                    <div className="absolute bottom-0 left-0 right-0 p-6">
-                                                        {/* Date */}
-                                                        {formatDate(selectedItem) && (
-                                                            <div className="flex items-center gap-2 text-white/80 text-sm mb-2">
-                                                                <Calendar className="w-4 h-4" />
-                                                                <span>{formatDate(selectedItem)}</span>
+                                                        {/* Category badge */}
+                                                        {category && (
+                                                            <div className={`absolute top-4 ${isAr ? "right-4" : "left-4"}`}>
+                                                                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium ${theme.categoryBadge} shadow-lg`}>
+                                                                    <Tag className="w-4 h-4" />
+                                                                    {category}
+                                                                </span>
                                                             </div>
                                                         )}
-                                                        <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">
-                                                            {getTitle(selectedItem)}
-                                                        </h3>
-                                                    </div>
 
-                                                    {/* Dots for images */}
-                                                    {hasMultipleImages && (
-                                                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
-                                                            {images.map((_, idx) => (
-                                                                <button
-                                                                    key={idx}
-                                                                    onClick={() => setDialogImageIndex(idx)}
-                                                                    className={`w-2 h-2 rounded-full transition-all ${
-                                                                        idx === dialogImageIndex
+                                                        {/* Image counter */}
+                                                        {hasMultipleImages && (
+                                                            <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1">
+                                                                <span className="text-white text-sm">
+                                                                    {dialogImageIndex + 1} / {images.length}
+                                                                </span>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Content overlay at bottom */}
+                                                        <div className="absolute bottom-0 left-0 right-0 p-6">
+                                                            {/* Date */}
+                                                            {formatDate(selectedItem) && (
+                                                                <div className="flex items-center gap-2 text-white/80 text-sm mb-2">
+                                                                    <Calendar className="w-4 h-4" />
+                                                                    <span>{formatDate(selectedItem)}</span>
+                                                                </div>
+                                                            )}
+                                                            <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">
+                                                                {getTitle(selectedItem)}
+                                                            </h3>
+                                                        </div>
+
+                                                        {/* Dots for images */}
+                                                        {hasMultipleImages && (
+                                                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
+                                                                {images.map((_, idx) => (
+                                                                    <button
+                                                                        key={idx}
+                                                                        onClick={() => setDialogImageIndex(idx)}
+                                                                        className={`w-2 h-2 rounded-full transition-all ${idx === dialogImageIndex
                                                                             ? "bg-white w-6"
                                                                             : "bg-white/50 hover:bg-white/70"
-                                                                    }`}
-                                                                />
-                                                            ))}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ) : null}
+                                                                            }`}
+                                                                    />
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ) : null}
 
-                                            {/* Content section */}
-                                            <div className="bg-white rounded-b-2xl p-6">
-                                                <div className="prose prose-slate max-w-none" dir={isAr ? "rtl" : "ltr"}>
-                                                    <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
-                                                        {getContent(selectedItem)}
-                                                    </p>
+                                                {/* Content section */}
+                                                <div className="bg-white rounded-b-2xl p-6">
+                                                    <div className="prose prose-slate max-w-none" dir={isAr ? "rtl" : "ltr"}>
+                                                        <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
+                                                            {getContent(selectedItem)}
+                                                        </p>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    )
-                                })()}
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>,
+                                        )
+                                    })()}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>,
                     document.body
                 )}
             </SectionContainer>
