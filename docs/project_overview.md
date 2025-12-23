@@ -43,7 +43,7 @@
 
 ## 📁 بنية المشروع
 
-```
+\`\`\`
 website/
 ├── app/                          # Next.js App Router
 │   ├── (root)/                   # المسارات العامة
@@ -88,7 +88,7 @@ website/
 │   └── ...
 │
 └── package.json                  # التبعيات
-```
+\`\`\`
 
 ---
 
@@ -106,7 +106,7 @@ website/
 #### الاستراتيجية المعتمدة: Split-Content Strategy
 بدلاً من جعل كل عنصر يحتوي على حقلين (عربي/إنجليزي)، تم اعتماد استراتيجية فصل المحتوى:
 
-```typescript
+\`\`\`typescript
 interface DynamicPage {
   // معلومات عامة
   id: string
@@ -118,7 +118,7 @@ interface DynamicPage {
   blocksAr: PageBlock[]  // العناصر العربية
   blocksEn: PageBlock[]  // العناصر الإنجليزية
 }
-```
+\`\`\`
 
 **المزايا**:
 - لا حاجة لتعديل 50+ عنصر موجود
@@ -425,23 +425,23 @@ interface DynamicPage {
 المشروع يدعم نظامين للتخزين:
 
 #### 1. Firebase (للإنتاج)
-```typescript
+\`\`\`typescript
 // عند توفر إعدادات Firebase
 - Firestore للبيانات
 - Storage للملفات
 - Authentication للمصادقة
-```
+\`\`\`
 
 #### 2. LocalStorage (للتطوير)
-```typescript
+\`\`\`typescript
 // عند عدم توفر Firebase
 - localStorage للبيانات
 - تخزين محلي للملفات
 - مصادقة بسيطة
-```
+\`\`\`
 
 ### المجموعات (Collections)
-```typescript
+\`\`\`typescript
 COLLECTIONS = {
   EMPLOYMENT_APPLICATIONS: "employmentApplications"
   CONTACT_MESSAGES: "contactMessages"
@@ -460,7 +460,7 @@ COLLECTIONS = {
   ACTIVITIES: "activities"
   NOTIFICATIONS: "notifications"
 }
-```
+\`\`\`
 
 ---
 
@@ -489,7 +489,7 @@ COLLECTIONS = {
 
 **Split-Content Strategy** (استراتيجية فصل المحتوى)
 
-```typescript
+\`\`\`typescript
 // بدلاً من:
 interface Block {
   titleAr: string
@@ -501,7 +501,7 @@ interface Page {
   blocksAr: Block[]  // محتوى عربي كامل
   blocksEn: Block[]  // محتوى إنجليزي كامل
 }
-```
+\`\`\`
 
 **المزايا**:
 1. لا حاجة لتعديل 50+ عنصر
@@ -599,7 +599,7 @@ interface Page {
 ## 🚀 التشغيل
 
 ### التطوير المحلي
-```bash
+\`\`\`bash
 # تثبيت التبعيات
 npm install
 
@@ -608,16 +608,16 @@ npm run dev
 
 # فتح المتصفح على
 http://localhost:3000
-```
+\`\`\`
 
 ### الإنتاج
-```bash
+\`\`\`bash
 # بناء المشروع
 npm run build
 
 # تشغيل الإنتاج
 npm start
-```
+\`\`\`
 
 ---
 
@@ -684,23 +684,23 @@ npm start
 ## 💡 نصائح للمطورين
 
 ### العمل على Page Builder
-```typescript
+\`\`\`typescript
 // لإضافة عنصر جديد:
 // 1. أنشئ ملف في components/page-builder/blocks/
 // 2. سجله في registry.tsx
 // 3. أضفه للفئة المناسبة في block-categories.tsx
-```
+\`\`\`
 
 ### العمل على التخزين
-```typescript
+\`\`\`typescript
 // استخدم دائماً الوظائف من storage.ts
 import { saveDynamicPage, getDynamicPage } from '@/lib/storage'
 
 // لا تتعامل مع Firebase مباشرة
-```
+\`\`\`
 
 ### العمل على اللغات
-```typescript
+\`\`\`typescript
 // استخدم hook اللغة
 import { useLanguage } from '@/lib/language-context'
 
@@ -709,7 +709,7 @@ function MyComponent() {
   
   return <div dir={dir}>{t.nav.home}</div>
 }
-```
+\`\`\`
 
 ---
 

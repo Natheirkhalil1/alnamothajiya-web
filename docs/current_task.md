@@ -51,7 +51,7 @@
 
 **الكود المقترح:**
 <<<<<<< HEAD
-```tsx
+\`\`\`tsx
 =======
 \`\`\`tsx
 >>>>>>> 1b633bfcd0d8a4a9200a4ced2b3f5caf261fa02c
@@ -78,10 +78,10 @@
   </button>
 )}
 <<<<<<< HEAD
-```
+\`\`\`
 
 **دالة النسخ:**
-```tsx
+\`\`\`tsx
 =======
 \`\`\`
 
@@ -107,7 +107,7 @@ const handleCopyFromLanguage = (sourceLanguage: "ar" | "en") => {
   }
 }
 <<<<<<< HEAD
-```
+\`\`\`
 =======
 \`\`\`
 >>>>>>> 1b633bfcd0d8a4a9200a4ced2b3f5caf261fa02c
@@ -123,7 +123,7 @@ const handleCopyFromLanguage = (sourceLanguage: "ar" | "en") => {
 
 **الكود:**
 <<<<<<< HEAD
-```tsx
+\`\`\`tsx
 =======
 \`\`\`tsx
 >>>>>>> 1b633bfcd0d8a4a9200a4ced2b3f5caf261fa02c
@@ -153,7 +153,7 @@ const handleCopyFromLanguage = (sourceLanguage: "ar" | "en") => {
   </DialogContent>
 </Dialog>
 <<<<<<< HEAD
-```
+\`\`\`
 =======
 \`\`\`
 >>>>>>> 1b633bfcd0d8a4a9200a4ced2b3f5caf261fa02c
@@ -172,7 +172,7 @@ const handleCopyFromLanguage = (sourceLanguage: "ar" | "en") => {
 
 **مثال للتحقق:**
 <<<<<<< HEAD
-```tsx5
+\`\`\`tsx5
 =======
 \`\`\`tsx5
 >>>>>>> 1b633bfcd0d8a4a9200a4ced2b3f5caf261fa02c
@@ -186,7 +186,7 @@ case "hero-basic":
     // ...
   }
 <<<<<<< HEAD
-```
+\`\`\`
 =======
 \`\`\`
 >>>>>>> 1b633bfcd0d8a4a9200a4ced2b3f5caf261fa02c
@@ -202,10 +202,10 @@ case "hero-basic":
 2. **عداد البلوكات لكل لغة:**
    - عرض عدد البلوكات بجانب كل تبويب لغة
 <<<<<<< HEAD
-   ```tsx
+   \`\`\`tsx
    العربية ({value.blocksAr?.length || 0})
    English ({value.blocksEn?.length || 0})
-   ```
+   \`\`\`
 =======
    \`\`\`tsx
    العربية ({value.blocksAr?.length || 0})

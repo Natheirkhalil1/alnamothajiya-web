@@ -125,7 +125,7 @@ The Documentation folder contains:
 
 ### التثبيت | Installation
 
-```bash
+\`\`\`bash
 # 1. استنساخ المشروع | Clone the repository
 git clone https://github.com/Natheirkhalil1/alnamothajiya-web.git
 cd alnamothajiya-web
@@ -141,11 +141,11 @@ npm run dev
 
 # 5. فتح المتصفح | Open browser
 # http://localhost:3000
-```
+\`\`\`
 
 ### التشغيل | Running
 
-```bash
+\`\`\`bash
 # Development mode
 npm run dev
 
@@ -155,13 +155,13 @@ npm start
 
 # Linting
 npm run lint
-```
+\`\`\`
 
 ---
 
 ## 🏗️ البنية | Architecture
 
-```
+\`\`\`
 alnamothajiya-web/
 ├── app/                          # Next.js App Router
 │   ├── (root)/                   # المسارات العامة | Public routes
@@ -230,7 +230,7 @@ alnamothajiya-web/
 ├── public/                       # الملفات الثابتة | Static files
 ├── styles/                       # الأنماط | Styles
 └── middleware.ts                 # Middleware (Language routing)
-```
+\`\`\`
 
 ---
 
@@ -287,7 +287,7 @@ alnamothajiya-web/
 
 ### كيفية الاستخدام | How to Use
 
-```
+\`\`\`
 1. افتح Dashboard → Pages → إضافة صفحة
 2. اختر اللغة (عربي/إنجليزي)
 3. اضغط "إضافة بلوك جديد"
@@ -297,11 +297,11 @@ alnamothajiya-web/
    - التصميم (Styling)
    - الحركة (Animation)
 6. احفظ وشاهد المعاينة
-```
+\`\`\`
 
 ### مثال: إنشاء صفحة "من نحن"
 
-```
+\`\`\`
 Hero Basic
   ↓
 Rich Text (نبذة عن المدرسة)
@@ -315,7 +315,7 @@ Stats (الإحصائيات)
 Testimonials (آراء أولياء الأمور)
   ↓
 CTA Strip (سجل الآن)
-```
+\`\`\`
 
 ---
 
@@ -348,7 +348,7 @@ CTA Strip (سجل الآن)
 
 ### الاستراتيجية: Split-Content
 
-```typescript
+\`\`\`typescript
 interface DynamicPage {
   // محتوى عربي كامل | Full Arabic content
   blocksAr: PageBlock[]
@@ -356,7 +356,7 @@ interface DynamicPage {
   // محتوى إنجليزي كامل | Full English content
   blocksEn: PageBlock[]
 }
-```
+\`\`\`
 
 ### المزايا | Advantages
 
@@ -372,7 +372,7 @@ interface DynamicPage {
 
 ### Vercel (موصى به | Recommended)
 
-```bash
+\`\`\`bash
 # 1. ادفع الكود لـ GitHub | Push to GitHub
 git push origin main
 
@@ -383,11 +383,11 @@ git push origin main
 
 # 3. أضف المتغيرات البيئية | Add environment variables
 # في Vercel Dashboard → Settings → Environment Variables
-```
+\`\`\`
 
 ### متغيرات البيئة | Environment Variables
 
-```env
+\`\`\`env
 # Firebase Configuration
 NEXT_PUBLIC_FIREBASE_API_KEY=your_key
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_domain
@@ -400,11 +400,11 @@ NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 FIREBASE_ADMIN_PROJECT_ID=your_project_id
 FIREBASE_ADMIN_CLIENT_EMAIL=your_client_email
 FIREBASE_ADMIN_PRIVATE_KEY=your_private_key
-```
+\`\`\`
 
 ### بناء محلي | Local Build
 
-```bash
+\`\`\`bash
 # بناء للإنتاج | Production build
 npm run build
 
@@ -413,7 +413,7 @@ npm start
 
 # معاينة | Preview
 npm run build && npm start
-```
+\`\`\`
 
 ---
 
@@ -457,7 +457,7 @@ npm run build && npm start
 
 ## 🧪 الاختبار | Testing
 
-```bash
+\`\`\`bash
 # تشغيل الاختبارات | Run tests
 npm test
 
@@ -472,7 +472,7 @@ npm run lint
 
 # Type checking
 npm run type-check
-```
+\`\`\`
 
 ---
 
@@ -495,7 +495,7 @@ npm run type-check
 
 نرحب بالمساهمات! | Contributions are welcome!
 
-```bash
+\`\`\`bash
 # 1. Fork المشروع | Fork the project
 # 2. إنشاء branch جديد | Create a new branch
 git checkout -b feature/amazing-feature
@@ -507,7 +507,7 @@ git commit -m 'Add amazing feature'
 git push origin feature/amazing-feature
 
 # 5. فتح Pull Request | Open Pull Request
-```
+\`\`\`
 
 ### إرشادات المساهمة | Contribution Guidelines
 - اتبع نمط الكود الموجود
@@ -521,13 +521,13 @@ git push origin feature/amazing-feature
 
 MIT License - مفتوح المصدر | Open Source
 
-```
+\`\`\`
 Copyright (c) 2025 Al-Namoothajia School
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction...
-```
+\`\`\`
 
 ---
 

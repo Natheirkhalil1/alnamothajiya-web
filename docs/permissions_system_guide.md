@@ -18,12 +18,12 @@
 
 فكر في نظام الصلاحيات مثل **مفاتيح الغرف في فندق**:
 
-```
+\`\`\`
 🏨 الفندق = النظام
 🔑 المفتاح = الصلاحية
 🚪 الغرفة = الميزة (مثل: حذف، تعديل، عرض)
 👤 الموظف = المستخدم
-```
+\`\`\`
 
 **مثال:**
 - **المدير** عنده مفتاح رئيسي (Master Key) → يفتح كل الغرف
@@ -36,7 +36,7 @@
 
 ### 1️⃣ الأدوار (Roles) - 7 أدوار
 
-```typescript
+\`\`\`typescript
 type Role = 
   | "admin"              // مدير النظام
   | "hr_manager"         // مدير الموارد البشرية
@@ -45,11 +45,11 @@ type Role =
   | "receptionist"       // موظف استقبال
   | "employee"           // موظف عادي
   | "viewer"             // مشاهد فقط
-```
+\`\`\`
 
 ### 2️⃣ الصلاحيات (Permissions) - 20 صلاحية
 
-```typescript
+\`\`\`typescript
 interface Permissions {
   // طلبات التوظيف (4 صلاحيات)
   canViewApplications: boolean       // عرض
@@ -83,7 +83,7 @@ interface Permissions {
   canViewReports: boolean            // عرض التقارير
   canExportData: boolean             // تصدير البيانات
 }
-```
+\`\`\`
 
 ---
 
@@ -94,7 +94,7 @@ interface Permissions {
 **الوصف:** السوبر مان! يقدر يعمل كل شي
 
 **الصلاحيات:**
-```javascript
+\`\`\`javascript
 {
   // طلبات التوظيف
   canViewApplications: true,        ✅
@@ -128,7 +128,7 @@ interface Permissions {
   canViewReports: true,             ✅
   canExportData: true               ✅
 }
-```
+\`\`\`
 
 **متى تستخدمه؟**
 - مدير المدرسة
@@ -142,7 +142,7 @@ interface Permissions {
 **الوصف:** مسؤول عن التوظيف والموظفين
 
 **الصلاحيات:**
-```javascript
+\`\`\`javascript
 {
   // طلبات التوظيف - كل شي ✅
   canViewApplications: true,        ✅
@@ -176,7 +176,7 @@ interface Permissions {
   canViewReports: true,             ✅
   canExportData: true               ✅
 }
-```
+\`\`\`
 
 **متى تستخدمه؟**
 - مدير الموارد البشرية
@@ -189,7 +189,7 @@ interface Permissions {
 **الوصف:** مسؤول عن طلبات الخدمات
 
 **الصلاحيات:**
-```javascript
+\`\`\`javascript
 {
   // طلبات التوظيف - عرض فقط
   canViewApplications: true,        ✅
@@ -223,7 +223,7 @@ interface Permissions {
   canViewReports: true,             ✅
   canExportData: true               ✅
 }
-```
+\`\`\`
 
 **متى تستخدمه؟**
 - مدير خدمة العملاء
@@ -236,7 +236,7 @@ interface Permissions {
 **الوصف:** مسؤول عن محتوى الموقع
 
 **الصلاحيات:**
-```javascript
+\`\`\`javascript
 {
   // طلبات التوظيف - لا ❌
   canViewApplications: false,       ❌
@@ -270,7 +270,7 @@ interface Permissions {
   canViewReports: false,            ❌
   canExportData: false              ❌
 }
-```
+\`\`\`
 
 **متى تستخدمه؟**
 - محرر المحتوى
@@ -283,7 +283,7 @@ interface Permissions {
 **الوصف:** يستقبل الاستفسارات ويرد على الرسائل
 
 **الصلاحيات:**
-```javascript
+\`\`\`javascript
 {
   // طلبات التوظيف - عرض فقط
   canViewApplications: true,        ✅
@@ -317,7 +317,7 @@ interface Permissions {
   canViewReports: false,            ❌
   canExportData: false              ❌
 }
-```
+\`\`\`
 
 **متى تستخدمه؟**
 - موظف الاستقبال
@@ -330,7 +330,7 @@ interface Permissions {
 **الوصف:** موظف عادي بصلاحيات محدودة جداً
 
 **الصلاحيات:**
-```javascript
+\`\`\`javascript
 {
   // طلبات التوظيف - عرض فقط
   canViewApplications: true,        ✅
@@ -364,7 +364,7 @@ interface Permissions {
   canViewReports: false,            ❌
   canExportData: false              ❌
 }
-```
+\`\`\`
 
 **متى تستخدمه؟**
 - موظف عادي
@@ -377,7 +377,7 @@ interface Permissions {
 **الوصف:** يقدر يشوف بس، ما يقدر يعدل أي شي
 
 **الصلاحيات:**
-```javascript
+\`\`\`javascript
 {
   // كل شي = عرض فقط ✅
   canViewApplications: true,        ✅
@@ -406,7 +406,7 @@ interface Permissions {
   canViewReports: true,             ✅
   canExportData: false              ❌
 }
-```
+\`\`\`
 
 **متى تستخدمه؟**
 - مراقب
@@ -419,7 +419,7 @@ interface Permissions {
 
 ### 1️⃣ بنية البيانات
 
-```typescript
+\`\`\`typescript
 // ملف: lib/storage.ts
 
 interface Employee {
@@ -436,11 +436,11 @@ interface Employee {
   isActive: boolean             // نشط أم لا
   lastLogin?: string            // آخر تسجيل دخول
 }
-```
+\`\`\`
 
 ### 2️⃣ Context (السياق)
 
-```typescript
+\`\`\`typescript
 // ملف: lib/auth-context.tsx
 
 interface AuthContextType {
@@ -449,11 +449,11 @@ interface AuthContextType {
   logout: () => void                     // تسجيل خروج
   hasPermission: (permission) => boolean // فحص الصلاحية
 }
-```
+\`\`\`
 
 ### 3️⃣ كيف يتم فحص الصلاحية؟
 
-```typescript
+\`\`\`typescript
 // ملف: lib/auth-context.tsx (السطر 204)
 
 const hasPermission = (permission: keyof Permissions): boolean => {
@@ -466,11 +466,11 @@ const hasPermission = (permission: keyof Permissions): boolean => {
   // إرجاع قيمة الصلاحية
   return currentUser.permissions[permission]
 }
-```
+\`\`\`
 
 **مثال استخدام:**
 
-```typescript
+\`\`\`typescript
 // في أي مكون
 
 import { useAuth } from '@/lib/auth-context'
@@ -487,7 +487,7 @@ function ApplicationsPage() {
     return null
   }
 }
-```
+\`\`\`
 
 ---
 
@@ -495,7 +495,7 @@ function ApplicationsPage() {
 
 ### السيناريو 1: إضافة موظف جديد
 
-```
+\`\`\`
 المدير يسجل دخول
         ↓
 يذهب لـ Dashboard → الموظفون
@@ -516,11 +516,11 @@ function ApplicationsPage() {
 يحفظ
         ↓
 أحمد الآن يقدر يسجل دخول!
-```
+\`\`\`
 
 ### السيناريو 2: موظف يحاول الوصول لصفحة
 
-```
+\`\`\`
 أحمد (hr_manager) يحاول يفتح صفحة "المحتوى"
         ↓
 النظام يفحص:
@@ -532,11 +532,11 @@ function ApplicationsPage() {
   "ليس لديك صلاحية للوصول لهذه الصفحة"
         ↓
 أحمد يتم توجيهه للصفحة الرئيسية
-```
+\`\`\`
 
 ### السيناريو 3: تعديل صلاحيات موظف
 
-```
+\`\`\`
 المدير يريد يعطي أحمد صلاحية إضافية
         ↓
 يذهب لـ Dashboard → الموظفون
@@ -549,7 +549,7 @@ function ApplicationsPage() {
 يحفظ
         ↓
 الآن أحمد يقدر يشوف المحتوى!
-```
+\`\`\`
 
 ---
 
@@ -557,7 +557,7 @@ function ApplicationsPage() {
 
 ### 1. حماية المسارات (Route Protection)
 
-```typescript
+\`\`\`typescript
 // في كل صفحة محمية
 
 'use client'
@@ -586,11 +586,11 @@ export default function ProtectedPage() {
   // عرض المحتوى
   return <div>محتوى محمي</div>
 }
-```
+\`\`\`
 
 ### 2. حماية الأزرار (Button Protection)
 
-```typescript
+\`\`\`typescript
 // عرض الزر فقط إذا عنده صلاحية
 
 {hasPermission('canDeleteApplications') && (
@@ -598,11 +598,11 @@ export default function ProtectedPage() {
     حذف
   </button>
 )}
-```
+\`\`\`
 
 ### 3. حماية API Routes
 
-```typescript
+\`\`\`typescript
 // في API Route
 
 import { getAuth } from '@/lib/auth-context'
@@ -618,7 +618,7 @@ export async function DELETE(request: Request) {
   // تنفيذ الحذف
   // ...
 }
-```
+\`\`\`
 
 ---
 
@@ -659,29 +659,29 @@ export async function DELETE(request: Request) {
 
 ### المشكلة: الموظف ما يقدر يسجل دخول
 
-```
+\`\`\`
 الحلول:
 1. تأكد أن isActive = true
 2. تأكد من البريد وكلمة السر
 3. تأكد أنه موجود في قاعدة البيانات
-```
+\`\`\`
 
 ### المشكلة: الموظف يشوف صفحات ما المفروض يشوفها
 
-```
+\`\`\`
 الحلول:
 1. راجع الصلاحيات في Dashboard
 2. تأكد من الدور الصحيح
 3. تأكد من حماية المسارات
-```
+\`\`\`
 
 ### المشكلة: الأزرار تظهر لكن ما تشتغل
 
-```
+\`\`\`
 الحلول:
 1. تأكد من حماية API Routes
 2. تأكد من فحص الصلاحيات في الـ backend
-```
+\`\`\`
 
 ---
 
@@ -705,7 +705,7 @@ export async function DELETE(request: Request) {
 
 ## 📝 ملخص سريع
 
-```
+\`\`\`
 نظام الصلاحيات = التحكم بمن يقدر يعمل إيه
 
 المكونات:
@@ -720,7 +720,7 @@ export async function DELETE(request: Request) {
 3. النظام يعطيه الصلاحيات تلقائياً
 4. الموظف يسجل دخول
 5. يشوف فقط ما يُسمح له به! 🔒
-```
+\`\`\`
 
 ---
 

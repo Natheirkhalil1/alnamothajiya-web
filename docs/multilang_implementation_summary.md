@@ -39,16 +39,16 @@
 
 ### Before
 <<<<<<< HEAD
-```
+\`\`\`
 /pages/about → Single content, language determined by context
-```
+\`\`\`
 
 ### After
-```
+\`\`\`
 /ar/about → Arabic content (blocksAr)
 /en/about → English content (blocksEn)
 /about → Redirects to /ar/about or /en/about based on browser language
-```
+\`\`\`
 =======
 \`\`\`
 /pages/about → Single content, language determined by context

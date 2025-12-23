@@ -9,7 +9,7 @@ To implement full bilingual support by separating page content into distinct "Ar
 ## 🏗️ Current Data Model
 Currently, a `DynamicPage` has a single `blocks` array:
 <<<<<<< HEAD
-```typescript
+\`\`\`typescript
 =======
 \`\`\`typescript
 >>>>>>> 1b633bfcd0d8a4a9200a4ced2b3f5caf261fa02c
@@ -18,7 +18,7 @@ interface DynamicPage {
   blocks?: PageBlock[] // Single array, mixed content
 }
 <<<<<<< HEAD
-```
+\`\`\`
 =======
 \`\`\`
 >>>>>>> 1b633bfcd0d8a4a9200a4ced2b3f5caf261fa02c
@@ -27,7 +27,7 @@ interface DynamicPage {
 We will split the content into two separate arrays:
 
 <<<<<<< HEAD
-```typescript
+\`\`\`typescript
 =======
 \`\`\`typescript
 >>>>>>> 1b633bfcd0d8a4a9200a4ced2b3f5caf261fa02c
@@ -44,7 +44,7 @@ interface DynamicPage {
   // blocks?: PageBlock[] 
 }
 <<<<<<< HEAD
-```
+\`\`\`
 =======
 \`\`\`
 >>>>>>> 1b633bfcd0d8a4a9200a4ced2b3f5caf261fa02c
@@ -65,10 +65,10 @@ interface DynamicPage {
 -   Update the page component to fetch the full page data.
 -   Use `useLanguage()` hook to determine which array to render:
 <<<<<<< HEAD
-    ```tsx
+    \`\`\`tsx
     const { language } = useLanguage()
     const blocksToRender = language === 'ar' ? page.blocksAr : page.blocksEn
-    ```
+    \`\`\`
 =======
     \`\`\`tsx
     const { language } = useLanguage()

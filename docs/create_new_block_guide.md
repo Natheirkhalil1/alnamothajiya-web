@@ -21,7 +21,7 @@
 
 ### الخطوات الرئيسية (7 خطوات)
 
-```
+\`\`\`
 1️⃣ إنشاء ملف العنصر
 2️⃣ تعريف الأنواع (Types)
 3️⃣ بناء المحرر (Editor)
@@ -29,7 +29,7 @@
 5️⃣ التسجيل (Registry)
 6️⃣ إضافة للفئة (Category)
 7️⃣ الاختبار
-```
+\`\`\`
 
 ---
 
@@ -37,7 +37,7 @@
 
 ### أين نضع الملفات؟
 
-```
+\`\`\`
 components/page-builder/
 ├── blocks/
 │   └── team-card.tsx          ← هنا نضع العنصر الجديد
@@ -45,7 +45,7 @@ components/page-builder/
 ├── registry.tsx               ← نسجل العنصر هنا
 ├── block-categories.tsx       ← نضيفه للفئة هنا
 └── utils.tsx                  ← أدوات مساعدة
-```
+\`\`\`
 
 ---
 
@@ -53,13 +53,13 @@ components/page-builder/
 
 ### 1.1 أنشئ الملف
 
-```
+\`\`\`
 المسار: components/page-builder/blocks/team-card.tsx
-```
+\`\`\`
 
 ### 1.2 البنية الأساسية
 
-```typescript
+\`\`\`typescript
 import * as React from "react"
 import { Block } from "../types"
 import { nmTheme } from "../theme"
@@ -75,11 +75,11 @@ import { useEditingLanguage } from "../editing-language-context"
 import { useLanguage } from "@/lib/language-context"
 
 // سنضيف الكود هنا...
-```
+\`\`\`
 
 **شرح الـ imports:**
 
-```typescript
+\`\`\`typescript
 // Block = النوع الأساسي لكل عنصر
 import { Block } from "../types"
 
@@ -101,7 +101,7 @@ import { useEditingLanguage } from "../editing-language-context"
 
 // للحصول على اللغة أثناء العرض
 import { useLanguage } from "@/lib/language-context"
-```
+\`\`\`
 
 ---
 
@@ -109,13 +109,13 @@ import { useLanguage } from "@/lib/language-context"
 
 ### 2.1 افتح ملف الأنواع
 
-```
+\`\`\`
 المسار: components/page-builder/types.ts
-```
+\`\`\`
 
 ### 2.2 أضف النوع الجديد
 
-```typescript
+\`\`\`typescript
 // في آخر الملف، قبل السطر الأخير
 
 export interface TeamCardBlock extends BaseBlock {
@@ -143,11 +143,11 @@ export interface TeamCardBlock extends BaseBlock {
   cardStyle?: "default" | "minimal" | "modern"  // نمط البطاقة
   showSocial?: boolean              // إظهار روابط التواصل
 }
-```
+\`\`\`
 
 **شرح:**
 
-```typescript
+\`\`\`typescript
 // BaseBlock = النوع الأساسي الذي يحتوي على:
 // - id: string
 // - blockStyles?: BlockStyles
@@ -160,11 +160,11 @@ kind: "team-card"
 
 // ? = اختياري (يمكن أن يكون undefined)
 bioAr?: string
-```
+\`\`\`
 
 ### 2.3 أضف للـ Union Type
 
-```typescript
+\`\`\`typescript
 // ابحث عن هذا السطر في types.ts:
 export type Block = 
   | HeroBasicBlock
@@ -180,7 +180,7 @@ export type BlockKind =
   | "rich-text"
   // ... باقي الأنواع
   | "team-card"  // ← أضف هذا السطر
-```
+\`\`\`
 
 ---
 
@@ -188,7 +188,7 @@ export type BlockKind =
 
 ### 3.1 الكود الكامل
 
-```typescript
+\`\`\`typescript
 // في ملف: components/page-builder/blocks/team-card.tsx
 
 export function TeamCardEditor({
@@ -325,11 +325,11 @@ export function TeamCardEditor({
     </div>
   )
 }
-```
+\`\`\`
 
 **شرح مهم:**
 
-```typescript
+\`\`\`typescript
 // لماذا نستخدم ?? "" بدلاً من || "" ؟
 
 // ❌ خطأ:
@@ -346,7 +346,7 @@ value={block.email ?? ""}
 onChange={(v) => update({ email: v || undefined })}
 // إذا v = "" → يحفظ undefined (يحذف الحقل)
 // إذا v = "ahmed@..." → يحفظ القيمة
-```
+\`\`\`
 
 ---
 
@@ -354,7 +354,7 @@ onChange={(v) => update({ email: v || undefined })}
 
 ### 4.1 الكود الكامل
 
-```typescript
+\`\`\`typescript
 // في نفس الملف: team-card.tsx
 
 export function TeamCardView({ block }: { block: TeamCardBlock }) {
@@ -489,7 +489,7 @@ export function TeamCardView({ block }: { block: TeamCardBlock }) {
     </>
   )
 }
-```
+\`\`\`
 
 ---
 
@@ -497,21 +497,21 @@ export function TeamCardView({ block }: { block: TeamCardBlock }) {
 
 ### 5.1 افتح ملف التسجيل
 
-```
+\`\`\`
 المسار: components/page-builder/registry.tsx
-```
+\`\`\`
 
 ### 5.2 أضف الـ import
 
-```typescript
+\`\`\`typescript
 // في أعلى الملف، مع باقي الـ imports:
 
 import { TeamCardEditor, TeamCardView } from "./blocks/team-card"
-```
+\`\`\`
 
 ### 5.3 سجل العنصر
 
-```typescript
+\`\`\`typescript
 // في blockRegistry object:
 
 export const blockRegistry: Record<BlockKind, BlockRegistryEntry> = {
@@ -524,7 +524,7 @@ export const blockRegistry: Record<BlockKind, BlockRegistryEntry> = {
   
   // ... باقي العناصر
 }
-```
+\`\`\`
 
 ---
 
@@ -532,13 +532,13 @@ export const blockRegistry: Record<BlockKind, BlockRegistryEntry> = {
 
 ### 6.1 افتح ملف الفئات
 
-```
+\`\`\`
 المسار: components/page-builder/block-categories.tsx
-```
+\`\`\`
 
 ### 6.2 أضف للفئة المناسبة
 
-```typescript
+\`\`\`typescript
 // ابحث عن الفئة "team" (الفريق والأشخاص)
 
 {
@@ -574,7 +574,7 @@ export const blockRegistry: Record<BlockKind, BlockRegistryEntry> = {
     },
   ],
 }
-```
+\`\`\`
 
 ---
 
@@ -582,14 +582,14 @@ export const blockRegistry: Record<BlockKind, BlockRegistryEntry> = {
 
 ### 7.1 اختبار المحرر
 
-```
+\`\`\`
 1. افتح Dashboard
 2. اذهب لـ Pages
 3. أنشئ صفحة جديدة أو عدل موجودة
 4. اضغط "إضافة بلوك جديد"
 5. اختر فئة "الفريق والأشخاص"
 6. اختر "بطاقة عضو فريق"
-```
+\`\`\`
 
 **ماذا يجب أن تشوف؟**
 - نافذة التعديل تفتح ✅
@@ -598,14 +598,14 @@ export const blockRegistry: Record<BlockKind, BlockRegistryEntry> = {
 
 ### 7.2 اختبار العارض
 
-```
+\`\`\`
 1. املأ المعلومات:
    - الاسم: أحمد محمد
    - المنصب: مدير التسويق
    - البريد: ahmed@example.com
 2. احفظ
 3. شاهد المعاينة
-```
+\`\`\`
 
 **ماذا يجب أن تشوف؟**
 - البطاقة تظهر بشكل صحيح ✅
@@ -614,11 +614,11 @@ export const blockRegistry: Record<BlockKind, BlockRegistryEntry> = {
 
 ### 7.3 اختبار التخزين
 
-```
+\`\`\`
 1. احفظ الصفحة
 2. أعد تحميل الصفحة
 3. افتح الصفحة مرة أخرى
-```
+\`\`\`
 
 **ماذا يجب أن تشوف؟**
 - البيانات محفوظة ✅
@@ -630,7 +630,7 @@ export const blockRegistry: Record<BlockKind, BlockRegistryEntry> = {
 
 ### البنية في قاعدة البيانات
 
-```json
+\`\`\`json
 {
   "id": "page-about",
   "blocksAr": [
@@ -656,7 +656,7 @@ export const blockRegistry: Record<BlockKind, BlockRegistryEntry> = {
     }
   ]
 }
-```
+\`\`\`
 
 ---
 
@@ -664,7 +664,7 @@ export const blockRegistry: Record<BlockKind, BlockRegistryEntry> = {
 
 ### إضافة أنماط مخصصة
 
-```typescript
+\`\`\`typescript
 // في team-card.tsx
 
 // يمكنك إضافة أنماط ثابتة:
@@ -684,7 +684,7 @@ return (
     </div>
   </>
 )
-```
+\`\`\`
 
 ---
 
@@ -692,7 +692,7 @@ return (
 
 ### 1. استخدام الـ Default Values
 
-```typescript
+\`\`\`typescript
 // في utils.tsx، أضف:
 
 export function createDefaultBlock(kind: BlockKind): Block {
@@ -713,11 +713,11 @@ export function createDefaultBlock(kind: BlockKind): Block {
   
   // ... باقي الكود
 }
-```
+\`\`\`
 
 ### 2. التحقق من البيانات (Validation)
 
-```typescript
+\`\`\`typescript
 // في المحرر:
 
 const isValid = () => {
@@ -733,11 +733,11 @@ const isValid = () => {
 }
 
 // استخدمه قبل الحفظ
-```
+\`\`\`
 
 ### 3. إضافة معاينة في المحرر
 
-```typescript
+\`\`\`typescript
 // في المحرر، أضف قسم معاينة:
 
 <div className="mt-4 rounded-lg border border-slate-200 p-4">
@@ -746,7 +746,7 @@ const isValid = () => {
   </h3>
   <TeamCardView block={block} />
 </div>
-```
+\`\`\`
 
 ---
 
@@ -754,31 +754,31 @@ const isValid = () => {
 
 ### المشكلة: العنصر لا يظهر في القائمة
 
-```
+\`\`\`
 الحلول:
 1. تأكد من إضافته في registry.tsx ✅
 2. تأكد من إضافته في block-categories.tsx ✅
 3. تأكد من الـ import صحيح ✅
 4. أعد تشغيل السيرفر (npm run dev) ✅
-```
+\`\`\`
 
 ### المشكلة: خطأ في الـ TypeScript
 
-```
+\`\`\`
 الحلول:
 1. تأكد من إضافة النوع في types.ts ✅
 2. تأكد من إضافته للـ Union Type ✅
 3. تأكد من الـ extends BaseBlock ✅
-```
+\`\`\`
 
 ### المشكلة: البيانات لا تُحفظ
 
-```
+\`\`\`
 الحلول:
 1. تأكد من استخدام onChange بشكل صحيح ✅
 2. تأكد من الـ update function ✅
 3. افحص console للأخطاء ✅
-```
+\`\`\`
 
 ---
 
@@ -786,7 +786,7 @@ const isValid = () => {
 
 قبل ما تعتبر العنصر جاهز، تأكد من:
 
-```
+\`\`\`
 ✅ الملف موجود في blocks/
 ✅ النوع معرّف في types.ts
 ✅ النوع مضاف للـ Union Type
@@ -798,7 +798,7 @@ const isValid = () => {
 ✅ التخزين يشتغل
 ✅ التبديل بين اللغات يشتغل
 ✅ الأنماط تطبق بشكل صحيح
-```
+\`\`\`
 
 ---
 
@@ -806,7 +806,7 @@ const isValid = () => {
 
 إنشاء عنصر جديد يتطلب:
 
-```
+\`\`\`
 1. ملف واحد (blocks/your-block.tsx)
 2. تعديل 3 ملفات:
    - types.ts (الأنواع)
@@ -815,7 +815,7 @@ const isValid = () => {
 3. كتابة 2 functions:
    - Editor (المحرر)
    - View (العارض)
-```
+\`\`\`
 
 **الوقت المتوقع:** 30-60 دقيقة للعنصر البسيط
 

@@ -6,9 +6,9 @@
 
 ## Overall Progress: 91% (10/11 sections accessible)
 
-```
+\`\`\`
 [####################] 91% Complete
-```
+\`\`\`
 
 ---
 

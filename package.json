@@ -9,8 +9,12 @@
     "start": "next start"
   },
   "dependencies": {
+    "@babel/runtime": "latest",
     "@codemirror/lang-css": "^6.3.1",
     "@codemirror/lang-javascript": "^6.2.4",
+    "@codemirror/state": "latest",
+    "@codemirror/theme-one-dark": "latest",
+    "@codemirror/view": "latest",
     "@emotion/is-prop-valid": "latest",
     "@fal-ai/serverless-client": "latest",
     "@hookform/resolvers": "^3.10.0",
@@ -48,7 +52,9 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.0.4",
+    "codemirror": "latest",
     "date-fns": "4.1.0",
+    "dompurify": "latest",
     "embla-carousel-react": "8.5.1",
     "firebase": "latest",
     "firebase-admin": "13.6.0",
