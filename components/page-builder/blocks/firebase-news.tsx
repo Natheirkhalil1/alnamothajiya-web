@@ -245,7 +245,7 @@ function CardImageSlider({
         if (images.length <= 1 || isPaused) return
         const interval = setInterval(() => {
             setCurrentIndex((prev) => (prev + 1) % images.length)
-        }, 3000)
+        }, 8000)
         return () => clearInterval(interval)
     }, [images.length, isPaused])
 
