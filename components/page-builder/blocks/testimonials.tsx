@@ -16,7 +16,7 @@ import { useLanguage } from "@/lib/language-context"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { CheckCircle, Star, Upload, X, User } from "lucide-react"
+import { CheckCircle, Star, Upload, X, User, ChevronLeft, ChevronRight } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { collection, getDocs } from "firebase/firestore"
 import { app } from "@/lib/firebase"
@@ -111,12 +111,13 @@ export function TestimonialsEditor({
         ]}
       />
 
-      {block.layout === "grid" && (
+      {(block.layout === "grid" || block.layout === "slider") && (
         <SelectField
           label={isAr ? "الأعمدة" : "Columns"}
-          value={String(block.columns ?? 3)}
-          onChange={(v) => update({ columns: Number(v) as 2 | 3 })}
+          value={String(block.columns ?? (block.layout === "slider" ? 1 : 3))}
+          onChange={(v) => update({ columns: Number(v) as 1 | 2 | 3 })}
           options={[
+            { value: "1", label: isAr ? "عمود واحد" : "1 Column" },
             { value: "2", label: isAr ? "عمودين" : "2 Columns" },
             { value: "3", label: isAr ? "3 أعمدة" : "3 Columns" },
           ]}
@@ -124,7 +125,7 @@ export function TestimonialsEditor({
       )}
 
       {block.layout === "slider" && (
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-2 border-t border-slate-100 pt-2 mt-2">
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -447,19 +448,21 @@ function TestimonialsSliderView({ block, items }: { block: TestimonialsBlock; it
   const { language } = useLanguage()
   const [currentIndex, setCurrentIndex] = React.useState(items.length)
   const [isResetting, setIsResetting] = React.useState(false)
+  const [isPaused, setIsPaused] = React.useState(false)
   const header = block.header
   const isAr = language === "ar"
+  const columns = block.columns || 1
 
   // Always use 8s as default if not explicitly set, or respect block settings if provided
   const interval = block.interval || 8000
 
   React.useEffect(() => {
-    if (!block.autoplay || items.length <= 1) return
+    if (!block.autoplay || items.length <= columns || isPaused) return
     const timer = setInterval(() => {
       setCurrentIndex((prev) => prev + 1)
     }, interval)
     return () => clearInterval(timer)
-  }, [block.autoplay, interval, items.length])
+  }, [block.autoplay, interval, items.length, columns, isPaused])
 
   // Handle infinite loop silent reset
   const handleAnimationComplete = () => {
@@ -476,6 +479,9 @@ function TestimonialsSliderView({ block, items }: { block: TestimonialsBlock; it
     }
   }
 
+  const nextSlide = () => setCurrentIndex(prev => prev + 1)
+  const prevSlide = () => setCurrentIndex(prev => prev - 1)
+
   if (!items.length) {
     return (
       <SectionContainer backgroundColor={block.backgroundColor} padding={block.padding} containerWidth={block.containerWidth} dir={isAr ? "rtl" : "ltr"}>
@@ -488,7 +494,6 @@ function TestimonialsSliderView({ block, items }: { block: TestimonialsBlock; it
 
   // Tripled array for infinite effect
   const displayItems = [...items, ...items, ...items]
-  const currentItem = displayItems[currentIndex % displayItems.length]
   const translationPerItem = (1 / Math.max(1, displayItems.length)) * 100
   const xTranslation = isAr ? (currentIndex * translationPerItem) : -(currentIndex * translationPerItem)
 
@@ -498,53 +503,115 @@ function TestimonialsSliderView({ block, items }: { block: TestimonialsBlock; it
   return (
     <SectionContainer backgroundColor={block.backgroundColor} padding={block.padding} containerWidth={block.containerWidth} dir={isAr ? "rtl" : "ltr"}>
       {getHeaderTitle() && (
-        <div className="mb-8 text-center">
-          <h2 className={`mb-3 ${nmTheme.textSection.title}`}>{getHeaderTitle()}</h2>
-          {getHeaderDescription() && <p className={`mx-auto max-w-2xl ${nmTheme.textSection.description}`}>{getHeaderDescription()}</p>}
+        <div className="mb-12 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-100 text-emerald-700 mb-4 shadow-sm border border-emerald-200">
+            <Star className="w-4 h-4 fill-emerald-500" />
+            <span className="text-sm font-medium">
+              {isAr ? "آراء عملائنا" : "Customer Reviews"}
+            </span>
+          </div>
+          <h2 className={`mb-4 text-3xl md:text-4xl font-bold text-slate-800`}>{getHeaderTitle()}</h2>
+          {getHeaderDescription() && <p className={`mx-auto max-w-2xl text-slate-600 leading-relaxed`}>{getHeaderDescription()}</p>}
         </div>
       )}
-      <div className="relative mx-auto max-w-4xl overflow-hidden px-4 py-8">
-        <motion.div
-          className="flex flex-nowrap"
-          animate={{ x: `${xTranslation}%` }}
-          style={{ width: `${(displayItems.length) * 100}%` }}
-          onAnimationComplete={handleAnimationComplete}
-          transition={isResetting ? { duration: 0 } : {
-            type: "spring",
-            stiffness: 260,
-            damping: 30,
-            mass: 1
-          }}
-        >
-          {displayItems.map((item, idx) => (
-            <div
-              key={`${item.id}-${idx}`}
-              className="px-4 flex-shrink-0"
-              style={{ width: `${(1 / displayItems.length) * 100}%` }}
+
+      <div
+        className="relative px-4 sm:px-12"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+      >
+        {/* Navigation Arrows */}
+        {items.length > columns && (
+          <>
+            <button
+              onClick={isAr ? nextSlide : prevSlide}
+              className={`absolute ${isAr ? "-right-2 sm:right-0" : "-left-2 sm:left-0"} top-1/2 -translate-y-1/2 z-10 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white text-emerald-600 flex items-center justify-center shadow-xl border border-emerald-100 transition-all hover:scale-110 active:scale-95 hover:bg-emerald-50`}
             >
-              <div className="rounded-2xl bg-white p-8 shadow-lg md:p-12 text-center h-full">
-                <div className="mb-4 flex justify-center gap-1">
-                  {[...Array(item.rating || 5)].map((_, i) => <span key={i} className="text-2xl text-yellow-400">★</span>)}
-                </div>
-                <blockquote className="mb-6 text-xl italic leading-relaxed text-slate-700 md:text-2xl">
-                  "{isAr ? item.quote : (item.quoteEn || item.quote)}"
-                </blockquote>
-                <div>
-                  <p className="text-lg font-bold text-slate-900">{isAr ? item.author : (item.authorEn || item.author)}</p>
-                  {item.role && <p className="mt-1 text-sm text-slate-500">{item.role}</p>}
+              {isAr ? <ChevronRight className="w-6 h-6" /> : <ChevronLeft className="w-6 h-6" />}
+            </button>
+            <button
+              onClick={isAr ? prevSlide : nextSlide}
+              className={`absolute ${isAr ? "-left-2 sm:left-0" : "-right-2 sm:right-0"} top-1/2 -translate-y-1/2 z-10 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white text-emerald-600 flex items-center justify-center shadow-xl border border-emerald-100 transition-all hover:scale-110 active:scale-95 hover:bg-emerald-50`}
+            >
+              {isAr ? <ChevronLeft className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}
+            </button>
+          </>
+        )}
+
+        <div className="overflow-hidden py-4">
+          <motion.div
+            className="flex flex-nowrap -mx-3"
+            animate={{ x: `${xTranslation}%` }}
+            style={{ width: `${(displayItems.length / columns) * 100}%` }}
+            onAnimationComplete={handleAnimationComplete}
+            transition={isResetting ? { duration: 0 } : {
+              type: "spring",
+              stiffness: 260,
+              damping: 30,
+              mass: 1
+            }}
+          >
+            {displayItems.map((item, idx) => (
+              <div
+                key={`${item.id}-${idx}`}
+                className="px-3 flex-shrink-0"
+                style={{ width: `${(1 / displayItems.length) * 100}%` }}
+              >
+                <div className="group relative rounded-2xl bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-900/20 dark:to-emerald-900/20 p-8 shadow-md border border-teal-100/50 dark:border-teal-800/30 hover:shadow-xl hover:shadow-teal-500/10 hover:-translate-y-1 transition-all duration-300 overflow-hidden h-full flex flex-col items-center text-center">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-teal-200/30 to-transparent rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-500" />
+                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-emerald-200/20 to-transparent rounded-full translate-y-1/2 -translate-x-1/2 group-hover:scale-150 transition-transform duration-500" />
+
+                  <div className="relative z-10 w-full">
+                    {/* 1. Avatar */}
+                    <div className="mb-4 flex justify-center">
+                      <div className="relative">
+                        <img
+                          src={item.avatarUrl || "/placeholder.svg?height=80&width=80"}
+                          alt={isAr ? item.author : (item.authorEn || item.author)}
+                          className="h-20 w-20 rounded-full object-cover border-4 border-white dark:border-slate-700 shadow-lg group-hover:scale-110 transition-transform duration-300"
+                        />
+                        <div className="absolute inset-0 rounded-full border-2 border-teal-400/50 scale-110 opacity-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-300" />
+                      </div>
+                    </div>
+
+                    {/* 2. Name */}
+                    <h4 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-1">
+                      {isAr ? item.author : (item.authorEn || item.author)}
+                    </h4>
+                    {item.role && <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">{isAr ? item.role : (item.roleEn || item.role)}</p>}
+
+                    {/* 3. Stars */}
+                    <div className="flex justify-center gap-1 mb-6">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`w-5 h-5 transition-all duration-300 ${star <= (item.rating || 5)
+                            ? "fill-amber-400 text-amber-400 group-hover:scale-110"
+                            : "text-slate-300 dark:text-slate-600"
+                            }`}
+                          style={{ transitionDelay: `${star * 50}ms` }}
+                        />
+                      ))}
+                    </div>
+
+                    {/* 4. Review */}
+                    <p className="text-slate-600 dark:text-slate-300 leading-relaxed italic text-lg line-clamp-4">
+                      "{isAr ? item.quote : (item.quoteEn || item.quote)}"
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </motion.div>
+            ))}
+          </motion.div>
+        </div>
 
-        {items.length > 1 && (
-          <div className="mt-12 flex justify-center gap-2">
+        {items.length > columns && (
+          <div className="mt-8 flex justify-center gap-2">
             {items.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentIndex(items.length + index)}
-                className={`h-3 w-3 rounded-full transition-all ${index === (currentIndex % items.length) ? "w-8 bg-emerald-600" : "bg-slate-300"}`}
+                className={`h-2.5 w-2.5 rounded-full transition-all ${index === (currentIndex % items.length) ? "w-8 bg-emerald-600" : "bg-slate-300 hover:bg-slate-400"}`}
               />
             ))}
           </div>

@@ -229,7 +229,7 @@ export interface IconPointsBlock extends BaseBlock {
 export interface TestimonialsBlock extends BaseBlock {
     kind: "testimonials"
     header?: SectionHeader
-    columns?: 2 | 3
+    columns?: 1 | 2 | 3
     layout?: "grid" | "slider"
     autoplay?: boolean
     interval?: number
