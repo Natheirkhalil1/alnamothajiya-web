@@ -385,7 +385,7 @@ export function FirebaseNewsView({ block }: { block: FirebaseNewsBlock }) {
         if (news.length <= itemsPerView || isPaused) return
         const interval = setInterval(() => {
             setCurrentIndex((prev) => prev + 1)
-        }, 3000)
+        }, 8000)
         return () => clearInterval(interval)
     }, [news.length, itemsPerView, isPaused])
 

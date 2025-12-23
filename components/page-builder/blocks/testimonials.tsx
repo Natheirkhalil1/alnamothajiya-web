@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { CheckCircle, Star, Upload, X, User } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 import { collection, getDocs } from "firebase/firestore"
 import { app } from "@/lib/firebase"
 
@@ -139,8 +140,8 @@ export function TestimonialsEditor({
           {block.autoplay && (
             <InputField
               label={isAr ? "الفاصل الزمني (ms)" : "Interval (ms)"}
-              value={(block.interval ?? 5000).toString()}
-              onChange={(v) => update({ interval: Number.parseInt(v) || 5000 })}
+              value={(block.interval ?? 8000).toString()}
+              onChange={(v) => update({ interval: Number.parseInt(v) || 8000 })}
               type="number"
             />
           )}
@@ -336,8 +337,8 @@ export function TestimonialsView({ block }: { block: TestimonialsBlock }) {
                     <Star
                       key={star}
                       className={`w-5 h-5 transition-all duration-300 ${star <= (item.rating || 5)
-                          ? "fill-amber-400 text-amber-400 group-hover:scale-110"
-                          : "text-slate-300 dark:text-slate-600"
+                        ? "fill-amber-400 text-amber-400 group-hover:scale-110"
+                        : "text-slate-300 dark:text-slate-600"
                         }`}
                       style={{ transitionDelay: `${star * 50}ms` }}
                     />
@@ -444,17 +445,36 @@ export function TestimonialsView({ block }: { block: TestimonialsBlock }) {
 
 function TestimonialsSliderView({ block, items }: { block: TestimonialsBlock; items: any[] }) {
   const { language } = useLanguage()
-  const [currentIndex, setCurrentIndex] = React.useState(0)
+  const [currentIndex, setCurrentIndex] = React.useState(items.length)
+  const [isResetting, setIsResetting] = React.useState(false)
   const header = block.header
   const isAr = language === "ar"
+
+  // Always use 8s as default if not explicitly set, or respect block settings if provided
+  const interval = block.interval || 8000
 
   React.useEffect(() => {
     if (!block.autoplay || items.length <= 1) return
     const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % items.length)
-    }, block.interval || 5000)
+      setCurrentIndex((prev) => prev + 1)
+    }, interval)
     return () => clearInterval(timer)
-  }, [block.autoplay, block.interval, items.length])
+  }, [block.autoplay, interval, items.length])
+
+  // Handle infinite loop silent reset
+  const handleAnimationComplete = () => {
+    if (items.length === 0) return
+
+    if (currentIndex >= items.length * 2) {
+      setIsResetting(true)
+      setCurrentIndex(items.length)
+      setTimeout(() => setIsResetting(false), 50)
+    } else if (currentIndex < items.length) {
+      setIsResetting(true)
+      setCurrentIndex(items.length * 2 - 1)
+      setTimeout(() => setIsResetting(false), 50)
+    }
+  }
 
   if (!items.length) {
     return (
@@ -466,7 +486,12 @@ function TestimonialsSliderView({ block, items }: { block: TestimonialsBlock; it
     )
   }
 
-  const currentItem = items[currentIndex]
+  // Tripled array for infinite effect
+  const displayItems = [...items, ...items, ...items]
+  const currentItem = displayItems[currentIndex % displayItems.length]
+  const translationPerItem = (1 / Math.max(1, displayItems.length)) * 100
+  const xTranslation = isAr ? (currentIndex * translationPerItem) : -(currentIndex * translationPerItem)
+
   const getHeaderTitle = () => (isAr ? header?.title : header?.titleEn || header?.title)
   const getHeaderDescription = () => (isAr ? header?.description : header?.descriptionEn || header?.description)
 
@@ -478,23 +503,49 @@ function TestimonialsSliderView({ block, items }: { block: TestimonialsBlock; it
           {getHeaderDescription() && <p className={`mx-auto max-w-2xl ${nmTheme.textSection.description}`}>{getHeaderDescription()}</p>}
         </div>
       )}
-      <div className="relative mx-auto max-w-4xl">
-        <div className="rounded-2xl bg-white p-8 shadow-lg md:p-12 text-center">
-          <div className="mb-4 flex justify-center gap-1">
-            {[...Array(currentItem.rating || 5)].map((_, i) => <span key={i} className="text-2xl text-yellow-400">★</span>)}
-          </div>
-          <blockquote className="mb-6 text-xl italic leading-relaxed text-slate-700 md:text-2xl">
-            "{isAr ? currentItem.quote : (currentItem.quoteEn || currentItem.quote)}"
-          </blockquote>
-          <div>
-            <p className="text-lg font-bold text-slate-900">{isAr ? currentItem.author : (currentItem.authorEn || currentItem.author)}</p>
-            {currentItem.role && <p className="mt-1 text-sm text-slate-500">{currentItem.role}</p>}
-          </div>
-        </div>
+      <div className="relative mx-auto max-w-4xl overflow-hidden px-4 py-8">
+        <motion.div
+          className="flex flex-nowrap"
+          animate={{ x: `${xTranslation}%` }}
+          style={{ width: `${(displayItems.length) * 100}%` }}
+          onAnimationComplete={handleAnimationComplete}
+          transition={isResetting ? { duration: 0 } : {
+            type: "spring",
+            stiffness: 260,
+            damping: 30,
+            mass: 1
+          }}
+        >
+          {displayItems.map((item, idx) => (
+            <div
+              key={`${item.id}-${idx}`}
+              className="px-4 flex-shrink-0"
+              style={{ width: `${(1 / displayItems.length) * 100}%` }}
+            >
+              <div className="rounded-2xl bg-white p-8 shadow-lg md:p-12 text-center h-full">
+                <div className="mb-4 flex justify-center gap-1">
+                  {[...Array(item.rating || 5)].map((_, i) => <span key={i} className="text-2xl text-yellow-400">★</span>)}
+                </div>
+                <blockquote className="mb-6 text-xl italic leading-relaxed text-slate-700 md:text-2xl">
+                  "{isAr ? item.quote : (item.quoteEn || item.quote)}"
+                </blockquote>
+                <div>
+                  <p className="text-lg font-bold text-slate-900">{isAr ? item.author : (item.authorEn || item.author)}</p>
+                  {item.role && <p className="mt-1 text-sm text-slate-500">{item.role}</p>}
+                </div>
+              </div>
+            </div>
+          ))}
+        </motion.div>
+
         {items.length > 1 && (
-          <div className="mt-8 flex justify-center gap-2">
+          <div className="mt-12 flex justify-center gap-2">
             {items.map((_, index) => (
-              <button key={index} onClick={() => setCurrentIndex(index)} className={`h-3 w-3 rounded-full transition-all ${index === currentIndex ? "w-8 bg-emerald-600" : "bg-slate-300"}`} />
+              <button
+                key={index}
+                onClick={() => setCurrentIndex(items.length + index)}
+                className={`h-3 w-3 rounded-full transition-all ${index === (currentIndex % items.length) ? "w-8 bg-emerald-600" : "bg-slate-300"}`}
+              />
             ))}
           </div>
         )}
