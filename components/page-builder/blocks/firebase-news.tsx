@@ -401,10 +401,12 @@ export function FirebaseNewsView({ block }: { block: FirebaseNewsBlock }) {
     const hasMultipleItems = news.length > itemsPerView
 
     const nextSlide = () => {
+        if (news.length === 0) return
         setCurrentIndex((prev) => (prev + 1) % news.length)
     }
 
     const prevSlide = () => {
+        if (news.length === 0) return
         setCurrentIndex((prev) => (prev - 1 + news.length) % news.length)
     }
 
@@ -507,6 +509,14 @@ export function FirebaseNewsView({ block }: { block: FirebaseNewsBlock }) {
         )
     }
 
+    // Calculate translation percentage
+    // We want to slide by (100 / columns)% of the VIEWPORT width per index.
+    // Since motion.div 'x' % is relative to the container itself, 
+    // and the container width is (news.length / columns) * 100% of viewport...
+    // the translation per index is (1 / news.length) * 100%.
+    const translationPerItem = (1 / Math.max(1, news.length)) * 100
+    const xTranslation = isAr ? (currentIndex * translationPerItem) : -(currentIndex * translationPerItem)
+
     return (
         <>
             {hoverStyles && <style>{hoverStyles}</style>}
@@ -564,86 +574,100 @@ export function FirebaseNewsView({ block }: { block: FirebaseNewsBlock }) {
                             </>
                         )}
 
-                        {/* Grid */}
-                        <div
-                            ref={sliderRef}
-                            className={`grid gap-6 ${gridCols}`}
-                        >
-                            {visibleItems.map((item, index) => {
-                                const itemImages = getItemImages(item)
-                                const category = getCategory(item)
+                        {/* Continuous Slider Wrapper */}
+                        <div className="overflow-hidden -mx-3 px-3 py-4">
+                            <motion.div
+                                ref={sliderRef}
+                                className="flex flex-nowrap"
+                                animate={{ x: `${xTranslation}%` }}
+                                style={{ width: `${(news.length / columns) * 100}%` }}
+                                transition={{
+                                    type: "spring",
+                                    stiffness: 260,
+                                    damping: 30,
+                                    mass: 1
+                                }}
+                            >
+                                {news.map((item) => {
+                                    const itemImages = getItemImages(item)
+                                    const category = getCategory(item)
 
-                                return (
-                                    <motion.div
-                                        key={`${item.id}-${currentIndex}`}
-                                        initial={{ opacity: 0, scale: 0.95 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        exit={{ opacity: 0, scale: 0.95 }}
-                                        transition={{ duration: 0.4, delay: index * 0.05 }}
-                                        className={`group relative bg-gradient-to-br ${theme.cardBg} rounded-2xl overflow-hidden shadow-lg ${theme.shadow} ${theme.hover} hover:shadow-xl transition-all duration-500 hover:-translate-y-2 cursor-pointer`}
-                                        onClick={() => openDialog(item)}
-                                    >
-                                        {/* Image Slider */}
-                                        {block.showImage !== false && itemImages.length > 0 && (
-                                            <div className="relative">
-                                                <CardImageSlider
-                                                    images={itemImages}
-                                                    alt={getTitle(item)}
-                                                    theme={theme}
-                                                    isAr={isAr}
-                                                />
+                                    return (
+                                        <div
+                                            key={item.id}
+                                            className="px-3 flex-shrink-0"
+                                            style={{ width: `${(1 / news.length) * 100}%` }}
+                                        >
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.95 }}
+                                                whileInView={{ opacity: 1, scale: 1 }}
+                                                viewport={{ once: true }}
+                                                className={`group relative bg-gradient-to-br ${theme.cardBg} rounded-2xl overflow-hidden shadow-lg ${theme.shadow} ${theme.hover} hover:shadow-xl transition-all duration-500 hover:-translate-y-2 cursor-pointer h-full`}
+                                                onClick={() => openDialog(item)}
+                                            >
+                                                {/* Image Slider */}
+                                                {block.showImage !== false && itemImages.length > 0 && (
+                                                    <div className="relative">
+                                                        <CardImageSlider
+                                                            images={itemImages}
+                                                            alt={getTitle(item)}
+                                                            theme={theme}
+                                                            isAr={isAr}
+                                                        />
 
-                                                {/* Category Badge */}
-                                                {category && (
-                                                    <div className={`absolute top-3 ${isAr ? "right-3" : "left-3"}`}>
-                                                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${theme.categoryBadge} shadow-lg`}>
-                                                            <Tag className="w-3 h-3" />
-                                                            {category}
-                                                        </span>
+                                                        {/* Category Badge */}
+                                                        {category && (
+                                                            <div className={`absolute top-3 ${isAr ? "right-3" : "left-3"}`}>
+                                                                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${theme.categoryBadge} shadow-lg`}>
+                                                                    <Tag className="w-3 h-3" />
+                                                                    {category}
+                                                                </span>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Floating badge */}
+                                                        <div className={`absolute bottom-3 ${isAr ? "left-3" : "right-3"}`}>
+                                                            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${theme.gradient} flex items-center justify-center shadow-lg`}>
+                                                                <Newspaper className="w-5 h-5 text-white" />
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 )}
 
-                                                {/* Floating badge */}
-                                                <div className={`absolute bottom-3 ${isAr ? "left-3" : "right-3"}`}>
-                                                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${theme.gradient} flex items-center justify-center shadow-lg`}>
-                                                        <Newspaper className="w-5 h-5 text-white" />
+                                                {/* Content */}
+                                                <div className="p-6">
+                                                    {/* Date */}
+                                                    {block.showDate !== false && formatDate(item) && (
+                                                        <div className={`flex items-center gap-2 text-sm text-${theme.text} mb-3`}>
+                                                            <Calendar className="w-4 h-4" />
+                                                            <span>{formatDate(item)}</span>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Title */}
+                                                    <h3 className="text-lg font-bold text-slate-800 mb-3 line-clamp-2 group-hover:text-slate-900 transition-colors">
+                                                        {getTitle(item)}
+                                                    </h3>
+
+                                                    {/* Description */}
+                                                    <p className="text-slate-600 text-sm line-clamp-3 mb-4">
+                                                        {getDescription(item)}
+                                                    </p>
+
+                                                    {/* Read More */}
+                                                    <div className={`flex items-center gap-2 text-${theme.text} font-medium text-sm group-hover:gap-3 transition-all mt-auto`}>
+                                                        <span>{isAr ? "اقرأ المزيد" : "Read More"}</span>
+                                                        <ChevronRight className={`w-4 h-4 ${isAr ? "rotate-180" : ""}`} />
                                                     </div>
                                                 </div>
-                                            </div>
-                                        )}
 
-                                        {/* Content */}
-                                        <div className="p-6">
-                                            {/* Date */}
-                                            {block.showDate !== false && formatDate(item) && (
-                                                <div className={`flex items-center gap-2 text-sm text-${theme.text} mb-3`}>
-                                                    <Calendar className="w-4 h-4" />
-                                                    <span>{formatDate(item)}</span>
-                                                </div>
-                                            )}
-
-                                            {/* Title */}
-                                            <h3 className="text-lg font-bold text-slate-800 mb-3 line-clamp-2 group-hover:text-slate-900 transition-colors">
-                                                {getTitle(item)}
-                                            </h3>
-
-                                            {/* Description */}
-                                            <p className="text-slate-600 text-sm line-clamp-3 mb-4">
-                                                {getDescription(item)}
-                                            </p>
-
-                                            {/* Read More */}
-                                            <div className={`flex items-center gap-2 text-${theme.text} font-medium text-sm group-hover:gap-3 transition-all`}>
-                                                <span>{isAr ? "اقرأ المزيد" : "Read More"}</span>
-                                                <ChevronRight className={`w-4 h-4 ${isAr ? "rotate-180" : ""}`} />
-                                            </div>
+                                                {/* Hover gradient overlay */}
+                                                <div className={`absolute inset-0 bg-gradient-to-t ${theme.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500 pointer-events-none`} />
+                                            </motion.div>
                                         </div>
-
-                                        {/* Hover gradient overlay */}
-                                        <div className={`absolute inset-0 bg-gradient-to-t ${theme.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500 pointer-events-none`} />
-                                    </motion.div>
-                                )
-                            })}
+                                    )
+                                })}
+                            </motion.div>
                         </div>
 
                         {/* Dots pagination - show current position in infinite loop */}
