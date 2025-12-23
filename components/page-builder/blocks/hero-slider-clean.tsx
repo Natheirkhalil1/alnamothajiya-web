@@ -276,4 +276,8 @@ export function HeroSliderView({ block }: { block: HeroSliderBlock }) {
             </section>
         </>
     )
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 1b633bfcd0d8a4a9200a4ced2b3f5caf261fa02c

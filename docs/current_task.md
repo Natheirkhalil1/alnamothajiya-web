@@ -50,7 +50,11 @@
 4. إضافة dialog تأكيد قبل النسخ (لأن النسخ سيمسح المحتوى الحالي)
 
 **الكود المقترح:**
+<<<<<<< HEAD
 ```tsx
+=======
+\`\`\`tsx
+>>>>>>> 1b633bfcd0d8a4a9200a4ced2b3f5caf261fa02c
 // داخل div تبويبات اللغة
 {editingLanguage === "en" && (value.blocksAr?.length > 0) && (
   <button
@@ -73,10 +77,17 @@
     <CopyIcon /> Copy from English
   </button>
 )}
+<<<<<<< HEAD
 ```
 
 **دالة النسخ:**
 ```tsx
+=======
+\`\`\`
+
+**دالة النسخ:**
+\`\`\`tsx
+>>>>>>> 1b633bfcd0d8a4a9200a4ced2b3f5caf261fa02c
 const handleCopyFromLanguage = (sourceLanguage: "ar" | "en") => {
   if (!onChange) return
 
@@ -95,7 +106,11 @@ const handleCopyFromLanguage = (sourceLanguage: "ar" | "en") => {
     onChange({ ...value, blocksEn: copiedBlocks })
   }
 }
+<<<<<<< HEAD
 ```
+=======
+\`\`\`
+>>>>>>> 1b633bfcd0d8a4a9200a4ced2b3f5caf261fa02c
 
 ---
 
@@ -107,7 +122,11 @@ const handleCopyFromLanguage = (sourceLanguage: "ar" | "en") => {
 3. إضافة Dialog component للتأكيد
 
 **الكود:**
+<<<<<<< HEAD
 ```tsx
+=======
+\`\`\`tsx
+>>>>>>> 1b633bfcd0d8a4a9200a4ced2b3f5caf261fa02c
 <Dialog open={copyConfirmOpen} onOpenChange={setCopyConfirmOpen}>
   <DialogContent>
     <DialogHeader>
@@ -133,7 +152,11 @@ const handleCopyFromLanguage = (sourceLanguage: "ar" | "en") => {
     </div>
   </DialogContent>
 </Dialog>
+<<<<<<< HEAD
 ```
+=======
+\`\`\`
+>>>>>>> 1b633bfcd0d8a4a9200a4ced2b3f5caf261fa02c
 
 ---
 
@@ -148,7 +171,11 @@ const handleCopyFromLanguage = (sourceLanguage: "ar" | "en") => {
 2. التأكد أن الدالة تستخدم parameter `language` بشكل صحيح
 
 **مثال للتحقق:**
+<<<<<<< HEAD
 ```tsx5
+=======
+\`\`\`tsx5
+>>>>>>> 1b633bfcd0d8a4a9200a4ced2b3f5caf261fa02c
 // يجب أن يكون هكذا:
 case "hero-basic":
   return {
@@ -158,7 +185,11 @@ case "hero-basic":
     titleEn: isAr ? "" : "Main Title",
     // ...
   }
+<<<<<<< HEAD
 ```
+=======
+\`\`\`
+>>>>>>> 1b633bfcd0d8a4a9200a4ced2b3f5caf261fa02c
 
 ---
 
@@ -170,10 +201,17 @@ case "hero-basic":
 
 2. **عداد البلوكات لكل لغة:**
    - عرض عدد البلوكات بجانب كل تبويب لغة
+<<<<<<< HEAD
    ```tsx
    العربية ({value.blocksAr?.length || 0})
    English ({value.blocksEn?.length || 0})
    ```
+=======
+   \`\`\`tsx
+   العربية ({value.blocksAr?.length || 0})
+   English ({value.blocksEn?.length || 0})
+   \`\`\`
+>>>>>>> 1b633bfcd0d8a4a9200a4ced2b3f5caf261fa02c
 
 ---
 

@@ -18,7 +18,10 @@ import { app } from "@/lib/firebase"
 interface FirebaseReview {
     id: string
     comment: string
+<<<<<<< HEAD
     reviewerName?: string
+=======
+>>>>>>> 1b633bfcd0d8a4a9200a4ced2b3f5caf261fa02c
     imageUrl?: string
     isVisible?: boolean
     publishedAt?: any
@@ -107,7 +110,11 @@ export function TestimonialsEditor({
                     <input
                         type="checkbox"
                         id="enableFirebaseReviews"
+<<<<<<< HEAD
                         checked={block.enableFirebaseReviews ?? true}
+=======
+                        checked={block.enableFirebaseReviews ?? false}
+>>>>>>> 1b633bfcd0d8a4a9200a4ced2b3f5caf261fa02c
                         onChange={(e) => update({ enableFirebaseReviews: e.target.checked })}
                         className="h-4 w-4 rounded border-gray-300 text-orange-600"
                     />
@@ -319,10 +326,14 @@ export function TestimonialsView({ block }: { block: TestimonialsBlock }) {
 
     // Load Firebase reviews from school_reviews collection
     React.useEffect(() => {
+<<<<<<< HEAD
         // Enable by default if not explicitly set
         const shouldFetch = block.enableFirebaseReviews ?? true
 
         if (!shouldFetch) {
+=======
+        if (!block.enableFirebaseReviews) {
+>>>>>>> 1b633bfcd0d8a4a9200a4ced2b3f5caf261fa02c
             setFirebaseReviews([])
             return
         }
@@ -344,8 +355,13 @@ export function TestimonialsView({ block }: { block: TestimonialsBlock }) {
                             id: doc.id,
                             quote: data.comment,
                             quoteEn: data.comment,
+<<<<<<< HEAD
                             author: data.reviewerName || "", // Get name from reviewerName field
                             authorEn: data.reviewerName || "",
+=======
+                            author: "", // Firebase reviews don't have author name
+                            authorEn: "",
+>>>>>>> 1b633bfcd0d8a4a9200a4ced2b3f5caf261fa02c
                             avatarUrl: data.imageUrl,
                             rating: data.rating || 5,
                             isFirebaseReview: true,
@@ -365,7 +381,11 @@ export function TestimonialsView({ block }: { block: TestimonialsBlock }) {
             }
         }
         fetchFirebaseReviews()
+<<<<<<< HEAD
     }, [block.enableFirebaseReviews, block])
+=======
+    }, [block.enableFirebaseReviews])
+>>>>>>> 1b633bfcd0d8a4a9200a4ced2b3f5caf261fa02c
 
     // Always load approved testimonials from dashboard
     React.useEffect(() => {
@@ -490,10 +510,18 @@ export function TestimonialsView({ block }: { block: TestimonialsBlock }) {
                                     {[1, 2, 3, 4, 5].map((star) => (
                                         <Star
                                             key={star}
+<<<<<<< HEAD
                                             className={`w-5 h-5 transition-all duration-300 ${star <= (item.rating || 5)
                                                 ? "fill-amber-400 text-amber-400 group-hover:scale-110"
                                                 : "text-slate-300 dark:text-slate-600"
                                                 }`}
+=======
+                                            className={`w-5 h-5 transition-all duration-300 ${
+                                                star <= (item.rating || 5)
+                                                    ? "fill-amber-400 text-amber-400 group-hover:scale-110"
+                                                    : "text-slate-300 dark:text-slate-600"
+                                            }`}
+>>>>>>> 1b633bfcd0d8a4a9200a4ced2b3f5caf261fa02c
                                             style={{ transitionDelay: `${star * 50}ms` }}
                                         />
                                     ))}

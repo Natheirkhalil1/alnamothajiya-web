@@ -38,6 +38,7 @@
 ## URL Structure
 
 ### Before
+<<<<<<< HEAD
 ```
 /pages/about → Single content, language determined by context
 ```
@@ -48,6 +49,18 @@
 /en/about → English content (blocksEn)
 /about → Redirects to /ar/about or /en/about based on browser language
 ```
+=======
+\`\`\`
+/pages/about → Single content, language determined by context
+\`\`\`
+
+### After
+\`\`\`
+/ar/about → Arabic content (blocksAr)
+/en/about → English content (blocksEn)
+/about → Redirects to /ar/about or /en/about based on browser language
+\`\`\`
+>>>>>>> 1b633bfcd0d8a4a9200a4ced2b3f5caf261fa02c
 
 ## Backward Compatibility
 

@@ -8,17 +8,29 @@ To implement full bilingual support by separating page content into distinct "Ar
 
 ## 🏗️ Current Data Model
 Currently, a `DynamicPage` has a single `blocks` array:
+<<<<<<< HEAD
 ```typescript
+=======
+\`\`\`typescript
+>>>>>>> 1b633bfcd0d8a4a9200a4ced2b3f5caf261fa02c
 interface DynamicPage {
   // ... metadata
   blocks?: PageBlock[] // Single array, mixed content
 }
+<<<<<<< HEAD
 ```
+=======
+\`\`\`
+>>>>>>> 1b633bfcd0d8a4a9200a4ced2b3f5caf261fa02c
 
 ## 💡 Proposed Data Model
 We will split the content into two separate arrays:
 
+<<<<<<< HEAD
 ```typescript
+=======
+\`\`\`typescript
+>>>>>>> 1b633bfcd0d8a4a9200a4ced2b3f5caf261fa02c
 interface DynamicPage {
   // ... metadata (titleAr, titleEn, slug, etc.)
   
@@ -31,7 +43,11 @@ interface DynamicPage {
   // Deprecated/Removed
   // blocks?: PageBlock[] 
 }
+<<<<<<< HEAD
 ```
+=======
+\`\`\`
+>>>>>>> 1b633bfcd0d8a4a9200a4ced2b3f5caf261fa02c
 
 ## 🛠 Implementation Plan
 
@@ -48,10 +64,17 @@ interface DynamicPage {
 ### 3. Frontend Rendering (`app/pages/[slug]/page.tsx`)
 -   Update the page component to fetch the full page data.
 -   Use `useLanguage()` hook to determine which array to render:
+<<<<<<< HEAD
     ```tsx
     const { language } = useLanguage()
     const blocksToRender = language === 'ar' ? page.blocksAr : page.blocksEn
     ```
+=======
+    \`\`\`tsx
+    const { language } = useLanguage()
+    const blocksToRender = language === 'ar' ? page.blocksAr : page.blocksEn
+    \`\`\`
+>>>>>>> 1b633bfcd0d8a4a9200a4ced2b3f5caf261fa02c
 
 ## ✅ Pros
 1.  **Zero Block Refactoring:** We don't need to touch the 34+ existing blocks. They remain "dumb" and monolingual.
