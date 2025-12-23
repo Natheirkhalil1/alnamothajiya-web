@@ -322,7 +322,8 @@ export function FirebaseNewsView({ block }: { block: FirebaseNewsBlock }) {
     const isAr = language === "ar"
     const [news, setNews] = useState<NewsItem[]>([])
     const [loading, setLoading] = useState(true)
-    const [currentIndex, setCurrentIndex] = useState(0)
+    const [currentIndex, setCurrentIndex] = useState(0) // Will be initialized after news is fetched
+    const [isResetting, setIsResetting] = useState(false)
     const [selectedItem, setSelectedItem] = useState<NewsItem | null>(null)
     const [dialogImageIndex, setDialogImageIndex] = useState(0)
     const [isPaused, setIsPaused] = useState(false)
@@ -354,6 +355,10 @@ export function FirebaseNewsView({ block }: { block: FirebaseNewsBlock }) {
                     return dateB.getTime() - dateA.getTime()
                 })
                 setNews(items)
+                // Initialize index to middle of tripled array for infinite effect
+                if (items.length > 0) {
+                    setCurrentIndex(items.length)
+                }
             } catch (error) {
                 console.error("Error fetching news:", error)
             } finally {
@@ -379,7 +384,7 @@ export function FirebaseNewsView({ block }: { block: FirebaseNewsBlock }) {
     useEffect(() => {
         if (news.length <= itemsPerView || isPaused) return
         const interval = setInterval(() => {
-            setCurrentIndex((prev) => (prev + 1) % news.length)
+            setCurrentIndex((prev) => prev + 1)
         }, 3000)
         return () => clearInterval(interval)
     }, [news.length, itemsPerView, isPaused])
@@ -402,12 +407,28 @@ export function FirebaseNewsView({ block }: { block: FirebaseNewsBlock }) {
 
     const nextSlide = () => {
         if (news.length === 0) return
-        setCurrentIndex((prev) => (prev + 1) % news.length)
+        setCurrentIndex((prev) => prev + 1)
     }
 
     const prevSlide = () => {
         if (news.length === 0) return
-        setCurrentIndex((prev) => (prev - 1 + news.length) % news.length)
+        setCurrentIndex((prev) => prev - 1)
+    }
+
+    // Handle infinite loop silent reset
+    const handleAnimationComplete = () => {
+        if (news.length === 0) return
+
+        // If we reached the end of the middle set or the start of the middle set
+        if (currentIndex >= news.length * 2) {
+            setIsResetting(true)
+            setCurrentIndex(news.length)
+            setTimeout(() => setIsResetting(false), 50)
+        } else if (currentIndex < news.length) {
+            setIsResetting(true)
+            setCurrentIndex(news.length * 2 - 1)
+            setTimeout(() => setIsResetting(false), 50)
+        }
     }
 
     const getTitle = (item: NewsItem) => {
@@ -509,12 +530,9 @@ export function FirebaseNewsView({ block }: { block: FirebaseNewsBlock }) {
         )
     }
 
-    // Calculate translation percentage
-    // We want to slide by (100 / columns)% of the VIEWPORT width per index.
-    // Since motion.div 'x' % is relative to the container itself, 
-    // and the container width is (news.length / columns) * 100% of viewport...
-    // the translation per index is (1 / news.length) * 100%.
-    const translationPerItem = (1 / Math.max(1, news.length)) * 100
+    // Calculate translation percentage for the tripled array
+    const displayNews = [...news, ...news, ...news]
+    const translationPerItem = (1 / Math.max(1, displayNews.length)) * 100
     const xTranslation = isAr ? (currentIndex * translationPerItem) : -(currentIndex * translationPerItem)
 
     return (
@@ -580,23 +598,24 @@ export function FirebaseNewsView({ block }: { block: FirebaseNewsBlock }) {
                                 ref={sliderRef}
                                 className="flex flex-nowrap"
                                 animate={{ x: `${xTranslation}%` }}
-                                style={{ width: `${(news.length / columns) * 100}%` }}
-                                transition={{
+                                style={{ width: `${(displayNews.length / columns) * 100}%` }}
+                                onAnimationComplete={handleAnimationComplete}
+                                transition={isResetting ? { duration: 0 } : {
                                     type: "spring",
                                     stiffness: 260,
                                     damping: 30,
                                     mass: 1
                                 }}
                             >
-                                {news.map((item) => {
+                                {displayNews.map((item, idx) => {
                                     const itemImages = getItemImages(item)
                                     const category = getCategory(item)
 
                                     return (
                                         <div
-                                            key={item.id}
+                                            key={`${item.id}-${idx}`}
                                             className="px-3 flex-shrink-0"
-                                            style={{ width: `${(1 / news.length) * 100}%` }}
+                                            style={{ width: `${(1 / displayNews.length) * 100}%` }}
                                         >
                                             <motion.div
                                                 initial={{ opacity: 0, scale: 0.95 }}
@@ -676,8 +695,8 @@ export function FirebaseNewsView({ block }: { block: FirebaseNewsBlock }) {
                                 {news.map((_, idx) => (
                                     <button
                                         key={idx}
-                                        onClick={() => setCurrentIndex(idx)}
-                                        className={`w-2.5 h-2.5 rounded-full transition-all ${idx === currentIndex
+                                        onClick={() => setCurrentIndex(news.length + idx)}
+                                        className={`w-2.5 h-2.5 rounded-full transition-all ${idx === (currentIndex % news.length)
                                             ? `${theme.dots} w-8`
                                             : `${theme.dotsInactive} hover:${theme.dots}`
                                             }`}
