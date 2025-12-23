@@ -284,10 +284,6 @@ export function TestimonialsView({ block }: { block: TestimonialsBlock }) {
     }
   }
 
-  if (isSlider) {
-    return <TestimonialsSliderView block={block} items={displayItems} />
-  }
-
   const colsClass = block.columns === 2 ? "md:grid-cols-2" : "md:grid-cols-3"
   const { hoverStyles, ...blockProps } = applyBlockStyles(block.blockStyles)
 
@@ -303,54 +299,66 @@ export function TestimonialsView({ block }: { block: TestimonialsBlock }) {
         dir={isAr ? "rtl" : "ltr"}
       >
         {getHeaderTitle() && (
-          <div className="mb-8 text-center">
-            <h2 className={`mb-3 ${nmTheme.textSection.title}`}>{getHeaderTitle()}</h2>
+          <div className="mb-12 text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-100 text-emerald-700 mb-4 shadow-sm border border-emerald-200">
+              <Star className="w-4 h-4 fill-emerald-500" />
+              <span className="text-sm font-medium">
+                {isAr ? "آراء عملائنا" : "Customer Reviews"}
+              </span>
+            </div>
+            <h2 className={`mb-4 text-3xl md:text-4xl font-bold text-slate-800`}>{getHeaderTitle()}</h2>
             {getHeaderDescription() && (
-              <p className={`mx-auto max-w-2xl ${nmTheme.textSection.description}`}>{getHeaderDescription()}</p>
+              <p className={`mx-auto max-w-2xl text-slate-600 leading-relaxed`}>{getHeaderDescription()}</p>
             )}
           </div>
         )}
-        <div className={`grid ${colsClass} gap-6`}>
-          {displayItems.map((item) => (
-            <div
-              key={item.id}
-              className="group relative rounded-2xl bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-900/20 dark:to-emerald-900/20 p-6 shadow-sm border border-teal-100/50 dark:border-teal-800/30 hover:shadow-xl hover:shadow-teal-500/10 hover:-translate-y-1 transition-all duration-300 overflow-hidden"
-            >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-teal-200/30 to-transparent rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-500" />
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-emerald-200/20 to-transparent rounded-full translate-y-1/2 -translate-x-1/2 group-hover:scale-150 transition-transform duration-500" />
-              <div className="relative z-10 text-center">
-                <div className="mb-4 flex justify-center">
-                  <div className="relative">
-                    <img
-                      src={item.avatarUrl || "/placeholder.svg?height=80&width=80"}
-                      alt={getAuthor(item)}
-                      className="h-20 w-20 rounded-full object-cover border-4 border-white dark:border-slate-700 shadow-lg group-hover:scale-110 transition-transform duration-300"
-                    />
-                    <div className="absolute inset-0 rounded-full border-2 border-teal-400/50 scale-110 opacity-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-300" />
+
+        {isSlider ? (
+          <div className="-mx-4 sm:-mx-12">
+            <TestimonialsSliderView block={block} items={displayItems} isAr={isAr} />
+          </div>
+        ) : (
+          <div className={`grid ${colsClass} gap-6`}>
+            {displayItems.map((item) => (
+              <div
+                key={item.id}
+                className="group relative rounded-2xl bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-900/20 dark:to-emerald-900/20 p-8 shadow-md border border-teal-100/50 dark:border-teal-800/30 hover:shadow-xl hover:shadow-teal-500/10 hover:-translate-y-1 transition-all duration-300 overflow-hidden h-full flex flex-col items-center text-center"
+              >
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-teal-200/30 to-transparent rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-500" />
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-emerald-200/20 to-transparent rounded-full translate-y-1/2 -translate-x-1/2 group-hover:scale-150 transition-transform duration-500" />
+                <div className="relative z-10 w-full">
+                  <div className="mb-4 flex justify-center">
+                    <div className="relative">
+                      <img
+                        src={item.avatarUrl || "/placeholder.svg?height=80&width=80"}
+                        alt={getAuthor(item)}
+                        className="h-20 w-20 rounded-full object-cover border-4 border-white dark:border-slate-700 shadow-lg group-hover:scale-110 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 rounded-full border-2 border-teal-400/50 scale-110 opacity-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-300" />
+                    </div>
                   </div>
+                  <h4 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-1">
+                    {getAuthor(item)}
+                  </h4>
+                  {getRole(item) && <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">{getRole(item)}</p>}
+                  <div className="flex justify-center gap-1 mb-6">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className={`w-5 h-5 transition-all duration-300 ${star <= (item.rating || 5)
+                          ? "fill-amber-400 text-amber-400 group-hover:scale-110"
+                          : "text-slate-300 dark:text-slate-600"
+                          }`}
+                        style={{ transitionDelay: `${star * 50}ms` }}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-slate-600 dark:text-slate-300 leading-relaxed italic text-lg line-clamp-4">"{getQuote(item)}"</p>
                 </div>
-                <h4 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2 group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors duration-300">
-                  {getAuthor(item)}
-                </h4>
-                {getRole(item) && <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">{getRole(item)}</p>}
-                <div className="flex justify-center gap-1 mb-4">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star
-                      key={star}
-                      className={`w-5 h-5 transition-all duration-300 ${star <= (item.rating || 5)
-                        ? "fill-amber-400 text-amber-400 group-hover:scale-110"
-                        : "text-slate-300 dark:text-slate-600"
-                        }`}
-                      style={{ transitionDelay: `${star * 50}ms` }}
-                    />
-                  ))}
-                </div>
-                <p className="text-slate-600 dark:text-slate-300 leading-relaxed italic">"{getQuote(item)}"</p>
               </div>
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000 pointer-events-none" />
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {block.enablePublicSubmission && (
           <div className="mt-12 max-w-xl mx-auto">
@@ -444,13 +452,10 @@ export function TestimonialsView({ block }: { block: TestimonialsBlock }) {
   )
 }
 
-function TestimonialsSliderView({ block, items }: { block: TestimonialsBlock; items: any[] }) {
-  const { language } = useLanguage()
+function TestimonialsSliderView({ block, items, isAr }: { block: TestimonialsBlock; items: any[]; isAr: boolean }) {
   const [currentIndex, setCurrentIndex] = React.useState(items.length)
   const [isResetting, setIsResetting] = React.useState(false)
   const [isPaused, setIsPaused] = React.useState(false)
-  const header = block.header
-  const isAr = language === "ar"
   const columns = block.columns || 1
 
   // Always use 8s as default if not explicitly set, or respect block settings if provided
@@ -484,11 +489,9 @@ function TestimonialsSliderView({ block, items }: { block: TestimonialsBlock; it
 
   if (!items.length) {
     return (
-      <SectionContainer backgroundColor={block.backgroundColor} padding={block.padding} containerWidth={block.containerWidth} dir={isAr ? "rtl" : "ltr"}>
-        <div className="rounded-lg border-2 border-dashed border-slate-300 p-8 text-center text-slate-500">
-          {isAr ? "لا توجد آراء لعرضها" : "No testimonials to display"}
-        </div>
-      </SectionContainer>
+      <div className="rounded-lg border-2 border-dashed border-slate-300 p-8 text-center text-slate-500">
+        {isAr ? "لا توجد آراء لعرضها" : "No testimonials to display"}
+      </div>
     )
   }
 
@@ -497,126 +500,108 @@ function TestimonialsSliderView({ block, items }: { block: TestimonialsBlock; it
   const translationPerItem = (1 / Math.max(1, displayItems.length)) * 100
   const xTranslation = isAr ? (currentIndex * translationPerItem) : -(currentIndex * translationPerItem)
 
-  const getHeaderTitle = () => (isAr ? header?.title : header?.titleEn || header?.title)
-  const getHeaderDescription = () => (isAr ? header?.description : header?.descriptionEn || header?.description)
-
   return (
-    <SectionContainer backgroundColor={block.backgroundColor} padding={block.padding} containerWidth={block.containerWidth} dir={isAr ? "rtl" : "ltr"}>
-      {getHeaderTitle() && (
-        <div className="mb-12 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-100 text-emerald-700 mb-4 shadow-sm border border-emerald-200">
-            <Star className="w-4 h-4 fill-emerald-500" />
-            <span className="text-sm font-medium">
-              {isAr ? "آراء عملائنا" : "Customer Reviews"}
-            </span>
-          </div>
-          <h2 className={`mb-4 text-3xl md:text-4xl font-bold text-slate-800`}>{getHeaderTitle()}</h2>
-          {getHeaderDescription() && <p className={`mx-auto max-w-2xl text-slate-600 leading-relaxed`}>{getHeaderDescription()}</p>}
-        </div>
+    <div
+      className="relative px-4 sm:px-12"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
+      {/* Navigation Arrows */}
+      {items.length > columns && (
+        <>
+          <button
+            onClick={isAr ? nextSlide : prevSlide}
+            className={`absolute ${isAr ? "-right-2 sm:right-0" : "-left-2 sm:left-0"} top-1/2 -translate-y-1/2 z-10 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white text-emerald-600 flex items-center justify-center shadow-xl border border-emerald-100 transition-all hover:scale-110 active:scale-95 hover:bg-emerald-50`}
+          >
+            {isAr ? <ChevronRight className="w-6 h-6" /> : <ChevronLeft className="w-6 h-6" />}
+          </button>
+          <button
+            onClick={isAr ? prevSlide : nextSlide}
+            className={`absolute ${isAr ? "-left-2 sm:left-0" : "-right-2 sm:right-0"} top-1/2 -translate-y-1/2 z-10 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white text-emerald-600 flex items-center justify-center shadow-xl border border-emerald-100 transition-all hover:scale-110 active:scale-95 hover:bg-emerald-50`}
+          >
+            {isAr ? <ChevronLeft className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}
+          </button>
+        </>
       )}
 
-      <div
-        className="relative px-4 sm:px-12"
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
-      >
-        {/* Navigation Arrows */}
-        {items.length > columns && (
-          <>
-            <button
-              onClick={isAr ? nextSlide : prevSlide}
-              className={`absolute ${isAr ? "-right-2 sm:right-0" : "-left-2 sm:left-0"} top-1/2 -translate-y-1/2 z-10 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white text-emerald-600 flex items-center justify-center shadow-xl border border-emerald-100 transition-all hover:scale-110 active:scale-95 hover:bg-emerald-50`}
+      <div className="overflow-hidden py-4">
+        <motion.div
+          className="flex flex-nowrap -mx-4"
+          animate={{ x: `${xTranslation}%` }}
+          style={{ width: `${(displayItems.length / columns) * 100}%` }}
+          onAnimationComplete={handleAnimationComplete}
+          transition={isResetting ? { duration: 0 } : {
+            type: "spring",
+            stiffness: 260,
+            damping: 30,
+            mass: 1
+          }}
+        >
+          {displayItems.map((item, idx) => (
+            <div
+              key={`${item.id}-${idx}`}
+              className="px-4 flex-shrink-0"
+              style={{ width: `${(1 / displayItems.length) * 100}%` }}
             >
-              {isAr ? <ChevronRight className="w-6 h-6" /> : <ChevronLeft className="w-6 h-6" />}
-            </button>
-            <button
-              onClick={isAr ? prevSlide : nextSlide}
-              className={`absolute ${isAr ? "-left-2 sm:left-0" : "-right-2 sm:right-0"} top-1/2 -translate-y-1/2 z-10 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white text-emerald-600 flex items-center justify-center shadow-xl border border-emerald-100 transition-all hover:scale-110 active:scale-95 hover:bg-emerald-50`}
-            >
-              {isAr ? <ChevronLeft className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}
-            </button>
-          </>
-        )}
+              <div className="group relative rounded-2xl bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-900/20 dark:to-emerald-900/20 p-8 shadow-md border border-teal-100/50 dark:border-teal-800/30 hover:shadow-xl hover:shadow-teal-500/10 hover:-translate-y-1 transition-all duration-300 overflow-hidden h-full flex flex-col items-center text-center">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-teal-200/30 to-transparent rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-500" />
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-emerald-200/20 to-transparent rounded-full translate-y-1/2 -translate-x-1/2 group-hover:scale-150 transition-transform duration-500" />
 
-        <div className="overflow-hidden py-4">
-          <motion.div
-            className="flex flex-nowrap -mx-3"
-            animate={{ x: `${xTranslation}%` }}
-            style={{ width: `${(displayItems.length / columns) * 100}%` }}
-            onAnimationComplete={handleAnimationComplete}
-            transition={isResetting ? { duration: 0 } : {
-              type: "spring",
-              stiffness: 260,
-              damping: 30,
-              mass: 1
-            }}
-          >
-            {displayItems.map((item, idx) => (
-              <div
-                key={`${item.id}-${idx}`}
-                className="px-3 flex-shrink-0"
-                style={{ width: `${(1 / displayItems.length) * 100}%` }}
-              >
-                <div className="group relative rounded-2xl bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-900/20 dark:to-emerald-900/20 p-8 shadow-md border border-teal-100/50 dark:border-teal-800/30 hover:shadow-xl hover:shadow-teal-500/10 hover:-translate-y-1 transition-all duration-300 overflow-hidden h-full flex flex-col items-center text-center">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-teal-200/30 to-transparent rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-500" />
-                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-emerald-200/20 to-transparent rounded-full translate-y-1/2 -translate-x-1/2 group-hover:scale-150 transition-transform duration-500" />
-
-                  <div className="relative z-10 w-full">
-                    {/* 1. Avatar */}
-                    <div className="mb-4 flex justify-center">
-                      <div className="relative">
-                        <img
-                          src={item.avatarUrl || "/placeholder.svg?height=80&width=80"}
-                          alt={isAr ? item.author : (item.authorEn || item.author)}
-                          className="h-20 w-20 rounded-full object-cover border-4 border-white dark:border-slate-700 shadow-lg group-hover:scale-110 transition-transform duration-300"
-                        />
-                        <div className="absolute inset-0 rounded-full border-2 border-teal-400/50 scale-110 opacity-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-300" />
-                      </div>
+                <div className="relative z-10 w-full">
+                  {/* 1. Avatar */}
+                  <div className="mb-4 flex justify-center">
+                    <div className="relative">
+                      <img
+                        src={item.avatarUrl || "/placeholder.svg?height=80&width=80"}
+                        alt={isAr ? item.author : (item.authorEn || item.author)}
+                        className="h-20 w-20 rounded-full object-cover border-4 border-white dark:border-slate-700 shadow-lg group-hover:scale-110 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 rounded-full border-2 border-teal-400/50 scale-110 opacity-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-300" />
                     </div>
-
-                    {/* 2. Name */}
-                    <h4 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                      {isAr ? item.author : (item.authorEn || item.author)}
-                    </h4>
-                    {item.role && <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">{isAr ? item.role : (item.roleEn || item.role)}</p>}
-
-                    {/* 3. Stars */}
-                    <div className="flex justify-center gap-1 mb-6">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={`w-5 h-5 transition-all duration-300 ${star <= (item.rating || 5)
-                            ? "fill-amber-400 text-amber-400 group-hover:scale-110"
-                            : "text-slate-300 dark:text-slate-600"
-                            }`}
-                          style={{ transitionDelay: `${star * 50}ms` }}
-                        />
-                      ))}
-                    </div>
-
-                    {/* 4. Review */}
-                    <p className="text-slate-600 dark:text-slate-300 leading-relaxed italic text-lg line-clamp-4">
-                      "{isAr ? item.quote : (item.quoteEn || item.quote)}"
-                    </p>
                   </div>
+
+                  {/* 2. Name */}
+                  <h4 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-1">
+                    {isAr ? item.author : (item.authorEn || item.author)}
+                  </h4>
+                  {item.role && <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">{isAr ? item.role : (item.roleEn || item.role)}</p>}
+
+                  {/* 3. Stars */}
+                  <div className="flex justify-center gap-1 mb-6">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className={`w-5 h-5 transition-all duration-300 ${star <= (item.rating || 5)
+                          ? "fill-amber-400 text-amber-400 group-hover:scale-110"
+                          : "text-slate-300 dark:text-slate-600"
+                          }`}
+                        style={{ transitionDelay: `${star * 50}ms` }}
+                      />
+                    ))}
+                  </div>
+
+                  {/* 4. Review */}
+                  <p className="text-slate-600 dark:text-slate-300 leading-relaxed italic text-lg line-clamp-4">
+                    "{isAr ? item.quote : (item.quoteEn || item.quote)}"
+                  </p>
                 </div>
               </div>
-            ))}
-          </motion.div>
-        </div>
-
-        {items.length > columns && (
-          <div className="mt-8 flex justify-center gap-2">
-            {items.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentIndex(items.length + index)}
-                className={`h-2.5 w-2.5 rounded-full transition-all ${index === (currentIndex % items.length) ? "w-8 bg-emerald-600" : "bg-slate-300 hover:bg-slate-400"}`}
-              />
-            ))}
-          </div>
-        )}
+            </div>
+          ))}
+        </motion.div>
       </div>
-    </SectionContainer>
+
+      {items.length > columns && (
+        <div className="mt-8 flex justify-center gap-2">
+          {items.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentIndex(items.length + index)}
+              className={`h-2.5 w-2.5 rounded-full transition-all ${index === (currentIndex % items.length) ? "w-8 bg-emerald-600" : "bg-slate-300 hover:bg-slate-400"}`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
