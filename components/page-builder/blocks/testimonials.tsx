@@ -106,7 +106,7 @@ export function TestimonialsEditor({
                     <input
                         type="checkbox"
                         id="enableFirebaseReviews"
-                        checked={block.enableFirebaseReviews ?? false}
+                        checked={block.enableFirebaseReviews ?? true}
                         onChange={(e) => update({ enableFirebaseReviews: e.target.checked })}
                         className="h-4 w-4 rounded border-gray-300 text-orange-600"
                     />
@@ -318,7 +318,10 @@ export function TestimonialsView({ block }: { block: TestimonialsBlock }) {
 
     // Load Firebase reviews from school_reviews collection
     React.useEffect(() => {
-        if (!block.enableFirebaseReviews) {
+        // Enable by default if not explicitly set
+        const shouldFetch = block.enableFirebaseReviews ?? true
+
+        if (!shouldFetch) {
             setFirebaseReviews([])
             return
         }
@@ -361,7 +364,7 @@ export function TestimonialsView({ block }: { block: TestimonialsBlock }) {
             }
         }
         fetchFirebaseReviews()
-    }, [block.enableFirebaseReviews])
+    }, [block.enableFirebaseReviews, block])
 
     // Always load approved testimonials from dashboard
     React.useEffect(() => {
@@ -486,11 +489,10 @@ export function TestimonialsView({ block }: { block: TestimonialsBlock }) {
                                     {[1, 2, 3, 4, 5].map((star) => (
                                         <Star
                                             key={star}
-                                            className={`w-5 h-5 transition-all duration-300 ${
-                                                star <= (item.rating || 5)
-                                                    ? "fill-amber-400 text-amber-400 group-hover:scale-110"
-                                                    : "text-slate-300 dark:text-slate-600"
-                                            }`}
+                                            className={`w-5 h-5 transition-all duration-300 ${star <= (item.rating || 5)
+                                                ? "fill-amber-400 text-amber-400 group-hover:scale-110"
+                                                : "text-slate-300 dark:text-slate-600"
+                                                }`}
                                             style={{ transitionDelay: `${star * 50}ms` }}
                                         />
                                     ))}
