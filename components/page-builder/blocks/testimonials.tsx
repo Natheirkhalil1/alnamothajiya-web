@@ -18,6 +18,7 @@ import { app } from "@/lib/firebase"
 interface FirebaseReview {
     id: string
     comment: string
+    reviewerName?: string
     imageUrl?: string
     isVisible?: boolean
     publishedAt?: any
@@ -343,8 +344,8 @@ export function TestimonialsView({ block }: { block: TestimonialsBlock }) {
                             id: doc.id,
                             quote: data.comment,
                             quoteEn: data.comment,
-                            author: "", // Firebase reviews don't have author name
-                            authorEn: "",
+                            author: data.reviewerName || "", // Get name from reviewerName field
+                            authorEn: data.reviewerName || "",
                             avatarUrl: data.imageUrl,
                             rating: data.rating || 5,
                             isFirebaseReview: true,
