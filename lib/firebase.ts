@@ -1,7 +1,16 @@
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app"
 import { getFirestore, type Firestore } from "firebase/firestore"
 import { getAuth, browserLocalPersistence, setPersistence, type Auth } from "firebase/auth"
-import { getStorage, ref, uploadBytes, uploadBytesResumable, getDownloadURL, deleteObject, type FirebaseStorage, type UploadTaskSnapshot } from "firebase/storage"
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  uploadBytesResumable,
+  getDownloadURL,
+  deleteObject,
+  type FirebaseStorage,
+  type UploadTaskSnapshot,
+} from "firebase/storage"
 
 const firebaseConfig = {
   apiKey: "AIzaSyCrfXi8bkZ-_c9hspk4Nw0P9-HFuB-od0s",
@@ -9,7 +18,7 @@ const firebaseConfig = {
   projectId: "aapp-1827e",
   storageBucket: "aapp-1827e.firebasestorage.app",
   messagingSenderId: "87450977016",
-  appId: "1:87450977016:web:815358999bb84ae4c7710d"
+  appId: "1:87450977016:web:815358999bb84ae4c7710d",
 }
 
 let app: FirebaseApp | undefined
@@ -113,11 +122,18 @@ export const SETTINGS_DOCS = {
 
 export { getDb as db, getFirebaseAuth as auth, getFirebaseStorage as storage }
 
+export function getApp(): FirebaseApp {
+  return getOrInitializeApp()
+}
+
+// For backward compatibility with direct app imports
+export { getOrInitializeApp as app }
+
 // Client-side upload function for use in browser components
 export async function uploadFileToStorage(
   file: File,
-  folder: string = "general",
-  onProgress?: (progress: number) => void
+  folder = "general",
+  onProgress?: (progress: number) => void,
 ): Promise<{ url: string; filename: string; path: string; size: number; type: string }> {
   const storage = getFirebaseStorage()
 
@@ -160,7 +176,7 @@ export async function uploadFileToStorage(
           } catch (error) {
             reject(error)
           }
-        }
+        },
       )
     })
   }
